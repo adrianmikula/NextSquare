@@ -15,3 +15,8 @@ also, i want to review the error handling and logging, and ensure all errors are
 lets also ensure the design is set up to work on mobile devices with responsive CSS styling and a standard, pop-out mobile menu. 
 
 
+
+also review the code complexity and consistency.  Eliminate code duplication, share common code, rewrite complicated methods simpler if possible, and ensure the code is readable, understandable, and wasy to maintain.  Split up any large source code files (longer than 500 lines), and aim to reduce the code length by 50% (soft target). 
+
+
+

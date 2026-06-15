@@ -23,35 +23,16 @@ export async function GET(
         quantity: parseInt(item.quantity),
         name: item.name,
         catalogObjectId: item.catalogObjectId,
-        priceMoney: item.basePriceMoney
-          ? {
-              amount: Number(item.basePriceMoney.amount),
-              currency: item.basePriceMoney.currency,
-            }
-          : undefined,
+        priceMoney: item.basePriceMoney ? { amount: Number(item.basePriceMoney.amount), currency: item.basePriceMoney.currency } : undefined,
         modifiers: (item.modifiers ?? []).map((m) => ({
-          id: m.catalogObjectId,
-          name: m.name ?? "",
-          priceMoney: m.basePriceMoney
-            ? {
-                amount: Number(m.basePriceMoney.amount),
-                currency: m.basePriceMoney.currency,
-              }
-            : undefined,
+          id: m.catalogObjectId, name: m.name ?? "",
+          priceMoney: m.basePriceMoney ? { amount: Number(m.basePriceMoney.amount), currency: m.basePriceMoney.currency } : undefined,
         })),
       })),
-      totalMoney: order.totalMoney
-        ? {
-            amount: Number(order.totalMoney.amount),
-            currency: order.totalMoney.currency,
-          }
-        : undefined,
+      totalMoney: order.totalMoney ? { amount: Number(order.totalMoney.amount), currency: order.totalMoney.currency } : undefined,
     })
   } catch (error) {
-    console.error("Order fetch error:", error)
-    return Response.json(
-      { error: "Failed to fetch order" },
-      { status: 500 }
-    )
+    console.error("[orders] Order fetch error:", error instanceof Error ? error.message : error)
+    return Response.json({ error: "Failed to fetch order. Please try again." }, { status: 500 })
   }
 }

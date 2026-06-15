@@ -7,11 +7,13 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("x-square-hmacsha256-signature") ?? ""
 
   if (!verifySquareWebhook(body, signature)) {
+    console.warn("[webhook] Invalid signature")
     return new Response("Invalid signature", { status: 401 })
   }
 
   const event = parseWebhookEvent(body)
   if (!event) {
+    console.warn("[webhook] Invalid event payload")
     return new Response("Invalid event", { status: 400 })
   }
 
@@ -27,6 +29,7 @@ export async function POST(request: NextRequest) {
     fulfillment?.shipmentDetails?.recipient?.phoneNumber
 
   if (!phone) {
+    console.warn("[webhook] No phone number in order fulfillment", { orderId: order.id })
     return new Response("No phone number", { status: 200 })
   }
 
@@ -48,10 +51,17 @@ export async function POST(request: NextRequest) {
         ? `Your order #${ticketName} has been delivered! Enjoy!`
         : `Your order #${ticketName} is ready for pickup!`
       break
+    default:
+      console.info("[webhook] Unhandled fulfillment state", { state, orderId: order.id })
   }
 
   if (message) {
-    await sendSms(phone, message)
+    try {
+      await sendSms(phone, message)
+      console.info("[webhook] SMS sent", { orderId: order.id, state })
+    } catch (error) {
+      console.error("[webhook] Failed to send SMS:", error instanceof Error ? error.message : error)
+    }
   }
 
   return new Response("OK", { status: 200 })

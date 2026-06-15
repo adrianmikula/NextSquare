@@ -8,25 +8,15 @@ export async function POST(request: NextRequest) {
     const { lineItems, customerInfo, fulfillmentType, fulfillmentDetails, idempotencyKey } = body
 
     if (!lineItems?.length || !customerInfo?.name || !customerInfo?.phone) {
-      return Response.json(
-        { error: "Missing required fields: lineItems, customer name, and phone" },
-        { status: 400 }
-      )
+      console.warn("[orders] Missing required fields", { name: !!customerInfo?.name, phone: !!customerInfo?.phone, items: lineItems?.length })
+      return Response.json({ error: "Missing required fields: lineItems, customer name, and phone" }, { status: 400 })
     }
 
     const { orderId } = await createOrder({
-      lineItems,
-      customerInfo,
-      fulfillmentType,
+      lineItems, customerInfo, fulfillmentType,
       fulfillmentDetails: fulfillmentDetails as {
         pickupAt?: string
-        address?: {
-          addressLine1?: string
-          addressLine2?: string
-          locality?: string
-          administrativeDistrictLevel1?: string
-          postalCode?: string
-        }
+        address?: { addressLine1?: string; addressLine2?: string; locality?: string; administrativeDistrictLevel1?: string; postalCode?: string }
         deliveryNotes?: string
       },
       idempotencyKey,
@@ -34,10 +24,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json({ orderId })
   } catch (error) {
-    console.error("Order creation error:", error)
-    return Response.json(
-      { error: "Failed to create order" },
-      { status: 500 }
-    )
+    console.error("[orders] Order creation error:", error instanceof Error ? error.message : error)
+    return Response.json({ error: "Failed to create order. Please try again." }, { status: 500 })
   }
 }

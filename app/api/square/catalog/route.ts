@@ -17,15 +17,10 @@ export async function GET(request: NextRequest) {
 
     const menu = await fetchMenu()
     return Response.json(menu, {
-      headers: {
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-      },
+      headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" },
     })
   } catch (error) {
-    console.error("Catalog fetch error:", error)
-    return Response.json(
-      { error: "Failed to fetch menu" },
-      { status: 500 }
-    )
+    console.error("[catalog] Menu fetch error:", error instanceof Error ? error.message : error)
+    return Response.json({ error: "Failed to fetch menu. Please try again later." }, { status: 500 })
   }
 }

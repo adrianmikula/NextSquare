@@ -4,6 +4,9 @@ import "./globals.css"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { CartProvider } from "@/components/cart/CartProvider"
+import { ToastProvider } from "@/components/ui/ToastProvider"
+import { DemoBadge } from "@/components/demo/DemoBadge"
+import { ToastContainer } from "@/components/ui/toast"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -34,11 +37,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <CartProvider>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <ToastProvider>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <ToastContainer />
+            <DemoBadge />
+          </ToastProvider>
         </CartProvider>
       </body>
     </html>
