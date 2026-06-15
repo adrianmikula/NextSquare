@@ -1,0 +1,25 @@
+import { cn } from "@/lib/utils"
+
+interface StatCardProps {
+  title: string
+  value: string | number
+  icon?: React.ReactNode
+  className?: string
+}
+
+export function StatCard({ title, value, icon, className }: StatCardProps) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-stone-200 bg-white p-6 shadow-sm",
+        className
+      )}
+    >
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-stone-500">{title}</p>
+        {icon && <div className="text-stone-400">{icon}</div>}
+      </div>
+      <p className="mt-2 text-3xl font-bold text-stone-900">{value}</p>
+    </div>
+  )
+}
