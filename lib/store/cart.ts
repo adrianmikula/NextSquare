@@ -1,0 +1,94 @@
+"use client"
+
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
+import type { CartItem, FulfillmentType } from "@/types/cart"
+
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+}
+
+interface CartActions {
+  addItem: (item: Omit<CartItem, "id">) => void
+  removeItem: (id: string) => void
+  updateQuantity: (id: string, qty: number) => void
+  setFulfillmentType: (type: FulfillmentType) => void
+  clearCart: () => void
+}
+
+interface CartState {
+  items: CartItem[]
+  fulfillmentType: FulfillmentType
+}
+
+type CartStore = CartState & CartActions
+
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set) => ({
+      items: [],
+      fulfillmentType: "PICKUP",
+
+      addItem: (item) =>
+        set((state) => {
+          const existingIndex = state.items.findIndex(
+            (i) =>
+              i.catalogObjectId === item.catalogObjectId &&
+              JSON.stringify(i.modifiers) === JSON.stringify(item.modifiers)
+          )
+
+          if (existingIndex >= 0) {
+            const updated = [...state.items]
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              quantity: updated[existingIndex].quantity + item.quantity,
+            }
+            return { items: updated }
+          }
+
+          return {
+            items: [...state.items, { ...item, id: generateId() }],
+          }
+        }),
+
+      removeItem: (id) =>
+        set((state) => ({
+          items: state.items.filter((i) => i.id !== id),
+        })),
+
+      updateQuantity: (id, qty) =>
+        set((state) => {
+          if (qty <= 0) {
+            return { items: state.items.filter((i) => i.id !== id) }
+          }
+          return {
+            items: state.items.map((i) =>
+              i.id === id ? { ...i, quantity: qty } : i
+            ),
+          }
+        }),
+
+      setFulfillmentType: (type) => set({ fulfillmentType: type }),
+
+      clearCart: () => set({ items: [] }),
+    }),
+    { name: "cafe-cart" }
+  )
+)
+
+export function useCartItemCount(): number {
+  return useCartStore((state) => state.items.reduce((sum, i) => sum + i.quantity, 0))
+}
+
+export function useCartSubtotal(): number {
+  return useCartStore((state) =>
+    state.items.reduce((sum, i) => {
+      const itemTotal = i.priceMoney.amount * i.quantity
+      const modifierTotal = i.modifiers.reduce(
+        (mSum, m) => mSum + (m.priceMoney?.amount ?? 0) * i.quantity,
+        0
+      )
+      return sum + itemTotal + modifierTotal
+    }, 0)
+  )
+}

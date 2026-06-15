@@ -24,6 +24,7 @@ export interface SquareWebhookEvent {
         id: string
         ticketName?: string
         fulfillments?: Array<{
+          type?: string
           state?: string
           pickupDetails?: {
             recipient?: { phoneNumber?: string }

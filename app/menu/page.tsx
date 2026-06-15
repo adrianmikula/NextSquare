@@ -1,51 +1,80 @@
-import type { Metadata } from "next"
-import { Coffee, Sandwich, Croissant } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+"use client"
 
-export const metadata: Metadata = {
-  title: "Menu",
-  description: "Browse our full menu of freshly prepared coffee, food, and drinks.",
-}
-
-const categories = [
-  {
-    name: "Coffee",
-    icon: Coffee,
-    items: [
-      { name: "Flat White", price: "$5.50", description: "Double shot espresso with steamed silky milk" },
-      { name: "Latte", price: "$5.50", description: "Espresso with steamed milk and a light foam" },
-      { name: "Cappuccino", price: "$5.50", description: "Espresso with thick foam and chocolate dust" },
-      { name: "Long Black", price: "$4.50", description: "Double shot espresso over hot water" },
-      { name: "Cold Brew", price: "$6.00", description: "Slow-steeped 24hr nitrogen-infused cold brew" },
-      { name: "Mocha", price: "$6.00", description: "Espresso with chocolate and steamed milk" },
-    ],
-  },
-  {
-    name: "Food",
-    icon: Sandwich,
-    items: [
-      { name: "Avocado Toast", price: "$14.00", description: "Sourdough, smashed avo, cherry tomatoes, feta" },
-      { name: "Breakfast Roll", price: "$12.00", description: "Bacon, egg, cheese, aioli on a brioche bun" },
-      { name: "Granola Bowl", price: "$13.00", description: "Toasted oats, yogurt, seasonal fruit, honey" },
-      { name: "BLAT Sandwich", price: "$15.00", description: "Bacon, lettuce, avocado, tomato on sourdough" },
-    ],
-  },
-  {
-    name: "Pastries",
-    icon: Croissant,
-    items: [
-      { name: "Croissant", price: "$5.00", description: "Buttery, flaky French pastry" },
-      { name: "Banana Bread", price: "$5.50", description: "House-made with locally sourced bananas" },
-      { name: "Muffin of the Day", price: "$5.00", description: "Ask your barista for today's flavour" },
-    ],
-  },
-]
+import { useState, useCallback } from "react"
+import { useMenu } from "@/hooks/useMenu"
+import { useCartStore } from "@/lib/store/cart"
+import type { SquareCatalogItem } from "@/types/square"
+import type { ModifierSelection } from "@/types/cart"
+import { CategoryNav } from "@/components/menu/CategoryNav"
+import { MenuGrid } from "@/components/menu/MenuGrid"
+import { MenuItemDetail } from "@/components/menu/MenuItemDetail"
 
 export default function MenuPage() {
+  const { items, categories, isLoading } = useMenu()
+  const addItem = useCartStore((s) => s.addItem)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [selectedItem, setSelectedItem] = useState<SquareCatalogItem | null>(null)
+
+  const filteredItems = activeCategory
+    ? items.filter((item) => item.itemData?.categoryId === activeCategory)
+    : items
+
+  const handleAddItem = useCallback((item: SquareCatalogItem) => {
+    const variation = item.itemData?.variations?.[0]?.itemVariationData
+    if (!variation) return
+
+    const priceMoney = variation.priceMoney
+      ? {
+          amount: Number(variation.priceMoney.amount),
+          currency: variation.priceMoney.currency,
+        }
+      : { amount: 0, currency: "AUD" }
+
+    const hasModifiers =
+      (item.itemData?.modifiers ?? []).length > 0
+
+    if (hasModifiers) {
+      setSelectedItem(item)
+    } else {
+      addItem({
+        catalogObjectId: item.id,
+        name: item.itemData?.name ?? "Untitled",
+        priceMoney: priceMoney,
+        quantity: 1,
+        modifiers: [],
+        imageUrl: item.imageUrl,
+      })
+    }
+  }, [addItem])
+
+  const handleAddToCart = useCallback(
+    (modifiers: ModifierSelection[], quantity: number) => {
+      if (!selectedItem) return
+
+      const variation = selectedItem.itemData?.variations?.[0]?.itemVariationData
+      const priceMoney = variation?.priceMoney
+        ? {
+            amount: Number(variation.priceMoney.amount),
+            currency: variation.priceMoney.currency,
+          }
+        : { amount: 0, currency: "AUD" }
+
+      addItem({
+        catalogObjectId: selectedItem.id,
+        name: selectedItem.itemData?.name ?? "Untitled",
+        priceMoney,
+        quantity,
+        modifiers,
+        imageUrl: selectedItem.imageUrl,
+      })
+    },
+    [selectedItem, addItem]
+  )
+
   return (
-    <div className="bg-stone-50 py-20">
+    <div className="bg-stone-50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center">
+        <div className="py-12 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-stone-900">
             Our Menu
           </h1>
@@ -53,45 +82,43 @@ export default function MenuPage() {
             Freshly prepared every day with locally sourced ingredients.
           </p>
         </div>
-
-        <div className="mt-16 grid gap-10 md:grid-cols-3">
-          {categories.map((category) => {
-            const Icon = category.icon
-            return (
-              <Card key={category.name}>
-                <CardHeader>
-                  <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <CardTitle>{category.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="divide-y divide-stone-100">
-                    {category.items.map((item) => (
-                      <li
-                        key={item.name}
-                        className="flex items-center justify-between py-3"
-                      >
-                        <div>
-                          <span className="text-sm font-medium text-stone-900">
-                            {item.name}
-                          </span>
-                          <p className="text-xs text-stone-500">
-                            {item.description}
-                          </p>
-                        </div>
-                        <span className="ml-4 text-sm font-bold text-amber-700">
-                          {item.price}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
       </div>
+
+      <CategoryNav
+        categories={categories}
+        activeCategory={activeCategory}
+        onSelect={setActiveCategory}
+      />
+
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        {isLoading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="animate-pulse rounded-xl border border-stone-200 bg-white"
+              >
+                <div className="aspect-[4/3] rounded-t-xl bg-stone-100" />
+                <div className="space-y-3 p-4">
+                  <div className="h-4 w-2/3 rounded bg-stone-100" />
+                  <div className="h-3 w-full rounded bg-stone-100" />
+                  <div className="h-3 w-1/2 rounded bg-stone-100" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <MenuGrid items={filteredItems} onAddItem={handleAddItem} />
+        )}
+      </div>
+
+      {selectedItem && (
+        <MenuItemDetail
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onAddToCart={handleAddToCart}
+        />
+      )}
     </div>
   )
 }

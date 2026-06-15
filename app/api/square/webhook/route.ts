@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
 
   const state = fulfillment?.state
   const ticketName = order.ticketName ?? order.id
+  const isDelivery = fulfillment?.type === "SHIPMENT"
 
   let message: string | null = null
 
@@ -43,7 +44,9 @@ export async function POST(request: NextRequest) {
       message = `We're making your order #${ticketName} now! ETA ~10 min`
       break
     case "COMPLETED":
-      message = `Your order #${ticketName} is ready for pickup!`
+      message = isDelivery
+        ? `Your order #${ticketName} has been delivered! Enjoy!`
+        : `Your order #${ticketName} is ready for pickup!`
       break
   }
 

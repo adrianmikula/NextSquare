@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { OrderButton } from "@/components/order-button"
+import { CartButton } from "@/components/cart/CartButton"
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -29,6 +30,7 @@ export function Header() {
               {link.label}
             </Link>
           ))}
+          <CartButton />
           <OrderButton />
         </nav>
 

@@ -1,0 +1,51 @@
+"use client"
+
+import Link from "next/link"
+
+interface OrderConfirmedProps {
+  orderId: string
+}
+
+export function OrderConfirmed({ orderId }: OrderConfirmedProps) {
+  return (
+    <div className="text-center">
+      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+        <svg
+          className="h-8 w-8 text-green-600"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      </div>
+      <h2 className="text-2xl font-bold text-stone-900">Order Confirmed!</h2>
+      <p className="mt-2 text-stone-600">
+        Your order <span className="font-semibold">#{orderId}</span> has been
+        placed successfully.
+      </p>
+      <p className="mt-1 text-sm text-stone-500">
+        You will receive an SMS confirmation shortly.
+      </p>
+      <div className="mt-8 flex justify-center gap-4">
+        <Link
+          href={`/order/${orderId}`}
+          className="rounded-xl bg-amber-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
+        >
+          Track Order
+        </Link>
+        <Link
+          href="/menu"
+          className="rounded-xl border border-stone-300 px-6 py-3 text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-50"
+        >
+          Order Again
+        </Link>
+      </div>
+    </div>
+  )
+}
