@@ -6,13 +6,25 @@ export interface SessionPayload extends JWTPayload {
   userId: string
 }
 
+const DEFAULT_ALGORITHM = "HS256"
+const SUPPORTED_ALGORITHMS = ["HS256", "HS384", "HS512"]
+
+function getAlgorithm(): string {
+  const alg = process.env.JWT_ALGORITHM || DEFAULT_ALGORITHM
+  if (!SUPPORTED_ALGORITHMS.includes(alg)) {
+    console.warn(`Unsupported JWT_ALGORITHM "${alg}", falling back to "${DEFAULT_ALGORITHM}"`)
+    return DEFAULT_ALGORITHM
+  }
+  return alg
+}
+
 function getEncodedKey() {
   return new TextEncoder().encode(process.env.DASHBOARD_PASSWORD ?? "")
 }
 
 export async function encrypt(payload: SessionPayload) {
   return new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256" })
+    .setProtectedHeader({ alg: getAlgorithm() })
     .setIssuedAt()
     .setExpirationTime("7d")
     .sign(getEncodedKey())
@@ -21,7 +33,7 @@ export async function encrypt(payload: SessionPayload) {
 export async function decrypt(session: string | undefined = "") {
   try {
     const { payload } = await jwtVerify<SessionPayload>(session, getEncodedKey(), {
-      algorithms: ["HS256"],
+      algorithms: SUPPORTED_ALGORITHMS,
     })
     return payload
   } catch {

@@ -1,0 +1,19 @@
+# Auth and session handling
+/lib/auth/ @adrian
+
+# API routes
+/app/api/ @adrian
+
+# Core library code
+/lib/ @adrian
+
+# Server configuration
+/next.config.ts @adrian
+/proxy.ts @adrian
+
+# CI/CD and security
+/.github/ @adrian
+/.npmrc @adrian
+
+# Environment configuration
+/.env.local.example @adrian
