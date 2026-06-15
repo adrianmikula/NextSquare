@@ -3,6 +3,7 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 
 beforeEach(() => {
   vi.stubEnv("DASHBOARD_PASSWORD", "test-password-123")
+  vi.stubEnv("JWT_ALGORITHM", "HS256")
 })
 
 afterEach(() => {

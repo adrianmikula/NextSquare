@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Client, Environment } from "square/legacy"
 import { CheckCircle2, XCircle } from "lucide-react"
+import { requireEnv } from "@/lib/env"
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -8,15 +9,15 @@ export const metadata: Metadata = {
 }
 
 const { locationsApi } = new Client({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN!,
+  accessToken: requireEnv("SQUARE_ACCESS_TOKEN"),
   environment:
-    process.env.SQUARE_ENVIRONMENT === "production" ? Environment.Production : Environment.Sandbox,
+    requireEnv("SQUARE_ENVIRONMENT") === "production" ? Environment.Production : Environment.Sandbox,
 })
 
 async function checkSquareConnection() {
   try {
     const { result } = await locationsApi.retrieveLocation(
-      process.env.SQUARE_LOCATION_ID!
+      requireEnv("SQUARE_LOCATION_ID")
     )
     return { connected: true, name: result.location?.name ?? "Connected" }
   } catch {

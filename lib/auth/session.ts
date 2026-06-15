@@ -1,6 +1,7 @@
 import "server-only"
 import { SignJWT, jwtVerify, type JWTPayload } from "jose"
 import { cookies } from "next/headers"
+import { requireEnv } from "@/lib/env"
 
 export interface SessionPayload extends JWTPayload {
   userId: string
@@ -10,16 +11,17 @@ const DEFAULT_ALGORITHM = "HS256"
 const SUPPORTED_ALGORITHMS = ["HS256", "HS384", "HS512"]
 
 function getAlgorithm(): string {
-  const alg = process.env.JWT_ALGORITHM || DEFAULT_ALGORITHM
+  const alg = requireEnv("JWT_ALGORITHM")
   if (!SUPPORTED_ALGORITHMS.includes(alg)) {
-    console.warn(`Unsupported JWT_ALGORITHM "${alg}", falling back to "${DEFAULT_ALGORITHM}"`)
-    return DEFAULT_ALGORITHM
+    throw new Error(
+      `Invalid JWT_ALGORITHM "${alg}". Supported algorithms: ${SUPPORTED_ALGORITHMS.join(", ")}`
+    )
   }
   return alg
 }
 
 function getEncodedKey() {
-  return new TextEncoder().encode(process.env.DASHBOARD_PASSWORD ?? "")
+  return new TextEncoder().encode(requireEnv("DASHBOARD_PASSWORD"))
 }
 
 export async function encrypt(payload: SessionPayload) {

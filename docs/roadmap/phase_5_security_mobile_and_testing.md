@@ -20,3 +20,6 @@ also review the code complexity and consistency.  Eliminate code duplication, sh
 
 
 
+also, we don't want to add fallback logic anywhere in the code (expect for cases like special 'demo' flags). add this principle under docs/patterns. wrong config should throw a meaningful error back to the developer or user .  we should also expand config tests to cover scenarios like correct error handling for misconfigured env vars
+
+

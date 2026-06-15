@@ -7,6 +7,7 @@ import { CartProvider } from "@/components/cart/CartProvider"
 import { ToastProvider } from "@/components/ui/ToastProvider"
 import { DemoBadge } from "@/components/demo/DemoBadge"
 import { ToastContainer } from "@/components/ui/toast"
+import { requireEnv } from "@/lib/env"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
     template: `%s | ${siteTitle}`,
   },
   description: siteDescription,
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(requireEnv("NEXT_PUBLIC_SITE_URL")),
   openGraph: {
     title: siteTitle,
     description: siteDescription,

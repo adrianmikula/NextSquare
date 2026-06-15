@@ -6,9 +6,10 @@ import type { CustomerInfo } from "@/types/order"
 import { getSquareEnvironment } from "./config"
 import { isDemoMode } from "@/lib/demo/config"
 import { getDemoOrder, createDemoOrder } from "@/lib/demo/menu-data"
+import { requireEnv } from "@/lib/env"
 
 const client = new Client({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN ?? "",
+  accessToken: isDemoMode() ? "" : requireEnv("SQUARE_ACCESS_TOKEN"),
   environment: getSquareEnvironment() === "production" ? Environment.Production : Environment.Sandbox,
 })
 
@@ -28,7 +29,7 @@ export async function createOrder(params: {
     return { orderId: order.id ?? `demo-${params.idempotencyKey}` }
   }
 
-  const locationId = process.env.SQUARE_LOCATION_ID!
+  const locationId = requireEnv("SQUARE_LOCATION_ID")
   const lineItemsPayload = params.lineItems.map((item) => ({
     catalogObjectId: item.catalogObjectId,
     quantity: item.quantity.toString(),

@@ -3,9 +3,10 @@ import { Client, Environment } from "square/legacy"
 import { getSquareEnvironment } from "./config"
 import { isDemoMode } from "@/lib/demo/config"
 import { createDemoPayment } from "@/lib/demo/menu-data"
+import { requireEnv } from "@/lib/env"
 
 const client = new Client({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN ?? "",
+  accessToken: isDemoMode() ? "" : requireEnv("SQUARE_ACCESS_TOKEN"),
   environment: getSquareEnvironment() === "production" ? Environment.Production : Environment.Sandbox,
 })
 

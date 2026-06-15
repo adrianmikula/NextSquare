@@ -5,6 +5,7 @@ vi.mock("square/legacy")
 
 beforeEach(() => {
   vi.stubEnv("SQUARE_ACCESS_TOKEN", "test-token")
+  vi.stubEnv("SQUARE_ENVIRONMENT", "sandbox")
   vi.stubEnv("SQUARE_LOCATION_ID", "loc-123")
 })
 

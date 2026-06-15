@@ -17,6 +17,7 @@ async function callPost(body: object) {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.stubEnv("DASHBOARD_PASSWORD", "correct-horse")
 })
 
 afterEach(() => {

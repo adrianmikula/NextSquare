@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Client, Environment } from "square/legacy"
 import { OrderTable } from "@/components/dashboard/order-table"
+import { requireEnv } from "@/lib/env"
 
 export const metadata: Metadata = {
   title: "Orders",
@@ -8,9 +9,9 @@ export const metadata: Metadata = {
 }
 
 const { ordersApi } = new Client({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN!,
+  accessToken: requireEnv("SQUARE_ACCESS_TOKEN"),
   environment:
-    process.env.SQUARE_ENVIRONMENT === "production" ? Environment.Production : Environment.Sandbox,
+    requireEnv("SQUARE_ENVIRONMENT") === "production" ? Environment.Production : Environment.Sandbox,
 })
 
 export default async function OrdersPage() {
@@ -28,7 +29,7 @@ export default async function OrdersPage() {
     ).toISOString()
 
     const { result } = await ordersApi.searchOrders({
-      locationIds: [process.env.SQUARE_LOCATION_ID!],
+      locationIds: [requireEnv("SQUARE_LOCATION_ID")],
       query: {
         filter: {
           dateTimeFilter: {

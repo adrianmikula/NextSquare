@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Client, Environment } from "square/legacy"
 import { MenuItemsGrid } from "./menu-items-grid"
+import { requireEnv } from "@/lib/env"
 
 export const metadata: Metadata = {
   title: "Menu Management",
@@ -8,9 +9,9 @@ export const metadata: Metadata = {
 }
 
 const { catalogApi } = new Client({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN!,
+  accessToken: requireEnv("SQUARE_ACCESS_TOKEN"),
   environment:
-    process.env.SQUARE_ENVIRONMENT === "production" ? Environment.Production : Environment.Sandbox,
+    requireEnv("SQUARE_ENVIRONMENT") === "production" ? Environment.Production : Environment.Sandbox,
 })
 
 export default async function MenuPage() {

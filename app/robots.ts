@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next"
+import { requireEnv } from "@/lib/env"
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -7,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: "/outstatic/",
     },
-    sitemap: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/sitemap.xml`,
+    sitemap: `${requireEnv("NEXT_PUBLIC_SITE_URL")}/sitemap.xml`,
   }
 }

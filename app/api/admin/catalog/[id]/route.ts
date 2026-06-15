@@ -2,11 +2,12 @@ import { NextRequest } from "next/server"
 import { Client, Environment } from "square/legacy"
 import { getSession } from "@/lib/auth/session"
 import crypto from "crypto"
+import { requireEnv } from "@/lib/env"
 
 const { catalogApi } = new Client({
-  accessToken: process.env.SQUARE_ACCESS_TOKEN!,
+  accessToken: requireEnv("SQUARE_ACCESS_TOKEN"),
   environment:
-    process.env.SQUARE_ENVIRONMENT === "production" ? Environment.Production : Environment.Sandbox,
+    requireEnv("SQUARE_ENVIRONMENT") === "production" ? Environment.Production : Environment.Sandbox,
 })
 
 interface UpdatePayload {
