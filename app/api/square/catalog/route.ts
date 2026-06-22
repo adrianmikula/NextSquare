@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server"
-import { fetchMenu } from "@/lib/square/catalog"
+import { fetchMenu, fetchItemBySlug } from "@/lib/square/catalog"
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,20 +7,32 @@ export async function GET(request: NextRequest) {
     const itemId = searchParams.get("id")
 
     if (itemId) {
-      const { fetchItemBySlug } = await import("@/lib/square/catalog")
       const item = await fetchItemBySlug(itemId)
       if (!item) {
         return Response.json({ error: "Item not found" }, { status: 404 })
       }
-      return Response.json(item)
+      return new Response(
+        JSON.stringify(item, (_key, value) =>
+          typeof value === "bigint" ? Number(value) : value
+        ),
+        { headers: { "Content-Type": "application/json" } }
+      )
     }
 
     const menu = await fetchMenu()
-    return Response.json(menu, {
-      headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" },
-    })
+    return new Response(
+      JSON.stringify(menu, (_key, value) =>
+        typeof value === "bigint" ? Number(value) : value
+      ),
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    )
   } catch (error) {
     console.error("[catalog] Menu fetch error:", error instanceof Error ? error.message : error)
-    return Response.json({ error: "Failed to fetch menu. Please try again later." }, { status: 500 })
+    return Response.json(
+      { error: "Failed to fetch menu. Please try again later." },
+      { status: 500 }
+    )
   }
 }

@@ -1,20 +1,21 @@
-import { describe, expect, it, vi, afterEach } from "vitest"
+import { describe, expect, it, vi, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/react"
+
+type SwrMockConfig = {
+  data?: any
+  error?: any
+  isLoading?: boolean
+}
+
+let swrConfig: SwrMockConfig = {}
 
 vi.mock("swr", () => ({
   default: (key: string) => {
     if (key === "/api/square/catalog") {
       return {
-        data: {
-          items: [
-            { id: "item-1", type: "ITEM", itemData: { name: "Flat White" } },
-          ],
-          categories: [
-            { id: "cat-1", type: "CATEGORY", categoryData: { name: "Coffee" } },
-          ],
-        },
-        error: undefined,
-        isLoading: false,
+        data: swrConfig.data,
+        error: swrConfig.error,
+        isLoading: swrConfig.isLoading ?? false,
       }
     }
     return { data: undefined, error: undefined, isLoading: true }
@@ -36,13 +37,53 @@ function TestComponent() {
   )
 }
 
+beforeEach(() => {
+  swrConfig = {}
+})
+
 describe("useMenu", () => {
   it("returns menu data from SWR", () => {
+    swrConfig = {
+      data: {
+        items: [{ id: "item-1", itemData: { name: "Flat White" } }],
+        categories: [{ id: "cat-1", categoryData: { name: "Coffee" } }],
+      },
+      isLoading: false,
+    }
     render(<TestComponent />)
     expect(screen.getByTestId("items").textContent).toBe("1")
     expect(screen.getByTestId("categories").textContent).toBe("1")
     expect(screen.getByTestId("first-item").textContent).toBe("Flat White")
     expect(screen.getByTestId("loading").textContent).toBe("false")
     expect(screen.getByTestId("error").textContent).toBe("false")
+  })
+
+  it("returns loading state", () => {
+    swrConfig = { isLoading: true }
+    render(<TestComponent />)
+    expect(screen.getByTestId("loading").textContent).toBe("true")
+  })
+
+  it("returns error state", () => {
+    swrConfig = { error: new Error("Failed to fetch"), isLoading: false }
+    render(<TestComponent />)
+    expect(screen.getByTestId("error").textContent).toBe("true")
+  })
+
+  it("defaults to empty arrays when data is undefined", () => {
+    swrConfig = { isLoading: false }
+    render(<TestComponent />)
+    expect(screen.getByTestId("items").textContent).toBe("0")
+    expect(screen.getByTestId("categories").textContent).toBe("0")
+  })
+
+  it("handles missing nested fields gracefully", () => {
+    swrConfig = {
+      data: { items: [{ id: "item-1" }], categories: [] },
+      isLoading: false,
+    }
+    render(<TestComponent />)
+    expect(screen.getByTestId("items").textContent).toBe("1")
+    expect(screen.getByTestId("categories").textContent).toBe("0")
   })
 })

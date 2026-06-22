@@ -114,6 +114,7 @@ export default function MenuPage() {
 
       {selectedItem && (
         <MenuItemDetail
+          key={selectedItem.id}
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
           onAddToCart={handleAddToCart}
