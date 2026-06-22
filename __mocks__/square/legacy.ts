@@ -11,10 +11,18 @@ export const mockPaymentsApi = {
   getPayment: vi.fn(),
 }
 
+export const mockLoyaltyApi = {
+  searchLoyaltyAccounts: vi.fn(),
+  createLoyaltyAccount: vi.fn(),
+  calculateLoyaltyPoints: vi.fn(),
+  retrieveLoyaltyProgram: vi.fn(),
+}
+
 export const Client = vi.fn(function () {
   return {
     ordersApi: mockOrdersApi,
     paymentsApi: mockPaymentsApi,
+    loyaltyApi: mockLoyaltyApi,
   }
 })
 

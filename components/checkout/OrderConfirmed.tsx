@@ -1,12 +1,15 @@
 "use client"
 
 import Link from "next/link"
+import { PointsEarned } from "@/components/loyalty/PointsEarned"
 
 interface OrderConfirmedProps {
   orderId: string
+  pointsEarned?: number
+  totalBalance?: number
 }
 
-export function OrderConfirmed({ orderId }: OrderConfirmedProps) {
+export function OrderConfirmed({ orderId, pointsEarned, totalBalance }: OrderConfirmedProps) {
   return (
     <div className="text-center">
       <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
@@ -32,6 +35,13 @@ export function OrderConfirmed({ orderId }: OrderConfirmedProps) {
       <p className="mt-1 text-sm text-stone-500">
         You will receive an SMS confirmation shortly.
       </p>
+
+      {pointsEarned !== undefined && totalBalance !== undefined && totalBalance > 0 && (
+        <div className="mt-6 text-left">
+          <PointsEarned pointsEarned={pointsEarned} totalBalance={totalBalance} />
+        </div>
+      )}
+
       <div className="mt-8 flex justify-center gap-4">
         <Link
           href={`/order/${orderId}`}

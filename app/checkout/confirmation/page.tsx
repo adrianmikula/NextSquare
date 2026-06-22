@@ -7,8 +7,16 @@ import { OrderConfirmed } from "@/components/checkout/OrderConfirmed"
 function ConfirmationContent() {
   const searchParams = useSearchParams()
   const orderId = searchParams.get("orderId") ?? ""
+  const pointsEarned = searchParams.get("pointsEarned")
+  const totalBalance = searchParams.get("totalBalance")
 
-  return <OrderConfirmed orderId={orderId} />
+  return (
+    <OrderConfirmed
+      orderId={orderId}
+      pointsEarned={pointsEarned ? parseInt(pointsEarned) : undefined}
+      totalBalance={totalBalance ? parseInt(totalBalance) : undefined}
+    />
+  )
 }
 
 export default function ConfirmationPage() {

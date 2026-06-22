@@ -12,6 +12,13 @@
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
   },
+  "overrides": {
+    "dompurify": "^3.4.10",
+    "cookie": "^0.7.2",
+    "tiptap-markdown": {
+      "markdown-it": "^14.2.0"
+    }
+  },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --quiet --fix"
   },
@@ -46,7 +53,7 @@
     "jsdom": "^29.1.1",
     "lint-staged": "^15.5.2",
     "simple-git-hooks": "^2.13.1",
-    "tailwindcss": "^4",
+    "tailwindcss": "4.1.10",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.8"

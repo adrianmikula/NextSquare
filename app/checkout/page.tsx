@@ -93,8 +93,27 @@ export default function CheckoutPage() {
           throw new Error(errData.error ?? "Payment failed")
         }
 
+        let pointsEarned = 0
+        let totalBalance = 0
+        try {
+          const loyaltyRes = await fetch("/api/square/loyalty", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phoneNumber: customerPhone, orderId }),
+          })
+          if (loyaltyRes.ok) {
+            const data = await loyaltyRes.json()
+            pointsEarned = data.pointsEarned
+            totalBalance = data.balanceAfterEarning ?? data.totalBalance
+          }
+        } catch {
+          // Non-blocking — loyalty enrollment is optional
+        }
+
         clearCart()
-        router.push(`/checkout/confirmation?orderId=${orderId}`)
+        router.push(
+          `/checkout/confirmation?orderId=${orderId}&pointsEarned=${pointsEarned}&totalBalance=${totalBalance}`,
+        )
       } catch (err) {
         const message = err instanceof Error ? err.message : "Something went wrong"
         addToast(message, "error")

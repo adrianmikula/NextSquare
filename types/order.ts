@@ -45,6 +45,7 @@ export interface OrderStatus {
     amount: number
     currency: string
   }
+  customerPhone?: string
 }
 
 export interface CreateOrderPayload {

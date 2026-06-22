@@ -1,5 +1,12 @@
 import { NextRequest } from "next/server"
 import { getOrder } from "@/lib/square/orders"
+import type { SquareOrderFulfillment } from "@/types/square"
+
+function extractPhoneFromFulfillment(fulfillment: SquareOrderFulfillment | undefined) {
+  if (!fulfillment) return undefined
+  const recipient = fulfillment.pickupDetails?.recipient ?? fulfillment.shipmentDetails?.recipient
+  return recipient?.phoneNumber
+}
 
 export async function GET(
   request: NextRequest,
@@ -30,6 +37,7 @@ export async function GET(
         })),
       })),
       totalMoney: order.totalMoney ? { amount: Number(order.totalMoney.amount), currency: order.totalMoney.currency } : undefined,
+      customerPhone: extractPhoneFromFulfillment(order.fulfillments?.[0]),
     })
   } catch (error) {
     console.error("[orders] Order fetch error:", error instanceof Error ? error.message : error)

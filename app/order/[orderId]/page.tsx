@@ -3,6 +3,7 @@
 import { use } from "react"
 import { useOrderStatus } from "@/hooks/useOrderStatus"
 import { OrderStatus } from "@/components/order/OrderStatus"
+import { LoyaltyBadge } from "@/components/loyalty/LoyaltyBadge"
 
 export default function OrderStatusPage({
   params,
@@ -32,7 +33,12 @@ export default function OrderStatusPage({
             </p>
           </div>
         ) : (
-          <OrderStatus order={order} />
+          <div className="space-y-6">
+            <OrderStatus order={order} />
+            {order.customerPhone && (
+              <LoyaltyBadge phoneNumber={order.customerPhone} orderId={order.orderId} />
+            )}
+          </div>
         )}
       </div>
     </div>
