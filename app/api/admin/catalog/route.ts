@@ -2,7 +2,6 @@ import { NextRequest } from "next/server"
 import { Client, Environment } from "square/legacy"
 import { getSession } from "@/lib/auth/session"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
-import { canEditCatalog, canEditStock } from "@/lib/auth/rbac"
 import { requireEnv } from "@/lib/env"
 
 const { catalogApi } = new Client({
@@ -17,10 +16,6 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  if (!canEditCatalog(session.roles) && !canEditStock(session.roles)) {
-    return Response.json({ error: "Insufficient permissions" }, { status: 403 })
-  }
-
   const rateLimitResult = rateLimit(
     `admin:${session.userId}:${new URL(request.url).pathname}`,
     10,
@@ -29,6 +24,7 @@ export async function GET(request: NextRequest) {
   if (!rateLimitResult.allowed) {
     return getRateLimitResponse(rateLimitResult.retryAfter!)
   }
+  // All authenticated roles (visitor, staff, owner, developer) can read catalog
 
   const { searchParams } = new URL(request.url)
   const id = searchParams.get("id")

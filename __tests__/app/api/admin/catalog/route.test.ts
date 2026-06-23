@@ -46,16 +46,36 @@ describe("GET /api/admin/catalog", () => {
     expect(response.status).toBe(401)
   })
 
-  it("returns 403 when visitor role only", async () => {
+  it("allows visitor to view catalog", async () => {
     vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["visitor"] })
+    mockSearchCatalogItems.mockResolvedValue({
+      result: {
+        items: [
+          { id: "item-1", itemData: { name: "Flat White" } },
+        ],
+        length: 1,
+      },
+    })
     const response = await callGet("http://localhost/api/admin/catalog")
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.items).toHaveLength(1)
   })
 
-  it("returns 403 when visitor role only", async () => {
-    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["visitor"] })
+  it("allows developer to view catalog", async () => {
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["developer"] })
+    mockSearchCatalogItems.mockResolvedValue({
+      result: {
+        items: [
+          { id: "item-1", itemData: { name: "Flat White" } },
+        ],
+        length: 1,
+      },
+    })
     const response = await callGet("http://localhost/api/admin/catalog")
-    expect(response.status).toBe(403)
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.items).toHaveLength(1)
   })
 
   it("allows staff to view catalog", async () => {

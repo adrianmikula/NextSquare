@@ -1,6 +1,6 @@
 # Admin Privilege Model & RBAC
 
-_Status: Single shared admin credential; no RBAC; no least-privilege separation. Phase 7 implements four-role RBAC._
+_Status: Single shared admin credential; no RBAC; no least-privilege separation. Phase 7 implements four-role RBAC backed by Square Team API and environment isolation._
 
 ---
 
@@ -24,52 +24,82 @@ export interface SessionPayload extends JWTPayload {
 
 ---
 
-## Four-Role RBAC Model (Phase 7)
+## Consistent Three-Layer RBAC Model (Phase 7)
 
-| Role | Permissions | Rationale |
-|------|-------------|-----------|
-| `visitor` | Read-only access to catalog, orders, loyalty data | Public-facing staff or stakeholders who need visibility but no mutation rights |
-| `owner` | Full product line management: create, update, delete catalog items; manage all product details and prices | Business owner with complete catalog control |
-| `staff` | Stock level management only: update inventory/availability; cannot edit product names, descriptions, or prices | Front-of-house staff who need to mark items sold out or available |
-| `developer` | Developer-related settings only: environment config, webhook management, deployment settings, logs | Technical operators who should not touch catalog or order data |
+Square's Team API exposes only one binary authority flag (`isOwner`). To cover all four roles consistently, the model layers **Square team membership** + **Square environment** + **email allowlist**:
+
+| Layer | owner | staff | visitor | developer |
+|-------|-------|-------|---------|-----------|
+| Square `isOwner` | `true` | `false` | not in team | bypassed |
+| Square environment | Production | Production | Production | **Sandbox only** |
+| Identifier | Team email | Team email | any auth | `DASHBOARD_DEVELOPER_EMAILS` |
+| Catalog mutations | Full | Stock only | None | None |
+| Square data risk | Production | Production | None | **Sandbox only** |
+
+The `developer` role is environment-gated: regardless of `SQUARE_ENVIRONMENT`, a developer session always targets the Square sandbox API (`connect.squareupsandbox.com`) and uses `SQUARE_SANDBOX_ACCESS_TOKEN` if configured. Developers can test against mock/sandbox Square data without any risk to production.
 
 ### Route Authorization Matrix
 
-| Route | Method | Required Role |
-|-------|--------|---------------|
-| `/api/admin/catalog` | GET | `visitor`, `owner`, `staff`, `developer` |
-| `/api/admin/catalog/[id]` | PATCH | `owner` (full) or `staff` (stock/availability only) |
-| `/api/square/webhook` | POST | `owner`, `developer` |
-| `/api/twilio/sms` | POST | `owner`, `developer` |
-| `/api/auth/*` | POST | Any authenticated role |
-| `/dashboard` | GET | Any authenticated role |
+| Route | Method | Required Role | Square environment |
+|-------|--------|---------------|-------------------|
+| `/api/admin/catalog` | GET | All authenticated roles | Per-role (dev=sandbox) |
+| `/api/admin/catalog/[id]` | PATCH | `owner` (full) or `staff` (stock-only) | Per-role (dev=sandbox) |
+| `/api/square/webhook` | POST | `owner`, `developer` | Per-role (dev=sandbox) |
+| `/api/twilio/sms` | POST | `owner`, `developer` | N/A |
+| `/api/auth/*` | POST | Any authenticated role | N/A |
+| `/dashboard` | GET | Any authenticated role | N/A |
+
+---
+
+## Role Resolution Flow
+
+```
+Password correct?
+  │
+  ▼
+Is email in DASHBOARD_DEVELOPER_EMAILS?
+  │ YES → role = developer (Square sandbox environment)
+  │ NO  ▼
+  Is DASHBOARD_ADMIN_EMAIL set?
+  │ NO  → role = owner (backward compat, production environment)
+  │ YES ▼
+  Call teamApi.searchTeamMembers()
+  │
+  ├─ Success → isOwner? → owner (production) : staff (production)
+  │            not found → visitor (production, read-only)
+  └─ Failure → 503 (fail-closed)
+```
+
+Square environment per role:
+- `owner`, `staff`, `visitor` → `SQUARE_ENVIRONMENT` (production or sandbox)
+- `developer` → **always sandbox**, using `SQUARE_SANDBOX_ACCESS_TOKEN` if set
+
+---
+
+## Fail-Closed Behavior
+
+When `DASHBOARD_ADMIN_EMAIL` is configured and Square is unreachable, authentication returns `503 Authentication service temporarily unavailable`. There is no fallback role — this prevents silent privilege escalation.
+
+When `DASHBOARD_ADMIN_EMAIL` is **not** configured: defaults to `owner` with no Square API call. This preserves backward compatibility for deployments not using Square RBAC.
 
 ---
 
 ## Implementation Path
 
-1. Extend `SessionPayload` to include `roles: string[]`
-2. Update JWT creation in `createSession()` to assign roles based on identity provider
-3. Build `lib/auth/rbac.ts` with permission checks:
-   ```
-   hasRole(roles: string[], required: string[]): boolean
-   canEditCatalog(roles): boolean
-   canEditStock(roles): boolean
-   canManageSettings(roles): boolean
-   ```
-4. Add role-check middleware or helper for admin routes
-5. Migrate from single password to per-operator credentials (future: SSO/OIDC)
+1. `SessionPayload` includes `roles: string[]`
+2. `lib/auth/rbac.ts` — permission helpers (`canEditCatalog`, `canEditStock`, `canManageSettings`)
+3. Role resolution in `POST /api/auth/challenge` and `POST /api/auth/login`
+4. OTP store (`lib/auth/mfa.ts`) carries `role` + `squareRequired` flag through challenge → verify
+5. Route enforcement: `PATCH /api/admin/catalog/[id]` blocks `staff` from name/description/price edits
 
 ---
 
 ## Phase 7: SMS MFA
 
-Implements the multi-factor requirement using Twilio SMS:
-
 - Two-step challenge/verify flow
-- 6-digit OTP with 5-minute TTL
-- In-memory OTP store (no persistence)
-- Rate-limited to prevent abuse
+- 6-digit OTP with configurable TTL (default 5 min)
+- In-memory OTP store with IP binding
+- Rate-limited (5 challenges / 15 min, 10 verifications / 15 min)
 
 See `app/api/auth/challenge/route.ts` and `app/api/auth/verify/route.ts`.
 
@@ -77,11 +107,9 @@ See `app/api/auth/challenge/route.ts` and `app/api/auth/verify/route.ts`.
 
 ## Phase 8: TOTP/WebAuthn Upgrade
 
-After SMS MFA is deployed:
-
-- Add TOTP authenticator app support as an alternative to SMS
-- Evaluate WebAuthn (passkeys) for operators with compatible devices
-- The challenge/verify route pattern remains the same; only the delivery channel changes
+- Add TOTP authenticator app support as alternative to SMS
+- Evaluate WebAuthn (passkeys) for compatible devices
+- Challenge/verify route pattern unchanged; only delivery channel changes
 
 ---
 
@@ -91,8 +119,9 @@ After SMS MFA is deployed:
 |--------|-------------------|-----|
 | Password sharing | None | Shared credential; no attribution |
 | Session hijacking | httpOnly + secure cookie | No IP binding or device fingerprinting |
-| Privilege escalation | None (single role) | Any authenticated user can do everything |
-| Insider threat | None | No separation of duties |
-| Brute force | None | No account lockout or rate limiting on login (addressed in Phase 7) |
-| Staff overreach | None | No stock-only permission boundary (addressed in Phase 7 RBAC) |
-| Developer data access | None | Developer can see catalog/orders (addressed in Phase 7 RBAC) |
+| Privilege escalation | Four-role RBAC enforced server-side | Developer/visitor blocked from catalog mutations |
+| Insider threat | Role separation (owner/staff/visitor/developer) | Single credential still shared (address in future) |
+| Brute force | Rate limiting on all auth routes | No account lockout (rate limit is the control) |
+| Staff overreach | Stock-only PATCH boundary | Staff cannot edit name/description/price |
+| Developer data access | `canManageSettings` only | Blocked from catalog and order mutations |
+| Square outage | Fail-closed (503) | None — no silent privilege escalation |

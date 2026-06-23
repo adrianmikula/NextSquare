@@ -11,9 +11,12 @@ export function getSquareApiBase(): string {
 }
 
 export function getSquareHeaders(): Record<string, string> {
+  const token = isDemoMode()
+    ? ""
+    : requireEnv("SQUARE_ACCESS_TOKEN")
   return {
     "Square-Version": API_VERSION,
-    Authorization: `Bearer ${isDemoMode() ? "" : requireEnv("SQUARE_ACCESS_TOKEN")}`,
+    Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   }
 }
@@ -21,4 +24,32 @@ export function getSquareHeaders(): Record<string, string> {
 export function getSquareEnvironment(): "sandbox" | "production" {
   if (isDemoMode()) return "sandbox"
   return requireEnv("SQUARE_ENVIRONMENT") as "sandbox" | "production"
+}
+
+export function getSquareEnvironmentForRole(roles: string[]): "sandbox" | "production" {
+  if (roles.includes("developer")) return "sandbox"
+  return getSquareEnvironment()
+}
+
+export function getSquareTokenForRole(roles: string[]): string {
+  if (roles.includes("developer")) {
+    return process.env.SQUARE_SANDBOX_ACCESS_TOKEN ?? requireEnv("SQUARE_ACCESS_TOKEN")
+  }
+  if (isDemoMode()) return ""
+  return requireEnv("SQUARE_ACCESS_TOKEN")
+}
+
+export function getSquareHeadersForRole(roles: string[]): Record<string, string> {
+  return {
+    "Square-Version": API_VERSION,
+    Authorization: `Bearer ${getSquareTokenForRole(roles)}`,
+    "Content-Type": "application/json",
+  }
+}
+
+export function getSquareApiBaseForRole(roles: string[]): string {
+  const env = getSquareEnvironmentForRole(roles)
+  return env === "production"
+    ? "https://connect.squareup.com"
+    : "https://connect.squareupsandbox.com"
 }

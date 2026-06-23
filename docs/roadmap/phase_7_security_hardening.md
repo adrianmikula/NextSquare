@@ -152,50 +152,51 @@ Add an operational backup posture covering all data classes:
 
 _Status: Single shared admin credential; no RBAC; no least-privilege separation_
 
-### 10.1 Current State Audit
+### 10.1 Design Decision: Square Team API + Environment as Source of Truth
 
-Document that current JWT auth uses a single `DASHBOARD_PASSWORD` shared credential with no role separation. Identify all actions available under the single `admin` role.
+Square's Team API exposes exactly one binary authority flag (`isOwner`), so RBAC uses a hybrid model for a consistent three-layer approach:
 
-### 10.2 Role Definitions
+| Role | Square source | Square environment | Dashboard permissions |
+|------|--------------|-------------------|----------------------|
+| `owner` | `isOwner: true` | Production (or `SQUARE_ENVIRONMENT`) | Full catalog management |
+| `staff` | `isOwner: false` | Production (or `SQUARE_ENVIRONMENT`) | Stock/availability only |
+| `visitor` | Not in Square team | Production (read-only) | Read-only catalog/orders |
+| `developer` | `DASHBOARD_DEVELOPER_EMAILS` | **Sandbox only** (ignores `SQUARE_ENVIRONMENT`) | Developer settings; cannot touch production Square data |
 
-Implement four roles with least-privilege permissions:
+The `developer` role is environment-gated: regardless of `SQUARE_ENVIRONMENT`, a developer session always targets the Square sandbox API. This means developers can test against mock/sandbox Square data without any risk to production — the isolation is enforced by the API endpoint, not just route permissions.
 
-| Role | Permissions | Rationale |
-|------|-------------|-----------|
-| `visitor` | Read-only access to catalog, orders, loyalty data | Public-facing staff or stakeholders who need visibility but no mutation rights |
-| `owner` | Full product line management: create, update, delete catalog items; manage all product details and prices | Business owner with complete catalog control |
-| `staff` | Stock level management only: update inventory/availability; cannot edit product names, descriptions, or prices | Front-of-house staff who need to mark items sold out or available |
-| `developer` | Developer-related settings only: environment config, webhook management, deployment settings, logs | Technical operators who should not touch catalog or order data |
-
-### 10.3 Implementation Plan
+### 10.2 Implementation
 
 1. Extend `SessionPayload` JWT claims to include `roles: string[]`
-2. Build `lib/auth/rbac.ts` with permission checks:
-   ```
-   hasRole(roles: string[], required: string[]): boolean
-   canEditCatalog(roles): boolean
-   canEditStock(roles): boolean
-   canManageSettings(roles): boolean
-   ```
-3. Update `/api/admin/catalog` routes: require `owner` or `staff` (with stock-only checks)
-4. Update `/api/square/webhook`, `/api/twilio/sms`, `/api/auth/*` routes: require appropriate role or session
-5. Add role assignment mechanism: `DASHBOARD_ADMIN_ROLES` env var mapping or future per-user credential store
-6. Enforce role checks server-side on every admin mutation route; never trust client-side role flags
+2. Build `lib/auth/rbac.ts` with permission checks
+3. Build `lib/square/config.ts` helpers:
+   - `getSquareEnvironmentForRole(roles)` → returns `"sandbox"` for developers
+   - `getSquareHeadersForRole(roles)` → uses `SQUARE_SANDBOX_ACCESS_TOKEN` for developers
+   - `getSquareApiBaseForRole(roles)` → sandbox URL for developers
+4. Role resolution in MFA challenge step (or legacy login):
+   - `DASHBOARD_DEVELOPER_EMAILS` checked first → `developer` role, skip Square Team lookup
+   - `DASHBOARD_ADMIN_EMAIL` looked up via `teamApi.searchTeamMembers`
+   - `isOwner` → `owner`, non-owner → `staff`, not found → `visitor`
+5. Store resolved role alongside OTP in MFA store; retrieve at verify step
+6. Future: migrate Square API call sites from `getSquareApiBase()` / `getSquareHeaders()` to `getSquareApiBaseForRole(session.roles)` / `getSquareHeadersForRole(session.roles)` to enforce sandbox isolation per-request
+
+### 10.3 Fail-Closed Behavior
+
+**Critical: If Square API is unreachable and `DASHBOARD_ADMIN_EMAIL` is configured, authentication fails closed (503) rather than silently granting a role.**
+
+| Scenario | Behavior |
+|----------|----------|
+| `DASHBOARD_ADMIN_EMAIL` unset | Defaults to `owner` (backward-compatible, no Square dependency) |
+| `DASHBOARD_ADMIN_EMAIL` set, Square reachable | Role derived from Square team membership |
+| `DASHBOARD_ADMIN_EMAIL` set, Square unreachable | **503 — Authentication service temporarily unavailable** |
 
 ### 10.4 Security Constraints
 
 - All role checks happen server-side; client role display is cosmetic only
-- `staff` role must be blocked from fields outside stock/availability (name, description, price)
-- `developer` role must be blocked from catalog mutations and order data
-- `visitor` role must be blocked from all POST/PUT/DELETE routes
-- Generic error messages for authorization failures: "Insufficient permissions" — do not reveal role names or required permissions
-- Log all authorization failures with role, route, timestamp, and IP for audit
-
-### 10.5 Immediate Operational Controls
-
-- Unique credentials per human operator (move away from single shared `DASHBOARD_PASSWORD`)
-- Session access logging: record operator role, timestamp, IP
-- Periodic access review cadence: quarterly review of role assignments
+- `staff` role blocked from name, description, price changes — only `availableOnline` permitted
+- `developer` role blocked from catalog mutations and order data
+- Generic error messages: "Insufficient permissions" — do not reveal role names
+- `squareRequired` flag stored with MFA code tracks whether role came from Square (for audit)
 
 ---
 
@@ -229,11 +230,15 @@ Implement a two-step login flow using the existing Twilio SMS client and JWT ses
    - Show countdown timer for code expiry
    - Allow back-navigation to re-enter password
 
-4. Add required env vars:
-   ```
-   DASHBOARD_ADMIN_PHONE=+1234567890   # Twilio-compatible, validated via requireEnv
-   MFA_CODE_TTL=300                    # seconds, default 5 min
-   ```
+ 4. Add required env vars:
+    ```
+    DASHBOARD_ADMIN_PHONE=+1234567890   # Twilio-compatible, validated via requireEnv
+    MFA_CODE_TTL=300                    # seconds, default 5 min
+    DASHBOARD_ADMIN_EMAIL=              # Optional: enables Square Team RBAC lookup
+    DASHBOARD_DEVELOPER_EMAILS=         # Optional: comma-separated emails for developer role
+    SQUARE_SANDBOX_ACCESS_TOKEN=        # Optional: developer sessions use this token + sandbox URL
+                                        # Leave unset to fall back to SQUARE_ACCESS_TOKEN for sandbox calls
+    ```
 
 5. Security constraints:
    - OTP stored in memory only (not in cookies, localStorage, or JWT)
@@ -245,6 +250,14 @@ Implement a two-step login flow using the existing Twilio SMS client and JWT ses
 **Effort estimate:** ~2–3 hours total. No new dependencies. Leverages existing Twilio client, JWT session, and React form patterns.
 
 **Phase 8 upgrade path:** After SMS MFA is deployed, add TOTP/WebAuthn as a secondary factor or replacement for operators who prefer authenticator apps over SMS. The two-step challenge/verify route pattern remains the same; only the delivery channel changes.
+
+### 10.6 Future: Per-Role Square Client Switching
+
+The role-aware helpers in `lib/square/config.ts` (`getSquareApiBaseForRole`, `getSquareHeadersForRole`) are available but not yet wired into all Square API call sites. To complete sandbox isolation for developers:
+
+- Migrate `lib/square/catalog.ts`, `lib/square/orders.ts`, `lib/square/payments.ts`, `lib/square/loyalty.ts` to accept `roles` parameter
+- Pass `session.roles` from each route handler
+- This ensures a developer session can never accidentally write to production Square data
 
 ---
 

@@ -9,6 +9,12 @@ export function requireEnv(name: string): string {
   return value
 }
 
+export function requireEnvListOptional(name: string, defaultValue: string[] = []): string[] {
+  const value = process.env[name]
+  if (!value) return defaultValue
+  return value.split(",").map((s) => s.trim()).filter(Boolean)
+}
+
 export function requireEnvInt(name: string, defaultValue: number): number {
   const raw = process.env[name]
   if (raw === undefined || raw === "") {

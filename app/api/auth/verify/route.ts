@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server"
 import { createSession } from "@/lib/auth/session"
-import { verifyMfaCode, clearMfaCode, getMfaKey } from "@/lib/auth/mfa"
+import { verifyMfaCode, clearMfaCode, getMfaKey, getMfaRole } from "@/lib/auth/mfa"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
 
 export async function POST(request: NextRequest) {
@@ -24,8 +24,9 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "Invalid code" }, { status: 401 })
   }
 
+  const role = getMfaRole(key) ?? "owner"
   clearMfaCode(key)
-  await createSession()
+  await createSession([role])
 
   return Response.json({ success: true })
 }

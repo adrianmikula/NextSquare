@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server"
-import { requireEnv } from "@/lib/env"
+import { requireEnv, requireEnvListOptional } from "@/lib/env"
 import { requireEnvInt } from "@/lib/env"
 import { storeMfaCode, getMfaKey } from "@/lib/auth/mfa"
 import { sendSms } from "@/lib/twilio/client"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
+import { Client, Environment } from "square/legacy"
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown"
@@ -25,7 +26,53 @@ export async function POST(request: NextRequest) {
   const ttl = requireEnvInt("MFA_CODE_TTL", 300)
   const key = getMfaKey(ip)
 
-  storeMfaCode(key, code, ip, ttl)
+  const adminEmail = process.env.DASHBOARD_ADMIN_EMAIL?.toLowerCase().trim()
+  const developerEmails = requireEnvListOptional("DASHBOARD_DEVELOPER_EMAILS")
+
+  let role: string
+  let squareRequired = false
+
+  if (adminEmail && developerEmails.includes(adminEmail)) {
+    role = "developer"
+  } else if (adminEmail) {
+    squareRequired = true
+    try {
+      const { teamApi } = new Client({
+        accessToken: requireEnv("SQUARE_ACCESS_TOKEN"),
+        environment:
+          requireEnv("SQUARE_ENVIRONMENT") === "production"
+            ? Environment.Production
+            : Environment.Sandbox,
+      })
+
+      const { result } = await teamApi.searchTeamMembers({
+        query: {
+          filter: { status: "ACTIVE" },
+        },
+      })
+
+      const members = result.teamMembers ?? []
+      const member = members.find(
+        (m) => m.emailAddress?.toLowerCase() === adminEmail
+      )
+
+      if (member) {
+        role = member.isOwner ? "owner" : "staff"
+      } else {
+        role = "visitor"
+      }
+    } catch (error) {
+      console.error("[rbac] Square team lookup failed:", error)
+      return Response.json(
+        { error: "Authentication service temporarily unavailable. Please try again later." },
+        { status: 503 }
+      )
+    }
+  } else {
+    role = "owner"
+  }
+
+  storeMfaCode(key, code, ip, ttl, role, squareRequired)
 
   try {
     await sendSms(
