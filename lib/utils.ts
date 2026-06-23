@@ -22,3 +22,13 @@ export function formatPhone(phone: string): string {
   }
   return phone
 }
+
+export function toPrice(
+  money: { amount: bigint; currency: string } | undefined,
+  fallbackCurrency = "AUD"
+): { amount: number; currency: string } {
+  return {
+    amount: Number(money?.amount ?? 0),
+    currency: money?.currency ?? fallbackCurrency,
+  }
+}

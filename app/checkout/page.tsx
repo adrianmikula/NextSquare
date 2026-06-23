@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { useCartStore, useCartSubtotal } from "@/lib/store/cart"
+import { useCartStore, useCartTotalWithFee } from "@/lib/store/cart"
 import { DeliveryPickupToggle } from "@/components/cart/DeliveryPickupToggle"
 import { OrderSummary } from "@/components/checkout/OrderSummary"
 import { PickupInfo } from "@/components/checkout/PickupInfo"
@@ -10,6 +10,7 @@ import { DeliveryInfo } from "@/components/checkout/DeliveryInfo"
 import { SquarePaymentForm } from "@/components/checkout/SquarePaymentForm"
 import { SquareFallback } from "@/components/checkout/SquareFallback"
 import { useToastContext } from "@/hooks/useToast"
+import { EmptyCart } from "@/components/cart/EmptyCart"
 import type { DeliveryAddress, CustomerInfo } from "@/types/order"
 
 const defaultAddress: DeliveryAddress = {
@@ -26,15 +27,13 @@ export default function CheckoutPage() {
   const fulfillmentType = useCartStore((s) => s.fulfillmentType)
   const setFulfillmentType = useCartStore((s) => s.setFulfillmentType)
   const clearCart = useCartStore((s) => s.clearCart)
-  const subtotal = useCartSubtotal()
+  const totalWithFee = useCartTotalWithFee()
   const { addToast } = useToastContext()
 
   const [customerName, setCustomerName] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>(defaultAddress)
   const [deliveryNotes, setDeliveryNotes] = useState("")
-
-  const totalWithFee = subtotal + Math.round(subtotal * 0.05)
 
   const handlePaymentSubmit = useCallback(
     async (nonce: string) => {
@@ -123,14 +122,7 @@ export default function CheckoutPage() {
   )
 
   if (items.length === 0) {
-    return (
-      <div className="bg-stone-50 py-20 text-center">
-        <p className="text-lg text-stone-500">Your cart is empty.</p>
-        <a href="/menu" className="mt-4 inline-block text-sm font-medium text-amber-700 hover:underline">
-          Browse our menu
-        </a>
-      </div>
-    )
+    return <EmptyCart />
   }
 
   return (

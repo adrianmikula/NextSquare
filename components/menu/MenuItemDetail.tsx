@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import type { SquareCatalogItem, SquareModifierList } from "@/types/square"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, toPrice } from "@/lib/utils"
 import { ModifierDialog } from "./ModifierDialog"
 import type { ModifierSelection } from "@/types/cart"
 
@@ -18,16 +18,31 @@ export function MenuItemDetail({
   onAddToCart,
 }: MenuItemDetailProps) {
   const [quantity, setQuantity] = useState(1)
-  const modifierLists = (item.itemData?.modifiers ?? []) as SquareModifierList[]
+  const modifierLists = useMemo(
+    () => (item.itemData?.modifiers ?? []) as SquareModifierList[],
+    [item]
+  )
+
   const [selectedModifiers, setSelectedModifiers] = useState<Record<string, ModifierSelection[]>>({})
+
   const variation = item.itemData?.variations?.[0]?.itemVariationData
-  const price = variation?.priceMoney ? Number(variation.priceMoney.amount) : 0
-  const currency = variation?.priceMoney?.currency ?? "AUD"
+  const price = toPrice(variation?.priceMoney).amount
+  const currency = toPrice(variation?.priceMoney).currency
   const name = item.itemData?.name ?? "Untitled"
+
+  const modifierPriceMap = useMemo(() => {
+    const map: Record<string, number> = {}
+    modifierLists.forEach((list) => {
+      list.modifierListData?.modifiers?.forEach((mod) => {
+        map[mod.id] = toPrice(mod.modifierData?.priceMoney).amount
+      })
+    })
+    return map
+  }, [modifierLists])
 
   const modifierTotal = Object.values(selectedModifiers).reduce(
     (sum, mods) =>
-      sum + mods.reduce((mSum, m) => mSum + (m.priceMoney?.amount ?? 0), 0),
+      sum + mods.reduce((mSum, m) => mSum + (modifierPriceMap[m.id] ?? 0), 0),
     0
   )
 
@@ -35,7 +50,12 @@ export function MenuItemDetail({
 
   const handleAdd = () => {
     const allModifiers = Object.values(selectedModifiers).flat()
-    onAddToCart(allModifiers, quantity)
+    const modifiersWithPrices: ModifierSelection[] = allModifiers.map((m) => ({
+      id: m.id,
+      name: m.name,
+      priceMoney: modifierPriceMap[m.id] ? { amount: modifierPriceMap[m.id], currency } : undefined,
+    }))
+    onAddToCart(modifiersWithPrices, quantity)
     onClose()
   }
 

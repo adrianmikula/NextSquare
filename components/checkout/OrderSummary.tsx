@@ -1,10 +1,12 @@
 "use client"
 
-import { useCartStore } from "@/lib/store/cart"
+import { useCartStore, useCartSubtotal, useCartFee } from "@/lib/store/cart"
 import { formatCurrency } from "@/lib/utils"
 
 export function OrderSummary() {
   const items = useCartStore((s) => s.items)
+  const subtotal = useCartSubtotal()
+  const fee = useCartFee()
 
   return (
     <div className="rounded-xl border border-stone-200 bg-white p-6">
@@ -37,6 +39,20 @@ export function OrderSummary() {
             </div>
           )
         })}
+      </div>
+      <div className="mt-4 space-y-2 border-t border-stone-100 pt-4 text-sm">
+        <div className="flex justify-between text-stone-600">
+          <span>Subtotal</span>
+          <span>{formatCurrency(subtotal)}</span>
+        </div>
+        <div className="flex justify-between text-stone-600">
+          <span>Service fee (5%)</span>
+          <span>{formatCurrency(fee)}</span>
+        </div>
+        <div className="flex justify-between text-base font-semibold text-stone-900">
+          <span>Total</span>
+          <span>{formatCurrency(subtotal + fee)}</span>
+        </div>
       </div>
     </div>
   )

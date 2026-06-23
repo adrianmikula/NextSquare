@@ -20,13 +20,15 @@ vi.mock("crypto", () => ({
 const mockRetrieveCatalogObject = vi.fn()
 const mockUpsertCatalogObject = vi.fn()
 
+class MockClient {
+  catalogApi = {
+    retrieveCatalogObject: mockRetrieveCatalogObject,
+    upsertCatalogObject: mockUpsertCatalogObject,
+  }
+}
+
 vi.mock("square/legacy", () => ({
-  Client: vi.fn(() => ({
-    catalogApi: {
-      retrieveCatalogObject: mockRetrieveCatalogObject,
-      upsertCatalogObject: mockUpsertCatalogObject,
-    },
-  })),
+  Client: MockClient,
   Environment: { Production: "production", Sandbox: "sandbox" },
 }))
 

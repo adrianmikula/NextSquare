@@ -1,5 +1,6 @@
-import { describe, expect, it, vi, beforeEach } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
+import { Suspense } from "react"
 
 vi.mock("@/components/order-button", () => ({
   OrderButton: () => <div data-testid="order-button" />,
@@ -10,12 +11,16 @@ vi.mock("@/components/cart/CartButton", () => ({
 }))
 
 vi.mock("@/components/layout/mobile-menu", () => ({
-  MobileMenuClient: () => <div data-testid="mobile-menu-client" />,
+  MobileMenuClient: () => <div data-testid="mobile-menu-client">Mobile Menu</div>,
 }))
 
 async function renderHeader() {
   const { Header } = await import("@/components/layout/header")
-  return render(<Header />)
+  return render(
+    <Suspense fallback={<div>Loading navigation...</div>}>
+      <Header />
+    </Suspense>
+  )
 }
 
 describe("Header", () => {
@@ -35,7 +40,8 @@ describe("Header", () => {
   it("renders order and cart buttons", async () => {
     await renderHeader()
     expect(screen.getByTestId("order-button")).toBeInTheDocument()
-    expect(screen.getByTestId("cart-button")).toBeInTheDocument()
+    const cartButtons = screen.getAllByTestId("cart-button")
+    expect(cartButtons.length).toBeGreaterThanOrEqual(1)
   })
 
   it("renders mobile menu", async () => {

@@ -80,5 +80,10 @@ export async function PATCH(
     object: catalogObject,
   })
 
-  return Response.json(result.catalogObject)
+  return new Response(
+    JSON.stringify(result.catalogObject, (_key, value) =>
+      typeof value === "bigint" ? Number(value) : value
+    ),
+    { headers: { "Content-Type": "application/json" } }
+  )
 }

@@ -1,12 +1,11 @@
 "use client"
 
 import { ShoppingBag } from "lucide-react"
-import { useCartItemCount } from "@/lib/store/cart"
-import { useCartContext } from "./CartProvider"
+import { useCartItemCount, useCartStore } from "@/lib/store/cart"
 
 export function CartButton() {
   const count = useCartItemCount()
-  const { openCart } = useCartContext()
+  const openCart = useCartStore((s) => s.openCart)
 
   return (
     <button

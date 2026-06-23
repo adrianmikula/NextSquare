@@ -1,20 +1,15 @@
 import { describe, expect, it, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { CartButton } from "@/components/cart/CartButton"
-import { CartProvider } from "@/components/cart/CartProvider"
-
-function renderWithProvider(element: React.ReactElement) {
-  return render(<CartProvider>{element}</CartProvider>)
-}
 
 beforeEach(async () => {
   const { useCartStore } = await import("@/lib/store/cart")
-  useCartStore.setState({ items: [], fulfillmentType: "PICKUP" })
+  useCartStore.setState({ items: [], fulfillmentType: "PICKUP", drawerOpen: false })
 })
 
 describe("CartButton", () => {
   it("renders without badge when cart is empty", async () => {
-    renderWithProvider(<CartButton />)
+    render(<CartButton />)
     const button = screen.getByRole("button", { name: /cart/i })
     expect(button).toBeInTheDocument()
   })
@@ -28,7 +23,7 @@ describe("CartButton", () => {
       quantity: 2,
       modifiers: [],
     })
-    renderWithProvider(<CartButton />)
+    render(<CartButton />)
     expect(screen.getByText("2")).toBeInTheDocument()
   })
 
@@ -45,7 +40,7 @@ describe("CartButton", () => {
       })
     }
 
-    renderWithProvider(<CartButton />)
+    render(<CartButton />)
     expect(screen.getByText("9+")).toBeInTheDocument()
   })
 })

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, act } from "@testing-library/react"
+import { Suspense } from "react"
 
 const mockUseOrderStatus = vi.fn()
 
@@ -17,7 +18,13 @@ vi.mock("@/components/loyalty/LoyaltyBadge", () => ({
 
 async function renderOrderPage(orderId: string) {
   const OrderStatusPage = (await import("@/app/order/[orderId]/page")).default
-  return render(<OrderStatusPage params={Promise.resolve({ orderId })} />)
+  return await act(async () => {
+    return render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <OrderStatusPage params={Promise.resolve({ orderId })} />
+      </Suspense>
+    )
+  })
 }
 
 beforeEach(() => {

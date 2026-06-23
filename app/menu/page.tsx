@@ -4,10 +4,28 @@ import { useState, useCallback } from "react"
 import { useMenu } from "@/hooks/useMenu"
 import { useCartStore } from "@/lib/store/cart"
 import type { SquareCatalogItem } from "@/types/square"
-import type { ModifierSelection } from "@/types/cart"
+import type { ModifierSelection, CartItem } from "@/types/cart"
 import { CategoryNav } from "@/components/menu/CategoryNav"
 import { MenuGrid } from "@/components/menu/MenuGrid"
 import { MenuItemDetail } from "@/components/menu/MenuItemDetail"
+import { toPrice } from "@/lib/utils"
+
+function buildCartItem(
+  item: SquareCatalogItem,
+  modifiers: ModifierSelection[],
+  quantity: number
+): Omit<CartItem, "id"> {
+  const variation = item.itemData?.variations?.[0]?.itemVariationData
+  const priceMoney = toPrice(variation?.priceMoney)
+  return {
+    catalogObjectId: item.id,
+    name: item.itemData?.name ?? "Untitled",
+    priceMoney,
+    quantity,
+    modifiers,
+    imageUrl: item.imageUrl,
+  }
+}
 
 export default function MenuPage() {
   const { items, categories, isLoading } = useMenu()
@@ -20,53 +38,20 @@ export default function MenuPage() {
     : items
 
   const handleAddItem = useCallback((item: SquareCatalogItem) => {
-    const variation = item.itemData?.variations?.[0]?.itemVariationData
-    if (!variation) return
-
-    const priceMoney = variation.priceMoney
-      ? {
-          amount: Number(variation.priceMoney.amount),
-          currency: variation.priceMoney.currency,
-        }
-      : { amount: 0, currency: "AUD" }
-
     const hasModifiers =
       (item.itemData?.modifiers ?? []).length > 0
 
     if (hasModifiers) {
       setSelectedItem(item)
     } else {
-      addItem({
-        catalogObjectId: item.id,
-        name: item.itemData?.name ?? "Untitled",
-        priceMoney: priceMoney,
-        quantity: 1,
-        modifiers: [],
-        imageUrl: item.imageUrl,
-      })
+      addItem(buildCartItem(item, [], 1))
     }
   }, [addItem])
 
   const handleAddToCart = useCallback(
     (modifiers: ModifierSelection[], quantity: number) => {
       if (!selectedItem) return
-
-      const variation = selectedItem.itemData?.variations?.[0]?.itemVariationData
-      const priceMoney = variation?.priceMoney
-        ? {
-            amount: Number(variation.priceMoney.amount),
-            currency: variation.priceMoney.currency,
-          }
-        : { amount: 0, currency: "AUD" }
-
-      addItem({
-        catalogObjectId: selectedItem.id,
-        name: selectedItem.itemData?.name ?? "Untitled",
-        priceMoney,
-        quantity,
-        modifiers,
-        imageUrl: selectedItem.imageUrl,
-      })
+      addItem(buildCartItem(selectedItem, modifiers, quantity))
     },
     [selectedItem, addItem]
   )

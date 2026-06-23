@@ -15,13 +15,15 @@ vi.mock("@/lib/env", () => ({
 const mockRetrieveCatalogObject = vi.fn()
 const mockSearchCatalogItems = vi.fn()
 
+class MockClient {
+  catalogApi = {
+    retrieveCatalogObject: mockRetrieveCatalogObject,
+    searchCatalogItems: mockSearchCatalogItems,
+  }
+}
+
 vi.mock("square/legacy", () => ({
-  Client: vi.fn(() => ({
-    catalogApi: {
-      retrieveCatalogObject: mockRetrieveCatalogObject,
-      searchCatalogItems: mockSearchCatalogItems,
-    },
-  })),
+  Client: MockClient,
   Environment: { Production: "production", Sandbox: "sandbox" },
 }))
 

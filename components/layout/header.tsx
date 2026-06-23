@@ -1,6 +1,8 @@
 import Link from "next/link"
 import { OrderButton } from "@/components/order-button"
 import { CartButton } from "@/components/cart/CartButton"
+import { MobileMenuClient } from "./mobile-menu"
+import { Suspense } from "react"
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -34,14 +36,11 @@ export function Header() {
           <OrderButton />
         </nav>
 
-        <MobileMenu />
+        <Suspense fallback={<div className="flex items-center md:hidden"><CartButton /></div>}>
+          <MobileMenuClient />
+        </Suspense>
       </div>
     </header>
   )
 }
 
-async function MobileMenu() {
-  const { MobileMenuClient } = await import("./mobile-menu")
-
-  return <MobileMenuClient />
-}

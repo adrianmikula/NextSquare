@@ -2,7 +2,7 @@
 
 import type { SquareModifierList, SquareModifier } from "@/types/square"
 import type { ModifierSelection } from "@/types/cart"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, toPrice } from "@/lib/utils"
 
 interface ModifierDialogProps {
   modifierList: SquareModifierList
@@ -18,24 +18,14 @@ export function ModifierDialog({
   const isSingle = modifierList.modifierListData?.selectionType === "SINGLE"
 
   const handleToggle = (modifier: SquareModifier) => {
-    const price = modifier.modifierData?.priceMoney
-      ? {
-          amount: Number(modifier.modifierData.priceMoney.amount),
-          currency: modifier.modifierData.priceMoney.currency,
-        }
-      : undefined
-
     if (isSingle) {
-      onSelect([{ id: modifier.id, name: modifier.modifierData?.name ?? "", priceMoney: price }])
+      onSelect([{ id: modifier.id, name: modifier.modifierData?.name ?? "" }])
     } else {
       const exists = selected.find((m) => m.id === modifier.id)
       if (exists) {
         onSelect(selected.filter((m) => m.id !== modifier.id))
       } else {
-        onSelect([
-          ...selected,
-          { id: modifier.id, name: modifier.modifierData?.name ?? "", priceMoney: price },
-        ])
+        onSelect([...selected, { id: modifier.id, name: modifier.modifierData?.name ?? "" }])
       }
     }
   }
@@ -50,9 +40,7 @@ export function ModifierDialog({
       <div className="space-y-1">
         {modifiers.map((modifier) => {
           const isSelected = selected.some((m) => m.id === modifier.id)
-          const price = modifier.modifierData?.priceMoney
-            ? Number(modifier.modifierData.priceMoney.amount)
-            : 0
+          const price = toPrice(modifier.modifierData?.priceMoney).amount
 
           return (
             <button

@@ -19,8 +19,13 @@ export async function GET(request: NextRequest) {
   const id = searchParams.get("id")
 
   if (id) {
-    const { result } = await catalogApi.retrieveCatalogObject(id, true)
-    return Response.json(result.object)
+  const { result } = await catalogApi.retrieveCatalogObject(id, true)
+  return new Response(
+    JSON.stringify(result.object, (_key, value) =>
+      typeof value === "bigint" ? Number(value) : value
+    ),
+    { headers: { "Content-Type": "application/json" } }
+  )
   }
 
   const { result } = await catalogApi.searchCatalogItems({
@@ -28,8 +33,14 @@ export async function GET(request: NextRequest) {
     sortOrder: "ASC",
   })
 
-  return Response.json({
-    items: result.items ?? [],
-    count: result.items?.length ?? 0,
-  })
+  return new Response(
+    JSON.stringify(
+      {
+        items: result.items ?? [],
+        count: result.items?.length ?? 0,
+      },
+      (_key, value) => (typeof value === "bigint" ? Number(value) : value)
+    ),
+    { headers: { "Content-Type": "application/json" } }
+  )
 }

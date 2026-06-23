@@ -1,7 +1,7 @@
 "use client"
 
 import type { SquareCatalogItem } from "@/types/square"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, toPrice } from "@/lib/utils"
 
 interface MenuItemCardProps {
   item: SquareCatalogItem
@@ -9,11 +9,9 @@ interface MenuItemCardProps {
 }
 
 export function MenuItemCard({ item, onAdd }: MenuItemCardProps) {
-  const variation = item.itemData?.variations?.[0]?.itemVariationData
-  const price = variation?.priceMoney
-    ? Number(variation.priceMoney.amount)
-    : 0
-  const currency = variation?.priceMoney?.currency ?? "AUD"
+  const { amount: price, currency } = toPrice(
+    item.itemData?.variations?.[0]?.itemVariationData?.priceMoney
+  )
   const name = item.itemData?.name ?? "Untitled"
   const description = item.itemData?.description
 

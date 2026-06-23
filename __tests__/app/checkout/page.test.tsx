@@ -18,7 +18,9 @@ const mockItems = [
 const mockAddItem = vi.fn()
 const mockRemoveItem = vi.fn()
 const mockUpdateQuantity = vi.fn()
-const mockSetFulfillmentType = vi.fn()
+const mockSetFulfillmentType = vi.fn((type: string) => {
+  cartStoreState.fulfillmentType = type
+})
 const mockClearCart = vi.fn()
 
 const cartStoreState = {
@@ -37,6 +39,7 @@ vi.mock("@/lib/store/cart", () => ({
     return cartStoreState
   },
   useCartSubtotal: () => 550,
+  useCartTotalWithFee: () => 578,
 }))
 
 vi.mock("@/components/cart/DeliveryPickupToggle", () => ({
@@ -72,7 +75,7 @@ vi.mock("@/components/checkout/DeliveryInfo", () => ({
 }))
 
 vi.mock("@/components/checkout/SquarePaymentForm", () => ({
-  default: ({ onSubmit }: any) => (
+  SquarePaymentForm: ({ onSubmit }: any) => (
     <div data-testid="payment-form">
       <button onClick={() => onSubmit("test-nonce")}>Pay</button>
     </div>
@@ -80,7 +83,7 @@ vi.mock("@/components/checkout/SquarePaymentForm", () => ({
 }))
 
 vi.mock("@/components/checkout/SquareFallback", () => ({
-  default: () => <div data-testid="square-fallback" />,
+  SquareFallback: () => <div data-testid="square-fallback" />,
 }))
 
 let mockFetch: any
@@ -102,7 +105,7 @@ describe("CheckoutPage", () => {
   it("shows empty cart message when no items", async () => {
     cartStoreState.items = []
     const { container } = await renderCheckout()
-    expect(screen.getByText("Your cart is empty.")).toBeInTheDocument()
+    expect(screen.getByText("Your cart is empty")).toBeInTheDocument()
     expect(screen.getByText("Browse our menu")).toBeInTheDocument()
   })
 

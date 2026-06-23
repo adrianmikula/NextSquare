@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({
 import { useSearchParams } from "next/navigation"
 
 vi.mock("@/components/checkout/OrderConfirmed", () => ({
-  default: ({ orderId, pointsEarned, totalBalance }: any) => (
+  OrderConfirmed: ({ orderId, pointsEarned, totalBalance }: any) => (
     <div data-testid="order-confirmed">
       <span data-testid="confirmed-order-id">{orderId}</span>
       <span data-testid="confirmed-points">{pointsEarned ?? "undefined"}</span>

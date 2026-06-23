@@ -3,7 +3,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
-import { CartProvider } from "@/components/cart/CartProvider"
+import { CartDrawer } from "@/components/cart/CartDrawer"
 import { ToastProvider } from "@/components/ui/ToastProvider"
 import { DemoBadge } from "@/components/demo/DemoBadge"
 import { ToastContainer } from "@/components/ui/toast"
@@ -37,17 +37,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <CartProvider>
-          <ToastProvider>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <ToastContainer />
-            <DemoBadge />
-          </ToastProvider>
-        </CartProvider>
+        <ToastProvider>
+          <div className="flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+          <ToastContainer />
+          <DemoBadge />
+          <CartDrawer />
+        </ToastProvider>
       </body>
     </html>
   )

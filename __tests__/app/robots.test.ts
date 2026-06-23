@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, afterEach } from "vitest"
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 
 beforeEach(() => {
   vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://cafetemplate.com")

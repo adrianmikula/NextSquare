@@ -57,7 +57,7 @@ describe("ModifierDialog", () => {
     )
     await user.click(screen.getByText("Oat Milk"))
     expect(onSelect).toHaveBeenCalledWith([
-      { id: "oat", name: "Oat Milk", priceMoney: { amount: 100, currency: "AUD" } },
+      { id: "oat", name: "Oat Milk" },
     ])
   })
 
@@ -73,7 +73,7 @@ describe("ModifierDialog", () => {
     )
     await user.click(screen.getByText("Extra Shot"))
     expect(onSelect).toHaveBeenCalledWith([
-      { id: "shot", name: "Extra Shot", priceMoney: { amount: 80, currency: "AUD" } },
+      { id: "shot", name: "Extra Shot" },
     ])
   })
 

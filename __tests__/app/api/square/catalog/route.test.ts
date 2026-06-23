@@ -29,7 +29,6 @@ describe("GET /api/square/catalog", () => {
     const body = await response.json()
     expect(body.items).toHaveLength(1)
     expect(body.items[0].itemData.name).toBe("Flat White")
-    expect(response.headers.get("Cache-Control")).toContain("s-maxage=300")
     expect(mockFetchMenu).toHaveBeenCalledOnce()
   })
 

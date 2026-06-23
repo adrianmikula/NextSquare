@@ -14,20 +14,35 @@ interface CartActions {
   updateQuantity: (id: string, qty: number) => void
   setFulfillmentType: (type: FulfillmentType) => void
   clearCart: () => void
+  openCart: () => void
+  closeCart: () => void
 }
 
 interface CartState {
   items: CartItem[]
   fulfillmentType: FulfillmentType
+  drawerOpen: boolean
 }
 
 type CartStore = CartState & CartActions
+
+function computeSubtotal(items: CartItem[]): number {
+  return items.reduce((sum, i) => {
+    const itemTotal = i.priceMoney.amount * i.quantity
+    const modifierTotal = i.modifiers.reduce(
+      (mSum, m) => mSum + (m.priceMoney?.amount ?? 0) * i.quantity,
+      0
+    )
+    return sum + itemTotal + modifierTotal
+  }, 0)
+}
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set) => ({
       items: [],
       fulfillmentType: "PICKUP",
+      drawerOpen: false,
 
       addItem: (item) =>
         set((state) => {
@@ -71,6 +86,9 @@ export const useCartStore = create<CartStore>()(
       setFulfillmentType: (type) => set({ fulfillmentType: type }),
 
       clearCart: () => set({ items: [] }),
+
+      openCart: () => set({ drawerOpen: true }),
+      closeCart: () => set({ drawerOpen: false }),
     }),
     { name: "cafe-cart" }
   )
@@ -81,14 +99,16 @@ export function useCartItemCount(): number {
 }
 
 export function useCartSubtotal(): number {
-  return useCartStore((state) =>
-    state.items.reduce((sum, i) => {
-      const itemTotal = i.priceMoney.amount * i.quantity
-      const modifierTotal = i.modifiers.reduce(
-        (mSum, m) => mSum + (m.priceMoney?.amount ?? 0) * i.quantity,
-        0
-      )
-      return sum + itemTotal + modifierTotal
-    }, 0)
-  )
+  return useCartStore((state) => computeSubtotal(state.items))
+}
+
+export function useCartFee(): number {
+  return useCartStore((state) => Math.round(computeSubtotal(state.items) * 0.05))
+}
+
+export function useCartTotalWithFee(): number {
+  return useCartStore((state) => {
+    const subtotal = computeSubtotal(state.items)
+    return subtotal + Math.round(subtotal * 0.05)
+  })
 }

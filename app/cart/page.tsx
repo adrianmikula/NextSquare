@@ -5,6 +5,8 @@ import { useCartStore, useCartItemCount, useCartSubtotal } from "@/lib/store/car
 import { CartItem } from "@/components/cart/CartItem"
 import { CartSummary } from "@/components/cart/CartSummary"
 import { DeliveryPickupToggle } from "@/components/cart/DeliveryPickupToggle"
+import { EmptyCart } from "@/components/cart/EmptyCart"
+
 export default function CartPage() {
   const items = useCartStore((s) => s.items)
   const fulfillmentType = useCartStore((s) => s.fulfillmentType)
@@ -28,28 +30,7 @@ export default function CartPage() {
         </div>
 
         {items.length === 0 ? (
-          <div className="rounded-xl border border-stone-200 bg-white py-20 text-center">
-            <svg
-              className="mx-auto h-16 w-16 text-stone-300"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1}
-                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-              />
-            </svg>
-            <p className="mt-4 text-lg text-stone-500">Your cart is empty</p>
-            <Link
-              href="/menu"
-              className="mt-4 inline-block text-sm font-medium text-amber-700 hover:underline"
-            >
-              Browse our menu
-            </Link>
-          </div>
+          <EmptyCart />
         ) : (
           <div className="space-y-6">
             <div className="rounded-xl border border-stone-200 bg-white p-4">

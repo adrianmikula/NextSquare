@@ -119,6 +119,6 @@ describe("MenuPage", () => {
     await renderMenu()
     const addButtons = screen.getAllByText("Add")
     await userEvent.click(addButtons[1])
-    expect(screen.getByText("Latte")).toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: "Latte", level: 2 })).toBeInTheDocument()
   })
 })
