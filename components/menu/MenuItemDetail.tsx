@@ -53,8 +53,16 @@ export function MenuItemDetail({
     const modifiersWithPrices: ModifierSelection[] = allModifiers.map((m) => ({
       id: m.id,
       name: m.name,
-      priceMoney: modifierPriceMap[m.id] ? { amount: modifierPriceMap[m.id], currency } : undefined,
+      priceMoney: modifierPriceMap[m.id] !== undefined ? { amount: modifierPriceMap[m.id], currency } : undefined,
     }))
+    console.log("=== DIALOG ADD CART DEBUG ===", {
+      itemId: item.id,
+      itemName: name,
+      selectedModifiersCount: allModifiers.length,
+      selectedModifiers: allModifiers.map(m => ({ id: m.id, name: m.name })),
+      modifiersWithPrices,
+      quantity,
+    })
     onAddToCart(modifiersWithPrices, quantity)
     onClose()
   }

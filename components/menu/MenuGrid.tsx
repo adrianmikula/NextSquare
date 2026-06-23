@@ -5,7 +5,7 @@ import { MenuItemCard } from "./MenuItemCard"
 
 interface MenuGridProps {
   items: SquareCatalogItem[]
-  onAddItem: (item: SquareCatalogItem) => void
+  onAddItem: (item: SquareCatalogItem, e: React.MouseEvent) => void
 }
 
 export function MenuGrid({ items, onAddItem }: MenuGridProps) {
@@ -23,7 +23,7 @@ export function MenuGrid({ items, onAddItem }: MenuGridProps) {
         <MenuItemCard
           key={item.id}
           item={item}
-          onAdd={() => onAddItem(item)}
+          onAdd={(e) => onAddItem(item, e)}
         />
       ))}
     </div>

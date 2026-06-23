@@ -37,13 +37,29 @@ export default function MenuPage() {
     ? items.filter((item) => item.itemData?.categoryId === activeCategory)
     : items
 
-  const handleAddItem = useCallback((item: SquareCatalogItem) => {
-    const hasModifiers =
-      (item.itemData?.modifiers ?? []).length > 0
+  const handleAddItem = useCallback((item: SquareCatalogItem, e: React.MouseEvent) => {
+    const modifiers = (item.itemData?.modifiers ?? [])
+
+    const hasModifiers = modifiers.length > 0
 
     if (hasModifiers) {
       setSelectedItem(item)
     } else {
+      const card = (e.currentTarget as HTMLElement).closest("[data-menu-item]") as HTMLElement
+      if (card) {
+        const cardRect = card.getBoundingClientRect()
+        const dy = -cardRect.top - cardRect.height / 2
+        const dx = window.innerWidth - cardRect.left - cardRect.width / 2
+        if (typeof card.animate === "function") {
+          card.animate(
+            [
+              { transform: "translate(0, 0) scale(1)", opacity: 1 },
+              { transform: `translate(${dx}px, ${dy}px) scale(0.05)`, opacity: 0 },
+            ],
+            { duration: 450, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" }
+          )
+        }
+      }
       addItem(buildCartItem(item, [], 1))
     }
   }, [addItem])

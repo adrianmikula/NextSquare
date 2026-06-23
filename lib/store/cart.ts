@@ -46,6 +46,16 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (item) =>
         set((state) => {
+          console.log("=== CART ADD ITEM DEBUG ===", {
+            item,
+            currentItemsCount: state.items.length,
+            currentItems: state.items.map(i => ({ id: i.id, catalogObjectId: i.catalogObjectId, modifiers: i.modifiers })),
+            existingIndex: state.items.findIndex(
+              (i) =>
+                i.catalogObjectId === item.catalogObjectId &&
+                JSON.stringify(i.modifiers) === JSON.stringify(item.modifiers)
+            ),
+          })
           const existingIndex = state.items.findIndex(
             (i) =>
               i.catalogObjectId === item.catalogObjectId &&

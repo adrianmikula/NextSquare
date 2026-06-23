@@ -5,7 +5,7 @@ import { formatCurrency, toPrice } from "@/lib/utils"
 
 interface MenuItemCardProps {
   item: SquareCatalogItem
-  onAdd: () => void
+  onAdd: (e: React.MouseEvent) => void
 }
 
 export function MenuItemCard({ item, onAdd }: MenuItemCardProps) {
@@ -16,7 +16,10 @@ export function MenuItemCard({ item, onAdd }: MenuItemCardProps) {
   const description = item.itemData?.description
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-all hover:shadow-md">
+    <div
+      data-menu-item={item.id}
+      className="group relative overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-all hover:shadow-md"
+    >
       <div className="aspect-[4/3] overflow-hidden bg-stone-100">
         {item.imageUrl ? (
           <img
