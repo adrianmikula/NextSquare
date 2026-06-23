@@ -2,6 +2,28 @@
 
 A Next.js 16 marketing & ordering site for Square POS cafes. Zero database — launch in hours.
 
+## Currently Supported Features
+
+| Feature | Details |
+|---|---|
+| **Marketing Site** | Hero, menu preview, reviews, hours, map, Instagram, about, contact |
+| **Custom Checkout** | Fully branded checkout with Square Web Payments SDK |
+| **Cart** | Zustand store with localStorage persistence, modifier support, pickup/delivery toggle |
+| **Menu / Catalog** | Managed in Square Dashboard, served via ISR (`revalidate: 300`) |
+| **Orders** | Create, retrieve, search via Square Orders API; status tracking |
+| **Payments** | Square Payments API (SDK) with verification token support; sandbox card `4111 1111 1111 1111` |
+| **SMS Notifications** | Twilio via Square order webhooks (`order.updated` → confirmed → preparing → ready) |
+| **Content / CMS** | Outstatic — Markdown stored in GitHub, no database |
+| **Admin Dashboard** | JWT session auth protected; retrieve/modify/upsert Square catalog items |
+| **Demo Mode** | Runs full app with mock Square responses — no credentials required |
+| **Customer Loyalty** | Square Loyalty API integration (Phase 6) |
+| **ISR / SSG** | Incremental static regeneration for marketing pages |
+| **Webhook Verification** | HMAC-SHA256 verification of Square webhooks |
+| **Mobile Support** | Responsive layout; mobile photo upload (Phase 13) |
+| **AI / Code Agents** | MCP support for Square, Twilio, and Next.js devtools (see below) |
+
+---
+
 ## Architecture
 
 ```
@@ -16,25 +38,26 @@ Next.js 16 + Tailwind v4
 │  │  Order tracking via Square Orders API       │   │
 │  └─────────────────────────────────────────────┘   │
 └───────────────────────┬────────────────────────────┘
-                        │
-            ┌───────────┴───────────┐
-            ▼                       ▼
+                         │
+             ┌───────────┴───────────┐
+             ▼                       ▼
 ┌──────────────────────┐  ┌──────────────────────┐
 │  Square APIs          │  │  Twilio SMS           │
 │  ─ Catalog (REST+ISR) │  │  Order notifications  │
 │  ─ Orders (SDK)       │  │  via Square webhooks  │
 │  ─ Payments (SDK)     │  └──────────────────────┘
 │  ─ Webhooks           │
+│  ─ Loyalty (SDK)      │        [Phase 6]
 └──────────────────────┘
 ```
 
-- **Checkout** — Fully custom branded checkout flow with Square Web Payments SDK
-- **Cart** — Zustand store with localStorage persistence, modifier support, pickup/delivery toggle
-- **Menu** — Managed in Square Dashboard, fetched via ISR (`revalidate: 300`)
-- **Payments** — Square Payments API (SDK) with verification token support
-- **Orders** — Square Orders API for create, retrieve, search
-- **Content** — Outstatic CMS (Markdown in GitHub, no database)
-- **SMS** — Twilio via Square webhooks (confirmed → preparing → ready)
+### Prerequisites
+
+- Node.js 20+
+- npm 9+
+- A Square Developer account ([developer.squareup.com](https://developer.squareup.com/))
+
+---
 
 ## Tech Stack
 
@@ -51,6 +74,102 @@ Next.js 16 + Tailwind v4
 | SMS | Twilio |
 | Payments | Square Web Payments SDK + Orders API |
 | Testing | Vitest + React Testing Library + jsdom |
+| Auth | JWT session tokens (crypto-agile, no server DB) |
+
+---
+
+## Website Security
+
+This project applies AI-era security measures in three categories: what is **implemented today**, what is **architecturally ready**, and what is **planned**.
+
+### Implemented
+
+#### Crypto-Agile JWT Auth
+
+Dashboard sessions are signed with HMAC (`HS256`/`HS384`/`HS512`) selected at runtime via the `JWT_ALGORITHM` env var. Verification accepts all supported algorithms simultaneously, enabling **rolling key rotation** without invalidating active sessions. The signing path is isolated with the `server-only` directive so key material never reaches the client bundle.
+
+- Code: [`lib/auth/session.ts`](lib/auth/session.ts)
+- Decision record: [`docs/adr/011-crypto-agile-jwt-signing.md`](docs/adr/011-crypto-agile-jwt-signing.md)
+
+#### Webhook Signature Verification
+
+Square webhooks are verified with constant-time HMAC-SHA256 using the `SQUARE_WEBHOOK_SIGNATURE_KEY`. Replay attacks are prevented by timestamp validation inside [`lib/webhooks/square.ts`](lib/webhooks/square.ts).
+
+#### Supply-Chain Hardening
+
+| Control | Implementation |
+|---|---|
+| **npm script suppression** | `.npmrc` sets `ignore-scripts=true` and `min-release-age=7`; CI uses `npm ci --ignore-scripts` |
+| **Vulnerability gate** | `npm audit --audit-level=high` fails CI on high/critical findings |
+| **Pinned CI actions** | All GitHub Actions pinned to commit SHAs; least-privilege `permissions: contents: read` |
+| **Dependency pinning** | `overrides` in `package.json` for high-risk transitive deps (`dompurify`, `cookie`, `markdown-it`) |
+| **Dependabot** | Weekly npm + GitHub Actions updates grouped by production/development |
+| **Direct-dependency rule** | Any package imported in source must be listed in `dependencies`, preventing silent transitive drift |
+| **SAST** | GitHub CodeQL (javascript-typescript) runs on every push/PR to `main` |
+
+Policy details: [`docs/patterns/supply-chain-hardening.md`](docs/patterns/supply-chain-hardening.md)
+
+#### No Silent Fallbacks
+
+Misconfiguration throws a meaningful error at startup (`requireEnv` in `lib/env.ts`) rather than silently degrading to an insecure default.
+
+### PQC-Ready (Post-Quantum Cryptography)
+
+The JWT signing abstraction in [`lib/auth/session.ts`](lib/auth/session.ts) is structured to support **ML-DSA** (FIPS 204, the NIST post-quantum signature standard) once the `jose` library exposes it. The `getAlgorithm()` gate already lists `SUPPORTED_ALGORITHMS` as a single source of truth — adding ML-DSA there is the only step required for the verification and signing paths.
+
+- **Why not yet activated:** `jose` v5.x does not yet expose ML-DSA; `.tsp` specs in `specs/square.tsp` model future hybrid schemes (ML-KEM + ECDH) for transport-layer key exchange.
+- Decision record: [`docs/adr/011-crypto-agile-jwt-signing.md`](docs/adr/011-crypto-agile-jwt-signing.md)
+
+### Roadmap: Anti-Fingerprinting & Security Headers
+
+The following are tracked in the project roadmap but **not yet enforced** in `next.config.ts` or `proxy.ts`:
+
+- **Content-Security-Policy** — restrict script/style/image sources; nonce-based inline script allowance
+- **Referrer-Policy** — `strict-origin-when-cross-origin` or `no-referrer`
+- **Permissions-Policy** — disable camera, microphone, geolocation on pages that don't need them
+- **Strict-Transport-Security** — HSTS with `max-age=31536000; includeSubDomains`
+- **X-Frame-Options** — `DENY` to prevent clickjacking
+- **Fingerprint mitigation** — block third-party analytics/tracker scripts; avoid `navigator` property leaks
+
+Roadmap reference: [`docs/roadmap/phase_5_security_mobile_and_testing.md`](docs/roadmap/phase_5_security_mobile_and_testing.md)
+
+---
+
+## AI Agent / MCP Support
+
+The project ships with [`mcp.json`](mcp.json) for AI coding agents and MCP-aware tools:
+
+```json
+{
+  "mcpServers": {
+    "next-devtools": {
+      "command": "npx",
+      "args": ["-y", "next-devtools-mcp@latest"]
+    },
+    "square": {
+      "command": "npx",
+      "args": ["-y", "@square/square-mcp-server"],
+      "env": {
+        "SQUARE_ACCESS_TOKEN": "${SQUARE_ACCESS_TOKEN}"
+      }
+    },
+    "twilio": {
+      "command": "npx",
+      "args": ["-y", "@twilio-alpha/mcp", "${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}"],
+      "env": {
+        "TWILIO_ACCOUNT_SID": "${TWILIO_ACCOUNT_SID}",
+        "TWILIO_AUTH_TOKEN": "${TWILIO_AUTH_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+| Server | Purpose |
+|---|---|
+| **next-devtools** | Next.js debugging, route inspection, server logs |
+| **square** | Direct Square API access (catalog, orders, payments, webhooks) via MCP |
+| **twilio** | Send SMS / manage Twilio resources via MCP |
 
 ---
 
@@ -64,135 +183,67 @@ npm install
 npm run dev                          # → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The app runs in **demo mode** by default after setup — see [Demo Mode](#demo-mode) below.
+The app runs in **demo mode** by default (`NEXT_PUBLIC_DEMO_MODE=true`) — see [Demo Mode](#demo-mode).
 
 ---
 
-## Setup & Configuration
+## Dev Setup
 
-### 1. Square (Required for live payments & menu)
+```bash
+npm run dev      # Start dev server with Turbopack → http://localhost:3000
+npm run build    # Production build → .next/
+npm run start    # Serve production build
+npm run lint     # ESLint across all .ts/.tsx files
+```
 
-Create a [Square Developer account](https://developer.squareup.com/) and a new application. From the Square Developer Dashboard:
+Linting uses [`eslint.config.mjs`](eslint.config.mjs). Pre-commit hooks run `lint-staged` on staged `.ts`/`.tsx` files via `simple-git-hooks`.
 
-| Variable | Where to find it |
-|---|---|
-| `SQUARE_ACCESS_TOKEN` | Square Dev Dashboard → your app → **Credentials** → copy the **Access Token** (use sandbox token for dev) |
-| `SQUARE_LOCATION_ID` | Square Dev Dashboard → your app → **Locations** → copy the ID of your default location |
-| `SQUARE_ENVIRONMENT` | `sandbox` while developing, `production` for live |
-| `NEXT_PUBLIC_SQUARE_APP_ID` | Square Dev Dashboard → your app → **Credentials** → **Application ID** |
-| `NEXT_PUBLIC_SQUARE_LOCATION_ID` | Same as `SQUARE_LOCATION_ID` (needed client-side for Web Payments SDK) |
-| `NEXT_PUBLIC_SQUARE_ORDERING_PROFILE_URL` | (Optional) Square-hosted ordering page URL as fallback |
+---
 
-**Sandbox test card:** `4111 1111 1111 1111` — any future expiry, any CVV.
+## Square Configuration
 
-### 2. Twilio (Optional — order SMS notifications)
+Create a Square Developer application. You need both **sandbox** credentials (for development) and **production** credentials (for live deployments).
 
 | Variable | Where to find it |
 |---|---|
-| `TWILIO_ACCOUNT_SID` | [Twilio Console](https://console.twilio.com) → **Account** → **API Keys & Credentials** |
-| `TWILIO_AUTH_TOKEN` | Same page (reveal or generate) |
-| `TWILIO_PHONE_NUMBER` | Twilio Console → **Phone Numbers** → your purchased number (e.g. `+61400000000`) |
-| `SQUARE_WEBHOOK_SIGNATURE_KEY` | Square Dev Dashboard → your app → **Webhooks** → **Signature Key** |
+| `SQUARE_ACCESS_TOKEN` | Dev Dashboard → your app → **Credentials** → copy the Access Token |
+| `SQUARE_LOCATION_ID` | Dev Dashboard → your app → **Locations** → your location ID |
+| `SQUARE_ENVIRONMENT` | `sandbox` (dev) or `production` (live) |
+| `NEXT_PUBLIC_SQUARE_APP_ID` | Dev Dashboard → **Credentials** → **Application ID** |
+| `NEXT_PUBLIC_SQUARE_LOCATION_ID` | Same as `SQUARE_LOCATION_ID` (used client-side by Web Payments SDK) |
+| `NEXT_PUBLIC_SQUARE_ORDERING_PROFILE_URL` | (Optional) Square-hosted ordering page as fallback |
 
-**Webhook setup:** In Square Developer Dashboard → your app → **Webhooks**, add a subscription to `order.updated` pointing to `https://yourdomain.com/api/square/webhook`. The signature key verifies that requests come from Square.
+### Webhook Setup
 
-### 3. Outstatic CMS (Optional — content management)
+In Square Developer Dashboard → your app → **Webhooks**, add a subscription to `order.updated` pointing to:
 
-| Variable | Where to find it |
-|---|---|
-| `OUTSTATIC_API_KEY` | Generate via the Outstatic admin UI at `/outstatic` after first deploy |
+```
+https://yourdomain.com/api/square/webhook
+```
 
-Outstatic stores content as Markdown files in your GitHub repo — no external database. The CMS is accessible at `/outstatic` when configured.
+Copy the **Signature Key** into `SQUARE_WEBHOOK_SIGNATURE_KEY` for HMAC verification.
 
-### 4. Dashboard Auth (Optional — admin dashboard)
+### Square CORS
 
-| Variable | Where to find it |
-|---|---|
-| `DASHBOARD_PASSWORD` | Choose any password. Used for basic auth on `/dashboard` routes. |
+Add `https://yourdomain.com` to your Square app's **Allowed CORS origins** in the Developer Dashboard.
 
-### 5. General
+### Loyalty (Phase 6)
 
 | Variable | Description |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | Canonical URL (e.g. `https://mycafe.com`). Used for OG images, sitemap, and robots. |
+| `SQUARE_LOYALTY_PROGRAM_ID` | From Square Dev Dashboard → **Loyalty** → Program ID |
 
-### Full `.env.local` reference
-
-```bash
-# ─── Square ──────────────────────────────────────────────────────────
-SQUARE_ACCESS_TOKEN=
-SQUARE_ENVIRONMENT=sandbox
-SQUARE_LOCATION_ID=
-NEXT_PUBLIC_SQUARE_APP_ID=
-NEXT_PUBLIC_SQUARE_LOCATION_ID=
-NEXT_PUBLIC_SQUARE_ORDERING_PROFILE_URL=
-
-# ─── Twilio ──────────────────────────────────────────────────────────
-TWILIO_ACCOUNT_SID=
-TWILIO_AUTH_TOKEN=
-TWILIO_PHONE_NUMBER=
-
-# ─── Square Webhooks ─────────────────────────────────────────────────
-SQUARE_WEBHOOK_SIGNATURE_KEY=
-
-# ─── Outstatic CMS ───────────────────────────────────────────────────
-OUTSTATIC_API_KEY=
-
-# ─── Dashboard Auth ──────────────────────────────────────────────────
-DASHBOARD_PASSWORD=
-
-# ─── App ─────────────────────────────────────────────────────────────
-NEXT_PUBLIC_SITE_URL=
-
-# ─── Demo Mode ───────────────────────────────────────────────────────
-NEXT_PUBLIC_DEMO_MODE=false
-```
+Full env reference: [`docs/roadmap/phase_4_full_square_integration.md`](docs/roadmap/phase_4_full_square_integration.md)
 
 ---
 
-## Demo Mode
-
-Run the full app without any real API credentials. All Square calls return mock data.
-
-```bash
-# In .env.local:
-NEXT_PUBLIC_DEMO_MODE=true
-```
-
-What's mocked:
-- **Menu** — 8 demo items (Latte, Flat White, Avocado Toast, etc.) with Unsplash images and modifiers
-- **Orders** — 3 demo orders in different states (`COMPLETED`, `IN_PROGRESS`, `PROPOSED`), plus new orders generate randomly
-- **Payments** — always returns `COMPLETED`
-- **Location** — returns a hardcoded Melbourne cafe address
-- **Square API base** — forced to sandbox
-
-A fixed amber **Demo Mode** badge appears in the bottom-left corner of the UI when active.
-
-To check demo mode in code: `lib/demo/config.ts` exports `isDemoMode()` — used as a guard in all Square service files.
-
----
-
-## Commands
-
-| Command | Action |
-|---|---|
-| `npm run dev` | Start dev server with Turbopack → `http://localhost:3000` |
-| `npm run build` | Production build (outputs `.next/`) |
-| `npm run start` | Start production server (after `build`) |
-| `npm run lint` | Run ESLint across all `.ts`/`.tsx` files |
-| `npm run test` | Run Vitest once (CI mode) |
-| `npx vitest` | Run Vitest in watch mode (dev) |
-| `npm audit` | Check for dependency vulnerabilities |
-
----
-
-## Testing
+## Tests
 
 Tests use **Vitest** + **React Testing Library** + **jsdom**. Located in `__tests__/` mirroring the source tree.
 
 ```bash
-npm run test        # Run all tests once
-npx vitest          # Watch mode
+npm run test        # Run all tests once (CI mode)
+npx vitest          # Watch mode for development
 ```
 
 ### Test structure
@@ -227,39 +278,20 @@ __tests__/
 └── proxy.test.ts
 ```
 
-### Adding a new test
+Config: [`vitest.config.mts`](vitest.config.mts) — environment `jsdom`, `@/` path aliases via `vite-tsconfig-paths`.
 
-1. Create `__tests__/<path>/<name>.test.ts` (or `.test.tsx` for components)
-2. Use `@/` path aliases (already configured in tsconfig + vitest)
-3. Mock external dependencies with `vi.mock()` at top level
-4. Use `vi.stubEnv()` / `vi.unstubAllEnvs()` for environment variables
-5. Use `vi.stubGlobal()` to mock `fetch` or other globals
+---
 
-```typescript
-import { describe, expect, it, vi } from "vitest"
-import { myFunction } from "@/lib/my-module"
+## Demo Mode
 
-vi.mock("@/external/dep", () => ({
-  someDep: vi.fn(() => "mocked"),
-}))
+Set `NEXT_PUBLIC_DEMO_MODE=true` to run without any real API credentials. All Square calls return mock data:
 
-describe("myFunction", () => {
-  it("does the thing", () => {
-    expect(myFunction()).toBe("expected")
-  })
-})
-```
+- **Menu** — 8 demo items with Unsplash images and modifiers
+- **Orders** — 3 demo orders in `COMPLETED`, `IN_PROGRESS`, `PROPOSED` states; new orders generate randomly
+- **Payments** — always returns `COMPLETED`
+- **Location** — hardcoded Melbourne cafe address
 
-### Mocking patterns
-
-| Scenario | Approach |
-|---|---|
-| External npm package | `vi.mock("package-name", () => ({ ... }))` |
-| External npm (complex) | `vi.mock("package-name")` + `__mocks__/package-name.ts` manual mock |
-| Internal module | `vi.mock("@/lib/module", () => ({ ... }))` |
-| Environment variable | `vi.stubEnv("KEY", "value")` / `vi.unstubAllEnvs()` |
-| `fetch` / global | `vi.stubGlobal("fetch", vi.fn())` |
-| Module-level side effects | Dynamic `import()` after setting env + `vi.resetModules()` |
+A **Demo Mode** badge appears in the UI when active. Check programmatically via `lib/demo/config.ts` (`isDemoMode()`).
 
 ---
 
@@ -269,11 +301,11 @@ describe("myFunction", () => {
 
 1. Push your repo to GitHub/GitLab/Bitbucket
 2. Create a [Netlify](https://netlify.com) account
-3. Have a Square **production** access token and application ready (or use demo mode for testing)
+3. Have a Square **production** access token and application ready (or use demo mode)
 
 ### Deploy via Git (recommended)
 
-Netlify auto-detects Next.js — no config file needed.
+Netlify auto-detects Next.js — [`netlify.toml`](netlify.toml) is included for explicit config.
 
 1. **Netlify Dashboard** → **Add new site** → **Import an existing project**
 2. Connect your Git provider and select the repo
@@ -283,62 +315,103 @@ Netlify auto-detects Next.js — no config file needed.
 |---|---|
 | **Build command** | `npm run build` |
 | **Publish directory** | `.next` (auto-detected) |
-| **Node version** | 20 (set via `.node-version` or Netlify UI) |
+| **Node version** | 20 |
 
-4. **Add environment variables** (all from `.env.local` — see table above). For production:
-   - `SQUARE_ENVIRONMENT=production`
-   - `NEXT_PUBLIC_DEMO_MODE=false` (or omit)
-5. **Deploy**
-
-### Deploy via CLI (for CI/CD)
-
-```bash
-# Install Netlify CLI
-npm install -g netlify-cli
-
-# Log in
-ntl login
-
-# Deploy
-ntl deploy --prod --build
-```
-
-### Post-deploy
-
-- **Custom domain** — Netlify Dashboard → **Domain settings** → add your domain
-- **Square webhooks** — Update your Square app's webhook URL to `https://yourdomain.com/api/square/webhook`
-- **Square CORS** — Add `https://yourdomain.com` to your Square app's CORS allowlist in the Developer Dashboard
-- **Outstatic** — Visit `https://yourdomain.com/outstatic` to generate an API key and start editing content
-- **ISR** — Next.js Incremental Static Regeneration works on Netlify. Menu pages revalidate every 300 seconds by default
-
-### Environment checklist for production
+4. **Add environment variables** — all from `.env.local`, with live credentials:
 
 | Variable | Production value |
 |---|---|
 | `SQUARE_ENVIRONMENT` | `production` |
-| `SQUARE_ACCESS_TOKEN` | Square **production** access token |
-| `NEXT_PUBLIC_SQUARE_APP_ID` | Square **production** application ID |
-| `NEXT_PUBLIC_DEMO_MODE` | `false` (or unset) |
+| `SQUARE_ACCESS_TOKEN` | Square **production** token |
+| `NEXT_PUBLIC_SQUARE_APP_ID` | Square **production** Application ID |
+| `NEXT_PUBLIC_DEMO_MODE` | `false` (or omit) |
 | `NEXT_PUBLIC_SITE_URL` | `https://yourdomain.com` |
 
-### Netlify `netlify.toml` (optional)
+5. **Deploy**
 
-The project deploys without this file (auto-detection works), but you can add one for explicit configuration:
+### Post-deploy checklist
+
+- **Custom domain** — Netlify Dashboard → **Domain settings** → add your domain
+- **Square webhooks** — Update webhook URL to `https://yourdomain.com/api/square/webhook`
+- **Square CORS** — Add `https://yourdomain.com` to CORS allowlist
+- **Outstatic** — Visit `https://yourdomain.com/outstatic` to generate API key
+
+---
+
+## Deploy to Railway
+
+Railway runs Node.js apps with zero-config and built-in env management.
+
+### Prerequisites
+
+1. Push your repo to GitHub
+2. Create a [Railway](https://railway.app) account
+3. Have Square **production** credentials
+
+### Deploy via Railway CLI
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login and link project
+railway login
+railway link
+
+# Add environment variables
+railway variables set SQUARE_ACCESS_TOKEN="your-prod-token"
+railway variables set SQUARE_ENVIRONMENT=production
+railway variables set SQUARE_LOCATION_ID="your-location-id"
+railway variables set NEXT_PUBLIC_SQUARE_APP_ID="your-app-id"
+railway variables set NEXT_PUBLIC_SQUARE_LOCATION_ID="your-location-id"
+railway variables set NEXT_PUBLIC_SITE_URL="https://your-app.up.railway.app"
+railway variables set NEXT_PUBLIC_DEMO_MODE=false
+
+# Deploy
+railway up
+```
+
+### Deploy via Dashboard
+
+1. **Railway Dashboard** → **New Project** → **Deploy from GitHub repo**
+2. Select your repo — Railway detects Next.js automatically
+3. The build runs `npm run build`; the start command is `npm start`
+4. Add all environment variables from `.env.local` in the **Variables** tab
+5. Railway exposes a public URL (e.g. `https://your-app.up.railway.app`)
+
+### Railway-specific notes
+
+| Concern | Recommendation |
+|---|---|
+| **Port** | Next.js respects `PORT` env var automatically in production |
+| **Node version** | Ensure Node 20+ (set via `NODE_VERSION` or `.node-version`) |
+| **Static files** | Next.js output dir `.next` is served correctly by Railway's Node runtime |
+| **ISR** | Works normally — pages regenerate on demand |
+| **Cron / Webhooks** | Railway can expose the `/api/square/webhook` route publicly |
+
+### Railway Nixpacks config (optional)
+
+Create [`nixpacks.toml`](nixpacks.toml) at repo root if you need explicit build control:
 
 ```toml
-[build]
-  command = "npm run build"
-  publish = ".next"
+[phases.setup]
+nixPkgs = ["nodejs-20_x", "npm-9_x"]
 
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+[phases.install]
+cmds = ["npm ci --ignore-scripts"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm start"
 ```
 
 ---
 
 ## CI/CD
 
-The repo includes a GitHub Actions CI pipeline (`.github/workflows/ci.yml`) that runs on push/PR to `main`:
+GitHub Actions pipeline runs on push/PR to `main`:
 
 - `audit` — `npm audit --audit-level=high`
 - `lint` — ESLint
@@ -361,6 +434,7 @@ The repo includes a GitHub Actions CI pipeline (`.github/workflows/ci.yml`) that
 | `/about` | Story and values |
 | `/contact` | Contact details and map |
 | `/outstatic` | Outstatic CMS admin (when configured) |
+| `/dashboard` | Admin dashboard — catalog management (JWT auth required) |
 
 ---
 
@@ -375,3 +449,41 @@ The repo includes a GitHub Actions CI pipeline (`.github/workflows/ci.yml`) that
 | `POST /api/square/webhook` | Square order webhook → Twilio SMS |
 | `POST /api/twilio/sms` | Send SMS via Twilio |
 | `GET|POST /api/outstatic/[...]` | Outstatic CMS API |
+
+---
+
+## Full Environment Reference
+
+```bash
+# ─── Square ──────────────────────────────────────────────────────────
+SQUARE_ACCESS_TOKEN=
+SQUARE_ENVIRONMENT=sandbox
+SQUARE_LOCATION_ID=
+NEXT_PUBLIC_SQUARE_APP_ID=
+NEXT_PUBLIC_SQUARE_LOCATION_ID=
+# Optional: Square hosted ordering profile (fallback URL)
+NEXT_PUBLIC_SQUARE_ORDERING_PROFILE_URL=
+
+# ─── Twilio ──────────────────────────────────────────────────────────
+TWILIO_ACCOUNT_SID=
+TWILIO_AUTH_TOKEN=
+TWILIO_PHONE_NUMBER=
+
+# ─── Square Webhooks ─────────────────────────────────────────────────
+SQUARE_WEBHOOK_SIGNATURE_KEY=
+
+# ─── Outstatic CMS ───────────────────────────────────────────────────
+OUTSTATIC_API_KEY=
+
+# ─── Dashboard Auth ──────────────────────────────────────────────────
+DASHBOARD_PASSWORD=
+
+# ─── Square Loyalty ─────────────────────────────────────────────────
+SQUARE_LOYALTY_PROGRAM_ID=
+
+# ─── App ─────────────────────────────────────────────────────────────
+NEXT_PUBLIC_SITE_URL=
+
+# ─── Demo Mode ───────────────────────────────────────────────────────
+NEXT_PUBLIC_DEMO_MODE=false
+```
