@@ -1,7 +1,15 @@
 import { NextRequest } from "next/server"
 import { getOrCreateLoyaltyAccount, calculateLoyaltyPoints, getLoyaltyProgram } from "@/lib/square/loyalty"
+import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
 
 export async function POST(request: NextRequest) {
+  const ip =
+    request.headers?.get?.("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
+
+  const rateLimitResult = rateLimit(`api:${ip}`, 30, 60 * 1000)
+  if (!rateLimitResult.allowed) {
+    return getRateLimitResponse(rateLimitResult.retryAfter!)
+  }
   try {
     const { phoneNumber, orderId } = await request.json()
 

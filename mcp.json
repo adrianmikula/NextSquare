@@ -2,18 +2,18 @@
   "mcpServers": {
     "next-devtools": {
       "command": "npx",
-      "args": ["-y", "next-devtools-mcp@latest"]
+      "args": ["-y", "next-devtools-mcp@1.0.0"]
     },
     "square": {
       "command": "npx",
-      "args": ["-y", "@square/square-mcp-server"],
+      "args": ["-y", "@square/square-mcp-server@1.0.0"],
       "env": {
         "SQUARE_ACCESS_TOKEN": "${SQUARE_ACCESS_TOKEN}"
       }
     },
     "twilio": {
       "command": "npx",
-      "args": ["-y", "@twilio-alpha/mcp", "${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}"],
+      "args": ["-y", "@twilio-alpha/mcp@1.0.0", "${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}"],
       "env": {
         "TWILIO_ACCOUNT_SID": "${TWILIO_ACCOUNT_SID}",
         "TWILIO_AUTH_TOKEN": "${TWILIO_AUTH_TOKEN}"

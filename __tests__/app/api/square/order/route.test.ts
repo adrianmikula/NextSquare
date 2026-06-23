@@ -8,7 +8,10 @@ vi.mock("@/lib/square/orders", () => ({
 
 async function callPost(body: unknown) {
   const { POST } = await import("@/app/api/square/order/route")
-  const request = { json: () => Promise.resolve(body) } as any
+  const request = {
+    json: () => Promise.resolve(body),
+    headers: { get: () => null },
+  } as any
   return POST(request)
 }
 

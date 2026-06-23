@@ -2,12 +2,13 @@ import "server-only"
 import { SignJWT, jwtVerify, type JWTPayload } from "jose"
 import { cookies } from "next/headers"
 import { requireEnv } from "@/lib/env"
+import { createCsrfToken, setCsrfCookie } from "@/lib/security/csrf"
 
 export interface SessionPayload extends JWTPayload {
   userId: string
+  roles: string[]
 }
 
-const DEFAULT_ALGORITHM = "HS256"
 const SUPPORTED_ALGORITHMS = ["HS256", "HS384", "HS512"]
 
 function getAlgorithm(): string {
@@ -43,9 +44,9 @@ export async function decrypt(session: string | undefined = "") {
   }
 }
 
-export async function createSession() {
+export async function createSession(roles: string[] = ["owner"]) {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  const session = await encrypt({ userId: "admin" })
+  const session = await encrypt({ userId: "admin", roles })
   const cookieStore = await cookies()
   cookieStore.set("session", session, {
     httpOnly: true,
@@ -54,11 +55,14 @@ export async function createSession() {
     sameSite: "lax",
     path: "/",
   })
+  const csrfToken = createCsrfToken()
+  await setCsrfCookie(csrfToken)
 }
 
 export async function deleteSession() {
   const cookieStore = await cookies()
   cookieStore.delete("session")
+  cookieStore.delete("csrf-token")
 }
 
 export async function getSession() {

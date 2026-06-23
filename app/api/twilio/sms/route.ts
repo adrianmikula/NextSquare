@@ -1,7 +1,15 @@
 import { NextRequest } from "next/server"
 import { sendSms } from "@/lib/twilio/client"
+import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
 
 export async function POST(request: NextRequest) {
+  const ip =
+    request.headers?.get?.("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
+
+  const rateLimitResult = rateLimit(`twilio:${ip}`, 5, 60 * 1000)
+  if (!rateLimitResult.allowed) {
+    return getRateLimitResponse(rateLimitResult.retryAfter!)
+  }
   try {
     const { to, message } = await request.json()
 

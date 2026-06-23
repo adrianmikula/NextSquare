@@ -17,7 +17,10 @@
     "cookie": "^0.7.2",
     "tiptap-markdown": {
       "markdown-it": "^14.2.0"
-    }
+    },
+    "@next-devtools/next-devtools-mcp": "1.0.0",
+    "@square/square-mcp-server": "1.0.0",
+    "@twilio-alpha/mcp": "1.0.0"
   },
   "lint-staged": {
     "*.{ts,tsx}": "eslint --quiet --fix"

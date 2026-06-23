@@ -1,8 +1,16 @@
 import { NextRequest } from "next/server"
 import { sendSms } from "@/lib/twilio/client"
 import { verifySquareWebhook, parseWebhookEvent } from "@/lib/webhooks/square"
+import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
 
 export async function POST(request: NextRequest) {
+  const ip =
+    request.headers?.get?.("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
+
+  const rateLimitResult = rateLimit(`webhook:${ip}`, 100, 60 * 1000)
+  if (!rateLimitResult.allowed) {
+    return getRateLimitResponse(rateLimitResult.retryAfter!)
+  }
   const body = await request.text()
   const signature = request.headers.get("x-square-hmacsha256-signature") ?? ""
 

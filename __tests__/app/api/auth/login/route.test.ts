@@ -11,6 +11,7 @@ async function callPost(body: object) {
   const { POST } = await import("@/app/api/auth/login/route")
   const request = {
     json: () => Promise.resolve(body),
+    headers: { get: () => null },
   }
   return POST(request as any)
 }

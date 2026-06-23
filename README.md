@@ -131,7 +131,7 @@ The following are tracked in the project roadmap but **not yet enforced** in `ne
 - **X-Frame-Options** — `DENY` to prevent clickjacking
 - **Fingerprint mitigation** — block third-party analytics/tracker scripts; avoid `navigator` property leaks
 
-Roadmap reference: [`docs/roadmap/phase_5_security_mobile_and_testing.md`](docs/roadmap/phase_5_security_mobile_and_testing.md)
+Roadmap reference: [`docs/roadmap/phase_7_security_hardening.md`](docs/roadmap/phase_7_security_hardening.md)
 
 ---
 

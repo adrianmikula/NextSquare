@@ -38,12 +38,12 @@ async function renderLoginForm() {
 }
 
 describe("LoginForm", () => {
-  it("renders password input and sign in button", async () => {
+  it("renders password input and send code button", async () => {
     await renderLoginForm()
     expect(
       screen.getByPlaceholderText("Enter dashboard password")
     ).toBeDefined()
-    expect(screen.getByRole("button", { name: "Sign in" })).toBeDefined()
+    expect(screen.getByRole("button", { name: "Send Code" })).toBeDefined()
   })
 
   it("shows error on failed login", async () => {
@@ -58,7 +58,7 @@ describe("LoginForm", () => {
 
     const input = screen.getByPlaceholderText("Enter dashboard password")
     await userEvent.type(input, "wrong-password")
-    await userEvent.click(screen.getByRole("button", { name: "Sign in" }))
+    await userEvent.click(screen.getByRole("button", { name: "Send Code" }))
 
     expect(await screen.findByText("Invalid password")).toBeDefined()
     vi.unstubAllGlobals()
@@ -68,16 +68,23 @@ describe("LoginForm", () => {
     mockGet.mockReturnValue("/dashboard/menu")
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
+      vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      }).mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ success: true }),
       })
     )
     await renderLoginForm()
 
-    const input = screen.getByPlaceholderText("Enter dashboard password")
-    await userEvent.type(input, "correct-password")
-    await userEvent.click(screen.getByRole("button", { name: "Sign in" }))
+    const passwordInput = screen.getByPlaceholderText("Enter dashboard password")
+    await userEvent.type(passwordInput, "correct-password")
+    await userEvent.click(screen.getByRole("button", { name: "Send Code" }))
+
+    const codeInput = await screen.findByPlaceholderText("Enter 6-digit code")
+    await userEvent.type(codeInput, "123456")
+    await userEvent.click(screen.getByRole("button", { name: "Verify" }))
 
     await vi.waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/dashboard/menu")
@@ -89,16 +96,23 @@ describe("LoginForm", () => {
   it("redirects to /dashboard when no redirect param", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
+      vi.fn().mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ success: true }),
+      }).mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ success: true }),
       })
     )
     await renderLoginForm()
 
-    const input = screen.getByPlaceholderText("Enter dashboard password")
-    await userEvent.type(input, "correct-password")
-    await userEvent.click(screen.getByRole("button", { name: "Sign in" }))
+    const passwordInput = screen.getByPlaceholderText("Enter dashboard password")
+    await userEvent.type(passwordInput, "correct-password")
+    await userEvent.click(screen.getByRole("button", { name: "Send Code" }))
+
+    const codeInput = await screen.findByPlaceholderText("Enter 6-digit code")
+    await userEvent.type(codeInput, "123456")
+    await userEvent.click(screen.getByRole("button", { name: "Verify" }))
 
     await vi.waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith("/dashboard")
@@ -112,7 +126,7 @@ describe("LoginForm", () => {
 
     const input = screen.getByPlaceholderText("Enter dashboard password")
     await userEvent.type(input, "any-password")
-    await userEvent.click(screen.getByRole("button", { name: "Sign in" }))
+    await userEvent.click(screen.getByRole("button", { name: "Send Code" }))
 
     expect(
       await screen.findByText("An error occurred. Please try again.")
@@ -134,9 +148,9 @@ describe("LoginForm", () => {
 
     const input = screen.getByPlaceholderText("Enter dashboard password")
     await userEvent.type(input, "password")
-    await userEvent.click(screen.getByRole("button", { name: "Sign in" }))
+    await userEvent.click(screen.getByRole("button", { name: "Send Code" }))
 
-    expect(screen.getByRole("button", { name: "Signing in..." })).toBeDefined()
+    expect(screen.getByRole("button", { name: "Verifying..." })).toBeDefined()
     resolveFetch!({ ok: true, json: () => Promise.resolve({ success: true }) })
     vi.unstubAllGlobals()
   })

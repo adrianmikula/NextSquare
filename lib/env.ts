@@ -8,3 +8,18 @@ export function requireEnv(name: string): string {
   }
   return value
 }
+
+export function requireEnvInt(name: string, defaultValue: number): number {
+  const raw = process.env[name]
+  if (raw === undefined || raw === "") {
+    return defaultValue
+  }
+  const value = parseInt(raw, 10)
+  if (isNaN(value) || value <= 0) {
+    throw new Error(
+      `Invalid integer value for ${name}: ${raw}\n` +
+        `  Expected a positive number. See .env.local.example for reference.`
+    )
+  }
+  return value
+}

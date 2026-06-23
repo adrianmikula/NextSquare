@@ -1,8 +1,16 @@
 import { NextRequest } from "next/server"
 import { createOrder } from "@/lib/square/orders"
+import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
 import type { CreateOrderPayload } from "@/types/order"
 
 export async function POST(request: NextRequest) {
+  const ip =
+    request.headers?.get?.("x-forwarded-for")?.split(",")[0].trim() ?? "unknown"
+
+  const rateLimitResult = rateLimit(`api:${ip}`, 30, 60 * 1000)
+  if (!rateLimitResult.allowed) {
+    return getRateLimitResponse(rateLimitResult.retryAfter!)
+  }
   try {
     const body: CreateOrderPayload = await request.json()
     const { lineItems, customerInfo, fulfillmentType, fulfillmentDetails, idempotencyKey } = body

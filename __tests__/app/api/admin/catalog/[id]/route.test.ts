@@ -17,6 +17,14 @@ vi.mock("crypto", () => ({
   randomUUID: () => "mock-uuid",
 }))
 
+vi.mock("next/headers", () => ({
+  cookies: () => ({
+    get: () => undefined,
+    set: vi.fn(),
+    delete: vi.fn(),
+  }),
+}))
+
 const mockRetrieveCatalogObject = vi.fn()
 const mockUpsertCatalogObject = vi.fn()
 
@@ -36,7 +44,11 @@ import { getSession } from "@/lib/auth/session"
 
 async function callPatch(id: string, body: any) {
   const { PATCH } = await import("@/app/api/admin/catalog/[id]/route")
-  const request = { json: () => Promise.resolve(body) } as any
+  const request = {
+    json: () => Promise.resolve(body),
+    url: `http://localhost/api/admin/catalog/${id}`,
+    headers: { get: () => null },
+  } as any
   const params = Promise.resolve({ id })
   return PATCH(request, { params })
 }
@@ -52,15 +64,21 @@ describe("PATCH /api/admin/catalog/[id]", () => {
     expect(response.status).toBe(401)
   })
 
+  it("returns 403 when visitor role only", async () => {
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["visitor"] })
+    const response = await callPatch("item-1", { name: "New Name" })
+    expect(response.status).toBe(403)
+  })
+
   it("returns 404 when item is not found", async () => {
-    vi.mocked(getSession).mockResolvedValue({ userId: "admin" })
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["owner"] })
     mockRetrieveCatalogObject.mockResolvedValue({ result: { object: null } })
     const response = await callPatch("non-existent", { name: "New" })
     expect(response.status).toBe(404)
   })
 
   it("updates ITEM name and description", async () => {
-    vi.mocked(getSession).mockResolvedValue({ userId: "admin" })
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["owner"] })
     const catalogObject = {
       type: "ITEM",
       itemData: { name: "Old Name", description: "Old desc" },
@@ -81,7 +99,7 @@ describe("PATCH /api/admin/catalog/[id]", () => {
   })
 
   it("updates ITEM availableOnline flag", async () => {
-    vi.mocked(getSession).mockResolvedValue({ userId: "admin" })
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["owner"] })
     const catalogObject = {
       type: "ITEM",
       itemData: { name: "Item", availableOnline: true },
@@ -94,7 +112,7 @@ describe("PATCH /api/admin/catalog/[id]", () => {
   })
 
   it("updates ITEM_VARIATION name and price", async () => {
-    vi.mocked(getSession).mockResolvedValue({ userId: "admin" })
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["owner"] })
     const catalogObject = {
       type: "ITEM_VARIATION",
       itemVariationData: { name: "Old", pricingType: "FIXED_PRICING", priceMoney: { amount: BigInt(500), currency: "AUD" }, itemId: "parent-1" },
@@ -108,7 +126,7 @@ describe("PATCH /api/admin/catalog/[id]", () => {
   })
 
   it("updates parent ITEM when variation availableOnline changes", async () => {
-    vi.mocked(getSession).mockResolvedValue({ userId: "admin" })
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["owner"] })
     const variationObject = {
       type: "ITEM_VARIATION",
       itemVariationData: { name: "Regular", itemId: "parent-item", priceMoney: { amount: BigInt(500), currency: "AUD" } },
@@ -133,7 +151,7 @@ describe("PATCH /api/admin/catalog/[id]", () => {
   })
 
   it("does not send update if no changes provided", async () => {
-    vi.mocked(getSession).mockResolvedValue({ userId: "admin" })
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["owner"] })
     const catalogObject = {
       type: "ITEM",
       itemData: { name: "Same" },
@@ -144,5 +162,45 @@ describe("PATCH /api/admin/catalog/[id]", () => {
     await callPatch("item-1", { name: undefined, description: undefined })
     expect(catalogObject.itemData.name).toBe("Same")
     expect(mockUpsertCatalogObject).toHaveBeenCalled()
+  })
+
+  it("allows staff to update stock (availableOnline)", async () => {
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["staff"] })
+    const catalogObject = {
+      type: "ITEM",
+      itemData: { name: "Item", availableOnline: true },
+    }
+    mockRetrieveCatalogObject.mockResolvedValue({ result: { object: catalogObject } })
+    mockUpsertCatalogObject.mockResolvedValue({ result: { catalogObject } })
+
+    const response = await callPatch("item-1", { availableOnline: false })
+    expect(response.status).toBe(200)
+    expect(catalogObject.itemData.availableOnline).toBe(false)
+  })
+
+  it("blocks staff from editing product name", async () => {
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["staff"] })
+    const catalogObject = {
+      type: "ITEM",
+      itemData: { name: "Item" },
+    }
+    mockRetrieveCatalogObject.mockResolvedValue({ result: { object: catalogObject } })
+
+    const response = await callPatch("item-1", { name: "New Name" })
+    expect(response.status).toBe(403)
+    expect(mockUpsertCatalogObject).not.toHaveBeenCalled()
+  })
+
+  it("blocks staff from editing product price", async () => {
+    vi.mocked(getSession).mockResolvedValue({ userId: "admin", roles: ["staff"] })
+    const catalogObject = {
+      type: "ITEM",
+      itemData: { name: "Item" },
+    }
+    mockRetrieveCatalogObject.mockResolvedValue({ result: { object: catalogObject } })
+
+    const response = await callPatch("item-1", { priceMoney: 5.0 })
+    expect(response.status).toBe(403)
+    expect(mockUpsertCatalogObject).not.toHaveBeenCalled()
   })
 })

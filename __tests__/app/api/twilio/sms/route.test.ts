@@ -8,7 +8,10 @@ vi.mock("@/lib/twilio/client", () => ({
 
 async function callPost(body: any) {
   const { POST } = await import("@/app/api/twilio/sms/route")
-  const request = { json: () => Promise.resolve(body) } as any
+  const request = {
+    json: () => Promise.resolve(body),
+    headers: { get: () => null },
+  }
   return POST(request)
 }
 
