@@ -14,6 +14,7 @@ A Next.js 16 marketing & ordering site for Square POS cafes. Zero database — l
 | **Payments** | Square Payments API (SDK) with verification token support; sandbox card `4111 1111 1111 1111` |
 | **SMS Notifications** | Twilio via Square order webhooks (`order.updated` → confirmed → preparing → ready) |
 | **Content / CMS** | Outstatic — Markdown stored in GitHub, no database |
+| | **WordPress (Phase 8)** — Headless CMS via WPGraphQL as an alternative backend |
 | **Admin Dashboard** | JWT session auth protected; retrieve/modify/upsert Square catalog items |
 | **Demo Mode** | Runs full app with mock Square responses — no credentials required |
 | **Customer Loyalty** | Square Loyalty API integration (Phase 6) |
@@ -70,7 +71,7 @@ Next.js 16 + Tailwind v4
 | Icons | lucide-react |
 | State (cart) | Zustand with localStorage persist |
 | Data fetching | SWR (client-side), fetch + ISR (server) |
-| CMS | Outstatic |
+| CMS | Outstatic (default) / WordPress (headless via WPGraphQL) |
 | SMS | Twilio |
 | Payments | Square Web Payments SDK + Orders API |
 | Testing | Vitest + React Testing Library + jsdom |

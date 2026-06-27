@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { render, screen } from "@testing-library/react"
+import { render, screen, waitFor } from "@testing-library/react"
 
 vi.mock("@/components/google-maps", () => ({
   GoogleMaps: () => <div data-testid="google-maps">Map</div>,
@@ -18,9 +18,9 @@ describe("ContactPage", () => {
     expect(screen.getByText(/We would love to hear from you/)).toBeInTheDocument()
   })
 
-  it("renders all contact details", () => {
+  it("renders all contact details", async () => {
     render(<ContactPage />)
-    expect(screen.getByText("Address")).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText("Address")).toBeInTheDocument())
     expect(screen.getByText("123 Coffee Lane, Melbourne VIC 3000")).toBeInTheDocument()
     expect(screen.getByText("Phone")).toBeInTheDocument()
     expect(screen.getByText("(03) 9000 0000")).toBeInTheDocument()
@@ -30,8 +30,8 @@ describe("ContactPage", () => {
     expect(screen.getByText("Mon-Fri 7am-3pm, Sat 8am-4pm, Sun 8am-2pm")).toBeInTheDocument()
   })
 
-  it("renders the Google Maps embed", () => {
+  it("renders the Google Maps embed", async () => {
     render(<ContactPage />)
-    expect(screen.getByTestId("google-maps")).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByTestId("google-maps")).toBeInTheDocument())
   })
 })

@@ -222,7 +222,7 @@ After the import completes:
 ## Key Design Decisions
 
 | Decision | Choice | Rationale |
-|---|---|---|
+|----------|--------|-----------|
 | **WordPress connector** | REST API (no plugin) | Works on any WordPress site. No installation required. |
 | **Shopify connector** | GraphQL Admin API | Full access to products, collections, pages, images. |
 | **Content storage** | Platform CMS (Postgres, structured blocks) | Imported pages map to CMS content blocks. Replaces Outstatic for SaaS tenants. |
@@ -230,6 +230,16 @@ After the import completes:
 | **Image storage** | Square Catalog API | Same as Phase 9. Images live in Square. |
 | **Conflict handling** | Preview → Choose | User decides on each conflict. No silent overwrites. |
 | **Redirects** | next.config.js | 301 redirects preserve SEO. Old URLs still work. |
+
+## Alternative Headless CMS Approach (Not Adopted)
+
+For operators who prefer to keep WordPress running long-term as a live CMS rather than one-shot importing content, the project also supports WordPress as an ongoing headless backend via WPGraphQL (see Phase 8). That path is intentionally kept separate from Phase 15's import flow. The following options were evaluated and rejected for the Phase 15 / Phase 8 use case:
+
+| Option | Why it was not adopted |
+|--------|------------------------|
+| **nextpress** | Requires a WordPress plugin on the source site and couples Next.js rendering to WordPress theme assets (scripts, stylesheets). Our import flow is plugin-free and content-only. |
+| **wp-next** | A full CMS replacement platform with a visual editor, admin dashboard, and Lexical-JSON storage. Overkill for importing cafe marketing content; violates minimal-dependency rule. |
+| **wp-node** | Operates at the database layer (MySQL direct access) rather than the CMS layer. Would require reimplementing WordPress query logic (post statuses, Gutenberg blocks, ACF, media sizes) that WPGraphQL already provides. |
 
 ---
 
