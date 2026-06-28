@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from "next/server"
 import { decrypt } from "@/lib/auth/session"
 import { isDemoMode } from "@/lib/env"
 
+// ---------------------------------------------------------------------------
+// CSP & Demo Mode
+// ---------------------------------------------------------------------------
+// When `style-src` contains both a `nonce-xxx` and `'unsafe-inline'`, the CSP
+// specification says the nonce takes precedence — `'unsafe-inline'` is IGNORED.
+// This silently blocks ALL inline styles including those React 18 generates
+// during hydration, producing blank or unstyled pages with no console errors.
+//
+// Demo mode (`DEMO_MODE=true` or `NEXT_PUBLIC_DEMO_MODE=true`) skips CSP
+// entirely so content generation and stakeholder demos are never blocked.
+// Full headers are restored only when both flags are absent in production.
+// See: docs/patterns/csp-demo-mode.md
+// ---------------------------------------------------------------------------
+
 const protectedRoutes = ["/dashboard"]
 const publicRoutes = ["/login"]
 
@@ -22,7 +36,7 @@ function getSecurityHeaders(nonce: string): Record<string, string> {
     "Cross-Origin-Embedder-Policy": "require-corp",
     "Content-Security-Policy": [
       "script-src 'nonce-" + nonce + "' 'self' https: http:;",
-      "style-src 'nonce-" + nonce + "' 'unsafe-inline' 'self' https: http:;",
+      "style-src 'nonce-" + nonce + "' 'self' https: http:;",
       "img-src 'self' https: data: blob:;",
       "font-src 'self' https: data:;",
       "connect-src 'self' https: wss:;",

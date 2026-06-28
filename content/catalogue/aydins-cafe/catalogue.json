@@ -1,0 +1,41 @@
+{
+  "name": "Aydin's Cafe",
+  "categories": [
+    {
+      "id": "breakfast",
+      "name": "Breakfast",
+      "items": [
+        { "id": "breakfast-burrito", "name": "Breakfast Burrito", "description": "Greek styled omelette, bacon, cheese, roasted capsicum, hash brown, spinach and onion BBQ sauce.", "price": 16.00 },
+        { "id": "breakfast-burger", "name": "Breakfast Burger", "description": "Toasted roll topped with beef patty, bacon, cheddar cheese, egg and BBQ sauce.", "price": 14.95 },
+        { "id": "breakfast-deluxe", "name": "Breakfast Deluxe", "description": "Eggs your way, slow cooked beans, bacon, chicken chippo, grilled mushrooms, hash brown, grilled tomato and crusty Italian bread.", "price": 19.00 },
+        { "id": "smash-the-day-avocado", "name": "Smash the Day Avocado", "description": "Smashed avo topped with crumbed greek feta and drizzled with balsamic vinaigrette on crusty Italian bread.", "price": 14.00 },
+        { "id": "fluffy-pancakes", "name": "Fluffy Pancakes (3)", "description": "Fluffy pancakes with seasonal fruits, whipped cream and maple syrup drizzle.", "price": 16.00 },
+        { "id": "crepes", "name": "Crapes (2)", "description": "Savoury crepes.", "price": 16.00 },
+        { "id": "savoury-french-toast", "name": "Savoury French Toast", "description": "Topped with bacon, rocket, sliced avocado and drizzled balsamic.", "price": 16.00 },
+        { "id": "eggs-benedict", "name": "Eggs Benedict", "description": "Poached eggs, rocket and bacon on ciabatta bread with hollandaise sauce.", "price": 15.00 },
+        { "id": "egg-and-bacon-burger", "name": "Egg and Bacon Burger", "description": "Classic egg and bacon burger.", "price": 12.95 },
+        { "id": "egg-and-bacon-toastie", "name": "Egg and Bacon Toastie", "description": "Toasted sandwich with egg and bacon.", "price": 10.50 },
+        { "id": "ham-and-cheese-toastie", "name": "Ham and Cheese Toastie", "description": "Classic ham and cheese toasted sandwich.", "price": 8.00 },
+        { "id": "cheese-and-tomato-toastie", "name": "Cheese and Tomato Toastie", "description": "Cheese and tomato toasted sandwich.", "price": 7.00 },
+        { "id": "chicken-and-cheese-toastie", "name": "Chicken and Cheese Toastie", "description": "Chicken and cheese toasted sandwich.", "price": 9.95 }
+      ]
+    },
+    {
+      "id": "lunch",
+      "name": "Lunch",
+      "items": [
+        { "id": "ham-and-cheese-croissant", "name": "Ham and Cheese Croissant", "description": "Buttery croissant filled with ham and cheese.", "price": 10.50 }
+      ]
+    },
+    {
+      "id": "sweet-treats",
+      "name": "Sweet Treats",
+      "items": [
+        { "id": "banana-bread", "name": "Banana Bread", "description": "Homemade banana bread.", "price": 5.50 },
+        { "id": "white-choc-raspberry-muffin", "name": "White Chocolate and Raspberry Muffin", "description": "Moist muffin with white chocolate and raspberry.", "price": 5.50 },
+        { "id": "chocolate-muffin", "name": "Chocolate Muffin", "description": "Rich chocolate muffin.", "price": 5.50 }
+      ]
+    }
+  ],
+  "items": []
+}

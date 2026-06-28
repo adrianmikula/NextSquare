@@ -1,0 +1,23 @@
+{
+  "name": "Warm Morning",
+  "colors": {
+    "primary": "#b45309",
+    "secondary": "#fef3c7",
+    "background": "#ffffff",
+    "surface": "#fffbeb",
+    "text": "#1c1917"
+  },
+  "components": {
+    "heroStyle": "gradient",
+    "cardStyle": "elevated",
+    "buttonStyle": "filled"
+  },
+  "images": {
+    "hero": "https://img3.restaurantguru.com/w550/h367/rf19-Aydins-Cafe-interior-2025-05.jpg",
+    "logo": "placeholder"
+  },
+  "typography": {
+    "headingFont": "Inter",
+    "bodyFont": "Inter"
+  }
+}

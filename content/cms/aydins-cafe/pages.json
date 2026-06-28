@@ -1,0 +1,185 @@
+{
+  "pages": [
+    {
+      "slug": "home",
+      "label": "Home",
+      "blocks": [
+        {
+          "type": "hero",
+          "data": {
+            "headline": "Aydin's Cafe",
+            "subheadline": "Fresh breakfast and brunch in Joondalup",
+            "ctaLabel": "View Menu",
+            "ctaLink": "/menu",
+            "image": "https://img3.restaurantguru.com/w550/h367/rf19-Aydins-Cafe-interior-2025-05.jpg"
+          }
+        },
+        {
+          "type": "products",
+          "data": {
+            "title": "Popular Right Now",
+            "items": [
+              { "name": "Breakfast Burger", "description": "Toasted roll topped with beef patty, bacon, cheddar cheese, egg and BBQ sauce.", "price": 14.95 },
+              { "name": "Breakfast Burrito", "description": "Greek styled omelette, bacon, cheese, roasted capsicum, hash brown, spinach and onion BBQ sauce.", "price": 16.00 },
+              { "name": "Fluffy Pancakes (3)", "description": "Fluffy pancakes with seasonal fruits, whipped cream and maple syrup drizzle.", "price": 16.00 },
+              { "name": "Ham and Cheese Croissant", "description": "Buttery croissant filled with ham and cheese.", "price": 10.50 }
+            ]
+          }
+        },
+        {
+          "type": "testimonials",
+          "data": {
+            "items": [
+              { "author": "Louis L.", "text": "Very tasty, I don't usually write review but I took my phone while eating this cheeseburger to write about it.", "source": "Uber Eats" },
+              { "author": "Steven W.", "text": "The burgers are excellent, made fresh. Taste is on point with the OG sauce.", "source": "Uber Eats" },
+              { "author": "Chris D.", "text": "Chips are excellent and the burgers are top shelf.", "source": "Uber Eats" }
+            ]
+          }
+        },
+        {
+          "type": "delivery",
+          "data": {
+            "heading": "Get it delivered",
+            "body": "Order Aydin's Cafe through Uber Eats.",
+            "platforms": [
+              { "name": "Uber Eats", "url": "https://www.ubereats.com/au/store/aydins-cafe/IJbz4BeDWlqHKtlczc8EXg", "label": "Order on Uber Eats" }
+            ]
+          }
+        }
+      ],
+      "seo": {
+        "title": "Aydin's Cafe - Fresh Breakfast & Brunch in Joondalup",
+        "description": "Aydin's Cafe in Joondalup serves fresh breakfast and brunch. Known for burgers made fresh, tasty chips, and hearty breakfast classics."
+      }
+    },
+    {
+      "slug": "menu",
+      "label": "Menu",
+      "blocks": [
+        {
+          "type": "products",
+          "data": {
+            "title": "Breakfast",
+            "items": [
+              { "name": "Breakfast Burrito", "description": "Greek styled omelette, bacon, cheese, roasted capsicum, hash brown, spinach and onion BBQ sauce.", "price": 16.00 },
+              { "name": "Breakfast Burger", "description": "Toasted roll topped with beef patty, bacon, cheddar cheese, egg and BBQ sauce.", "price": 14.95 },
+              { "name": "Breakfast Deluxe", "description": "Eggs your way, slow cooked beans, bacon, chicken chippo, grilled mushrooms, hash brown, grilled tomato and crusty Italian bread.", "price": 19.00 },
+              { "name": "Smash the Day Avocado", "description": "Smashed avo topped with crumbed greek feta and drizzled with balsamic vinaigrette on crusty Italian bread.", "price": 14.00 },
+              { "name": "Fluffy Pancakes (3)", "description": "Fluffy pancakes with seasonal fruits, whipped cream and maple syrup drizzle.", "price": 16.00 },
+              { "name": "Crapes (2)", "description": "Savoury crepes.", "price": 16.00 },
+              { "name": "Savoury French Toast", "description": "Topped with bacon, rocket, sliced avocado and drizzled balsamic.", "price": 16.00 },
+              { "name": "Eggs Benedict", "description": "Poached eggs, rocket and bacon on ciabatta bread with hollandaise sauce.", "price": 15.00 },
+              { "name": "Egg and Bacon Burger", "description": "Classic egg and bacon burger.", "price": 12.95 },
+              { "name": "Egg and Bacon Toastie", "description": "Toasted sandwich with egg and bacon.", "price": 10.50 },
+              { "name": "Ham and Cheese Toastie", "description": "Classic ham and cheese toasted sandwich.", "price": 8.00 },
+              { "name": "Cheese and Tomato Toastie", "description": "Cheese and tomato toasted sandwich.", "price": 7.00 },
+              { "name": "Chicken and Cheese Toastie", "description": "Chicken and cheese toasted sandwich.", "price": 9.95 }
+            ]
+          }
+        },
+        {
+          "type": "products",
+          "data": {
+            "title": "Lunch",
+            "items": [
+              { "name": "Ham and Cheese Croissant", "description": "Buttery croissant filled with ham and cheese.", "price": 10.50 }
+            ]
+          }
+        },
+        {
+          "type": "products",
+          "data": {
+            "title": "Sweet Treats",
+            "items": [
+              { "name": "Banana Bread", "description": "Homemade banana bread.", "price": 5.50 },
+              { "name": "White Chocolate and Raspberry Muffin", "description": "Moist muffin with white chocolate and raspberry.", "price": 5.50 },
+              { "name": "Chocolate Muffin", "description": "Rich chocolate muffin.", "price": 5.50 }
+            ]
+          }
+        },
+        {
+          "type": "delivery",
+          "data": {
+            "heading": "Order delivery",
+            "body": "Get your favourites delivered via Uber Eats.",
+            "platforms": [
+              { "name": "Uber Eats", "url": "https://www.ubereats.com/au/store/aydins-cafe/IJbz4BeDWlqHKtlczc8EXg", "label": "Order on Uber Eats" }
+            ]
+          }
+        }
+      ],
+      "seo": {
+        "title": "Menu - Aydin's Cafe",
+        "description": "Browse our menu of fresh breakfast, lunch, and sweet treats at Aydin's Cafe in Joondalup."
+      }
+    },
+    {
+      "slug": "about",
+      "label": "About",
+      "blocks": [
+        {
+          "type": "text",
+          "data": {
+            "heading": "Our Story",
+            "body": "Aydin's Cafe in Joondalup serves fresh breakfast and brunch in a casual setting. We're known for burgers made fresh, tasty chips, and hearty breakfast classics. Whether you're grabbing a quick bite on the go or settling in for a relaxed brunch, we've got you covered."
+          }
+        },
+        {
+          "type": "testimonials",
+          "data": {
+            "items": [
+              { "author": "Louis L.", "text": "Very tasty, I don't usually write review but I took my phone while eating this cheeseburger to write about it.", "source": "Uber Eats" },
+              { "author": "Steven W.", "text": "The burgers are excellent, made fresh. Taste is on point with the OG sauce.", "source": "Uber Eats" },
+              { "author": "Chris D.", "text": "Chips are excellent and the burgers are top shelf.", "source": "Uber Eats" }
+            ]
+          }
+        }
+      ],
+      "seo": {
+        "title": "About - Aydin's Cafe",
+        "description": "Learn more about Aydin's Cafe in Joondalup, your local spot for fresh breakfast and brunch."
+      }
+    },
+    {
+      "slug": "contact",
+      "label": "Contact",
+      "blocks": [
+        {
+          "type": "hours",
+          "data": {
+            "schedule": [
+              { "day": "Monday", "open": "07:00", "close": "15:00" },
+              { "day": "Tuesday", "open": "07:00", "close": "15:00" },
+              { "day": "Wednesday", "open": "07:00", "close": "15:00" },
+              { "day": "Thursday", "open": "07:00", "close": "15:00" },
+              { "day": "Friday", "open": "07:00", "close": "15:00" },
+              { "day": "Saturday", "open": "08:00", "close": "14:00" },
+              { "day": "Sunday", "open": "Closed", "close": "Closed" }
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "data": {
+            "heading": "Find Us",
+            "body": "5/1 Winton Road, Joondalup WA 6027\nPhone: +61 8 9403 3709"
+          }
+        },
+        {
+          "type": "delivery",
+          "data": {
+            "heading": "Delivery & Pickup",
+            "body": "Order online for delivery or pickup through Uber Eats.",
+            "platforms": [
+              { "name": "Uber Eats", "url": "https://www.ubereats.com/au/store/aydins-cafe/IJbz4BeDWlqHKtlczc8EXg", "label": "Order on Uber Eats" }
+            ]
+          }
+        }
+      ],
+      "seo": {
+        "title": "Contact - Aydin's Cafe",
+        "description": "Find Aydin's Cafe in Joondalup, view opening hours, and order delivery."
+      }
+    }
+  ]
+}

@@ -35,6 +35,10 @@ export default function CheckoutPage() {
   const [deliveryAddress, setDeliveryAddress] = useState<DeliveryAddress>(defaultAddress)
   const [deliveryNotes, setDeliveryNotes] = useState("")
 
+  const onError = useCallback((message: string) => {
+    addToast(message, "error")
+  }, [addToast])
+
   const handlePaymentSubmit = useCallback(
     async (nonce: string) => {
       if (!customerName || !customerPhone) {
@@ -146,7 +150,7 @@ export default function CheckoutPage() {
           )}
 
           <OrderSummary />
-          <SquarePaymentForm amount={totalWithFee} currency="AUD" onError={(msg) => addToast(msg, "error")} onSubmit={handlePaymentSubmit} />
+          <SquarePaymentForm amount={totalWithFee} currency="AUD" onError={onError} onSubmit={handlePaymentSubmit} />
           <SquareFallback />
         </div>
       </div>

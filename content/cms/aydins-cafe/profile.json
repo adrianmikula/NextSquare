@@ -1,0 +1,60 @@
+{
+  "name": "Aydin's Cafe",
+  "slug": "aydins-cafe",
+  "type": "cafe",
+  "description": "Aydin's Cafe in Joondalup serves fresh breakfast and brunch in a casual setting. We're known for burgers made fresh, tasty chips, and hearty breakfast classics. Whether you're grabbing a quick bite on the go or settling in for a relaxed brunch, we've got you covered.",
+  "location": {
+    "address": "5/1 Winton Road, Joondalup WA 6027",
+    "suburb": "Joondalup",
+    "state": "WA",
+    "postcode": "6027",
+    "country": "AU"
+  },
+  "phone": "+61 8 9403 3709",
+  "hours": {
+    "monday": "07:00-15:00",
+    "tuesday": "07:00-15:00",
+    "wednesday": "07:00-15:00",
+    "thursday": "07:00-15:00",
+    "friday": "07:00-15:00",
+    "saturday": "08:00-14:00",
+    "sunday": "Closed"
+  },
+  "media": {
+    "hero": "https://img3.restaurantguru.com/w550/h367/rf19-Aydins-Cafe-interior-2025-05.jpg",
+    "gallery": [
+      "https://img3.restaurantguru.com/w550/h367/rf19-Aydins-Cafe-interior-2025-05.jpg",
+      "https://img02.restaurantguru.com/c871-Restaurant-Aydins-Cafe-food.jpg",
+      "https://img02.restaurantguru.com/c385-Aydins-Cafe-Joondalup-french-fries.jpg",
+      "https://img02.restaurantguru.com/c010-Restaurant-Aydins-Cafe-pulled-pork-sandwich.jpg",
+      "https://img02.restaurantguru.com/cf7f-Restaurant-Aydins-Cafe-meals.jpg"
+    ]
+  },
+  "catalogue": {
+    "categories": [
+      { "id": "breakfast", "name": "Breakfast", "slug": "breakfast" },
+      { "id": "lunch", "name": "Lunch", "slug": "lunch" },
+      { "id": "sweet-treats", "name": "Sweet Treats", "slug": "sweet-treats" }
+    ]
+  },
+  "testimonials": [
+    { "author": "Louis L.", "text": "Very tasty, I don't usually write review but I took my phone while eating this cheeseburger to write about it.", "source": "Uber Eats" },
+    { "author": "Steven W.", "text": "The burgers are excellent, made fresh. Taste is on point with the OG sauce.", "source": "Uber Eats" },
+    { "author": "Chris D.", "text": "Chips are excellent and the burgers are top shelf.", "source": "Uber Eats" }
+  ],
+  "deliveryUrls": [
+    { "name": "Uber Eats", "url": "https://www.ubereats.com/au/store/aydins-cafe/IJbz4BeDWlqHKtlczc8EXg", "label": "Order on Uber Eats" }
+  ],
+  "tripAdvisorSummary": {
+    "rating": 0,
+    "reviewCount": 0,
+    "topKeywords": []
+  },
+  "vibe": {
+    "palette": ["#b45309", "#fef3c7", "#78350f", "#fffbeb"],
+    "adjectives": ["warm", "casual", "fresh", "inviting"]
+  },
+  "audience": ["locals", "breakfast-crowd", "families"],
+  "tone": "casual and friendly",
+  "features": ["delivery", "takeaway", "wheelchair-accessible"]
+}
