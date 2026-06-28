@@ -1,12 +1,21 @@
 import { MapPin, Clock } from "lucide-react"
+import { readSiteProfile } from "@/lib/cms"
+
+const tenants = ["aydins-cafe"]
+const tenant = tenants[0] || "aydins-cafe"
+const profile = readSiteProfile(tenant)
 
 const hours = [
-  { day: "Monday - Friday", time: "7:00 AM - 3:00 PM" },
-  { day: "Saturday", time: "8:00 AM - 4:00 PM" },
-  { day: "Sunday", time: "8:00 AM - 2:00 PM" },
+  { day: "Monday - Friday", time: profile?.contact?.hours?.weekdays || "7:00 AM - 3:00 PM" },
+  { day: "Saturday", time: profile?.contact?.hours?.saturday || "8:00 AM - 4:00 PM" },
+  { day: "Sunday", time: profile?.contact?.hours?.sunday || "Closed" },
 ]
 
 export function HoursLocation() {
+  const address = profile?.address
+  const street = address?.street || "123 Coffee Lane"
+  const suburbState = `${address?.suburb || "Melbourne"} ${address?.state || "VIC"} ${address?.postcode || "3000"}`
+
   return (
     <section className="bg-stone-50 py-20">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -36,9 +45,9 @@ export function HoursLocation() {
               </h2>
             </div>
             <div className="mt-6 space-y-2 text-sm text-stone-600">
-              <p>123 Coffee Lane</p>
-              <p>Melbourne VIC 3000</p>
-              <p>Australia</p>
+              <p>{street}</p>
+              <p>{suburbState}</p>
+              <p>{address?.country || "Australia"}</p>
             </div>
           </div>
         </div>

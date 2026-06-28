@@ -1,34 +1,45 @@
 import type { Metadata } from "next"
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
 import { GoogleMaps } from "@/components/google-maps"
+import { readSiteProfile } from "@/lib/cms"
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Get in touch with us. Find our location, hours, and contact information.",
-}
+const tenants = ["aydins-cafe"]
+const tenant = tenants[0] || "aydins-cafe"
+const profile = readSiteProfile(tenant)
+
+const address = profile?.address
+const contact = profile?.contact
 
 const contactDetails = [
   {
     icon: MapPin,
     label: "Address",
-    value: "123 Coffee Lane, Melbourne VIC 3000",
+    value: address?.full || "123 Coffee Lane, Melbourne VIC 3000",
   },
   {
     icon: Phone,
     label: "Phone",
-    value: "(03) 9000 0000",
+    value: contact?.phoneDisplay || contact?.phone || "(03) 9000 0000",
   },
   {
     icon: Mail,
     label: "Email",
-    value: "hello@cafetemplate.com",
+    value: contact?.email || "hello@cafetemplate.com",
   },
   {
     icon: Clock,
     label: "Hours",
-    value: "Mon-Fri 7am-3pm, Sat 8am-4pm, Sun 8am-2pm",
+    value:
+      contact?.hours?.weekdays
+        ? `Mon-Fri ${contact.hours.weekdays}${contact?.hours?.saturday ? `, Sat ${contact.hours.saturday}` : ""}`
+        : "Mon-Fri 7am-3pm, Sat 8am-4pm, Sun 8am-2pm",
   },
 ]
+
+export const metadata: Metadata = {
+  title: "Contact",
+  description: profile?.seo?.description || "Get in touch with us. Find our location, hours, and contact information.",
+}
 
 export default function ContactPage() {
   return (
@@ -64,7 +75,7 @@ export default function ContactPage() {
           </div>
 
           <div className="overflow-hidden rounded-xl">
-            <GoogleMaps />
+            <GoogleMaps query={address?.full} />
           </div>
         </div>
       </div>

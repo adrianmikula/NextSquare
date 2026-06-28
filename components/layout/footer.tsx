@@ -1,7 +1,14 @@
 import Link from "next/link"
+import type { SiteProfile } from "@/lib/cms"
 
-export function Footer() {
+const FALLBACK_NAME = "Cafe Template"
+
+export function Footer({ siteProfile }: { siteProfile?: SiteProfile | null }) {
   const year = new Date().getFullYear()
+  const name = siteProfile?.siteName || FALLBACK_NAME
+  const tagline = siteProfile?.tagline || "Fresh coffee, great food, good vibes."
+  const instagram = siteProfile?.social?.instagram || "@cafetemplate"
+  const email = siteProfile?.contact?.email || "hello@cafetemplate.com"
 
   return (
     <footer className="border-t border-stone-200 bg-stone-50">
@@ -9,11 +16,9 @@ export function Footer() {
         <div className="grid gap-8 sm:grid-cols-3">
           <div>
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-stone-500">
-              Cafe Template
+              {name}
             </h3>
-            <p className="text-sm text-stone-600">
-              Fresh coffee, great food, good vibes.
-            </p>
+            <p className="text-sm text-stone-600">{tagline}</p>
           </div>
 
           <div>
@@ -46,14 +51,13 @@ export function Footer() {
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-stone-500">
               Follow Us
             </h3>
-            <p className="text-sm text-stone-600">
-              Instagram: @cafetemplate
-            </p>
+            <p className="text-sm text-stone-600">Instagram: {instagram}</p>
+            <p className="text-sm text-stone-600">{email}</p>
           </div>
         </div>
 
         <div className="mt-8 border-t border-stone-200 pt-6 text-center text-xs text-stone-400">
-          &copy; {year} Cafe Template. Built with Next.js &amp; Square.
+          &copy; {year} {name}. Built with Next.js &amp; Square.
         </div>
       </div>
     </footer>

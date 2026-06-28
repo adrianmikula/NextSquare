@@ -3,8 +3,15 @@ import path from "path"
 
 const CMS_ROOT = path.join(process.cwd(), "content", "cms")
 const THEMES_ROOT = path.join(process.cwd(), "content", "themes")
+const SITE_PROFILE_ROOT = path.join(process.cwd(), "content", "site-profile")
 
-export function getTenantDir(tenant: string, kind: "cms" | "themes" | "catalogue") {
+export function readSiteProfile(tenant: string): SiteProfile | null {
+  const file = path.join(SITE_PROFILE_ROOT, tenant, "site-profile.json")
+  if (!fs.existsSync(file)) return null
+  return readJson<SiteProfile>(file)
+}
+
+export function getTenantDir(tenant: string, kind: "cms" | "themes" | "catalogue" | "site-profile") {
   return path.join(process.cwd(), "content", kind, tenant)
 }
 
@@ -13,13 +20,48 @@ export function readJson<T>(filePath: string): T {
   return JSON.parse(raw) as T
 }
 
-export function listTenants(kind: "cms" | "themes" | "catalogue" = "cms"): string[] {
+export function listTenants(kind: "cms" | "themes" | "catalogue" | "site-profile" = "cms"): string[] {
   const root = path.join(process.cwd(), "content", kind)
   if (!fs.existsSync(root)) return []
   return fs
     .readdirSync(root, { withFileTypes: true })
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
+}
+
+export interface SiteProfile {
+  siteName: string
+  tagline?: string
+  description?: string
+  address?: {
+    street: string
+    suburb: string
+    state: string
+    postcode: string
+    country?: string
+    full: string
+  }
+  contact?: {
+    phone?: string
+    phoneDisplay?: string
+    email?: string
+    hours?: {
+      weekdays?: string
+      saturday?: string
+      sunday?: string
+    }
+  }
+  social?: {
+    instagram?: string
+  }
+  foundedYear?: string
+  story?: string
+  values?: Array<{ title: string; description: string }>
+  seo?: {
+    title?: string
+    description?: string
+  }
+  [key: string]: unknown
 }
 
 export interface ThemeConfig {

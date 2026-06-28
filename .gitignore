@@ -39,3 +39,7 @@ coverage/
 
 # AI instructions (keep private)
 .github/instructions/codacy.instructions.md
+
+# Tenant-specific content (CMS, themes, profiles, catalogues)
+# Generated per-tenant by the website-builder skill; not part of platform code
+content/

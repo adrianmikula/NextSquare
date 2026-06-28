@@ -56,6 +56,7 @@ Gather whatever the user can provide. Mark missing sources as `∅`.
 | Uber Eats | Restaurant/storefront URL |
 | DoorDash | Restaurant/storefront URL |
 | TripAdvisor | Business listing URL |
+| **Branding** | Ask the user directly: *What is the exact business name, tagline, and short description?* *How should the site feel — e.g. warm and rustic, modern and minimal, playful?* If they have an existing website, ask for a screenshot or URL and derive visual direction from it. Consult `resources/theme-examples.md` for industry-specific direction keywords and palettes. |
 
 Required: at least one source. If none available, stop and list what is needed.
 
@@ -81,7 +82,7 @@ Do not invent data. If a source returns nothing after exhaustive search, note th
 
 From the scratchpad, produce a single `BusinessProfile` matching the schema in `resources/schemas.md` (`BusinessProfile` interface).
 
-Write `content/cms/<tenant>/profile.json`.
+**Do not write `BusinessProfile` to a file.** It exists as working memory only. All persisted tenant data flows through `SiteProfile` (written in Step 5).
 
 **Rules:**
 - Derive all values from fetched source data. Do not inject preset examples.
@@ -151,11 +152,11 @@ Write:
 - `content/themes/<tenant>/theme-b.json`
 
 **Rules:**
-- Both themes must derive colours from the `vibe.palette` captured in analysis.
+- Both themes must derive colours from the `vibe.palette` and `vibe.adjectives` captured in analysis.
 - Select two distinct directions from the `vibe.adjectives` list. Each theme should lean toward a different adjective or combination of adjectives.
 - Themes must differ in at least `components.heroStyle`, `components.cardStyle`, and `components.buttonStyle`.
-- Both themes reference the same `media.hero` and `media.logo` paths.
-- If `media.hero` and `media.logo` are empty, set `images.hero` and `images.logo` to `"placeholder"` and choose a neutral default asset path that themes can render as a labelled placeholder until images are uploaded.
+- Image URLs (hero, gallery) live in the CMS pages and `site-profile.json`, not in theme files. Theme JSON should contain only colours, typography, and component style flags.
+- Consult `resources/theme-examples.md` for industry-specific palettes, typography, and direction keywords. Match the business `type` to the corresponding subcategory section and use that as a starting point.
 
 `ThemeConfig` shape is defined in `resources/schemas.md`. Do not use preset theme definitions. Generate each theme pair afresh from the current `BusinessProfile`.
 

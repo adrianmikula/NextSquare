@@ -8,25 +8,30 @@ import { ToastProvider } from "@/components/ui/ToastProvider"
 import { DemoBadge } from "@/components/demo/DemoBadge"
 import { ToastContainer } from "@/components/ui/toast"
 import { requireEnv } from "@/lib/env"
+import { listTenants, readSiteProfile } from "@/lib/cms"
 
 const inter = Inter({ subsets: ["latin"] })
 
-const siteTitle = "Cafe Template"
-const siteDescription =
-  "Fresh coffee, great food, and a warm atmosphere. Order online for pickup or delivery."
+export async function generateMetadata(): Promise<Metadata> {
+  const tenants = listTenants()
+  const tenant = tenants[0] || "aydins-cafe"
+  const profile = readSiteProfile(tenant)
+  const title = profile?.seo?.title || profile?.siteName || "Cafe Template"
+  const description = profile?.seo?.description || profile?.description || ""
 
-export const metadata: Metadata = {
-  title: {
-    default: siteTitle,
-    template: `%s | ${siteTitle}`,
-  },
-  description: siteDescription,
-  metadataBase: new URL(requireEnv("NEXT_PUBLIC_SITE_URL")),
-  openGraph: {
-    title: siteTitle,
-    description: siteDescription,
-    type: "website",
-  },
+  return {
+    title: {
+      default: title,
+      template: `%s | ${title}`,
+    },
+    description,
+    metadataBase: new URL(requireEnv("NEXT_PUBLIC_SITE_URL")),
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+  }
 }
 
 export default function RootLayout({
@@ -34,15 +39,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const tenants = listTenants()
+  const tenant = tenants[0] || "aydins-cafe"
+  const siteProfile = readSiteProfile(tenant)
+
   return (
     <html lang="en">
       <body className={inter.className}>
         <ToastProvider>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <Header siteProfile={siteProfile} />
+          <main className="flex-1">{children}</main>
+          <Footer siteProfile={siteProfile} />
         </ToastProvider>
         <ToastContainer />
         <DemoBadge />

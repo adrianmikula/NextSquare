@@ -4,6 +4,49 @@ All TypeScript interfaces and JSON shapes used by the website-builder skill. Imp
 
 ---
 
+## SiteProfile
+
+**Single source of truth** for a tenant's branding, contact, and identity. Stored at `content/site-profile/<tenant>/site-profile.json`. Every generated output (CMS pages, themes, catalogue, layout slots) must derive from this file.
+
+```typescript
+interface SiteProfile {
+  siteName: string;
+  tagline?: string;
+  description?: string;
+  address?: {
+    street: string;
+    suburb: string;
+    state: string;
+    postcode: string;
+    country?: string;
+    full: string;
+  };
+  contact?: {
+    phone?: string;
+    phoneDisplay?: string;
+    email?: string;
+    hours?: {
+      weekdays?: string;
+      saturday?: string;
+      sunday?: string;
+    };
+  };
+  social?: {
+    instagram?: string;
+  };
+  foundedYear?: string;
+  story?: string;
+  values?: Array<{ title: string; description: string }>;
+  seo?: {
+    title?: string;
+    description?: string;
+  };
+  [key: string]: unknown;
+}
+```
+
+---
+
 ## BusinessProfile
 
 The single source of truth extracted from all inputs.
@@ -221,10 +264,11 @@ interface ThemeConfig {
     buttonStyle: 'filled' | 'outlined' | 'ghost';
     navStyle: 'solid' | 'transparent' | 'sticky';
   };
-  images: {
-    hero: string;      // relative path or asset reference
-    logo: string;      // relative path or asset reference
-    atlas: string[];   // additional image paths
+  typography: {
+    headingFont: string;
+    bodyFont: string;
+    weights: { heading: number; body: number };
+    sectionPadding?: string;
   };
 }
 ```
@@ -237,7 +281,7 @@ Stored under `content/catalogue/<tenant>/catalogue.json`. Mirrors Square Catalog
 
 ```typescript
 interface CatalogueDoc {
-  categories: Array<{ name: string; description: string }>;
+  categories?: Array<{ name: string; description?: string }>;
   items: Array<{
     name: string;
     description: string;

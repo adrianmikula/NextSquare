@@ -1,31 +1,51 @@
 import type { Metadata } from "next"
 import { Heart, Coffee, Users } from "lucide-react"
+import { readSiteProfile } from "@/lib/cms"
+
+function FallbackValues() {
+  return {
+    story: "Founded in 2020, Cafe Template started as a small dream between two friends who believed that great coffee could bring people together. What began as a pop-up at the local farmers market quickly grew into the beloved neighbourhood cafe it is today.",
+    values: [
+      {
+        icon: Coffee,
+        title: "Quality Coffee",
+        description:
+          "We source our beans from sustainable farms and roast them locally in small batches for peak freshness.",
+      },
+      {
+        icon: Heart,
+        title: "Community First",
+        description:
+          "Our cafe is a gathering place for friends, families, and colleagues. Everyone is welcome here.",
+      },
+      {
+        icon: Users,
+        title: "Great Service",
+        description:
+          "Our team is passionate about creating a warm, welcoming experience for every customer.",
+      },
+    ],
+  }
+}
+
+const tenants = ["aydins-cafe"]
+const tenant = tenants[0] || "aydins-cafe"
+const profile = readSiteProfile(tenant)
+const { story, values } = profile
+  ? {
+      story: profile.story || "",
+      values: (profile.values || []).map((v, i) => ({
+        icon: [Coffee, Heart, Users][i % 3],
+        title: v.title,
+        description: v.description,
+      })),
+    }
+  : FallbackValues()
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Learn about our story, our values, and what makes our cafe special.",
+  description: profile?.seo?.description || "Learn about our story, our values, and what makes our cafe special.",
 }
-
-const values = [
-  {
-    icon: Coffee,
-    title: "Quality Coffee",
-    description:
-      "We source our beans from sustainable farms and roast them locally in small batches for peak freshness.",
-  },
-  {
-    icon: Heart,
-    title: "Community First",
-    description:
-      "Our cafe is a gathering place for friends, families, and colleagues. Everyone is welcome here.",
-  },
-  {
-    icon: Users,
-    title: "Great Service",
-    description:
-      "Our team is passionate about creating a warm, welcoming experience for every customer.",
-  },
-]
 
 export default function AboutPage() {
   return (
@@ -36,25 +56,7 @@ export default function AboutPage() {
             Our Story
           </h1>
           <div className="mt-8 space-y-4 text-left text-stone-600">
-            <p>
-              Founded in 2020, Cafe Template started as a small dream
-              between two friends who believed that great coffee could bring
-              people together. What began as a pop-up at the local farmers
-              market quickly grew into the beloved neighbourhood cafe it is
-              today.
-            </p>
-            <p>
-              We believe in the power of simple things done well. From our
-              carefully roasted coffee beans to our freshly prepared food,
-              every detail matters. We partner with local farmers, bakers,
-              and artisans to bring you the best our community has to offer.
-            </p>
-            <p>
-              Whether you are grabbing a quick flat white on your way to
-              work, settling in for a long brunch with friends, or ordering
-              online for pickup, we are here to make your day a little
-              brighter.
-            </p>
+            <p>{story}</p>
           </div>
         </div>
 
