@@ -3,7 +3,7 @@ import { OrderButton } from "@/components/order-button"
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-stone-900 py-24 sm:py-32">
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1920&q=80')] bg-cover bg-center opacity-40" />
+      <div className="absolute inset-0 bg-stone-900" />
       <div className="absolute inset-0 bg-gradient-to-b from-stone-900/70 to-stone-900" />
 
       <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6">

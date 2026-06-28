@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { decrypt } from "@/lib/auth/session"
+import { isDemoMode } from "@/lib/env"
 
 const protectedRoutes = ["/dashboard"]
 const publicRoutes = ["/login"]
@@ -65,19 +66,28 @@ export default async function proxy(req: NextRequest) {
     },
   })
 
-  const headers = getSecurityHeaders(nonce)
+  const headers = isDemoMode() ? getDemoModeHeaders() : getSecurityHeaders(nonce)
   for (const [key, value] of Object.entries(headers)) {
     response.headers.set(key, value)
   }
 
-  response.cookies.set("nonce", nonce, {
-    httpOnly: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60,
-  })
+  if (!isDemoMode()) {
+    response.cookies.set("nonce", nonce, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60,
+    })
+  }
 
   return response
+}
+
+function getDemoModeHeaders(): Record<string, string> {
+  return {
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+  }
 }
 
 export const config = {

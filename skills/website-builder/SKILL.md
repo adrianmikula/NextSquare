@@ -15,9 +15,24 @@ Given at least one real data source, build a working demo website by extracting 
 
 ## Prerequisites
 
-- Project scaffold in place (`app/`, `lib/`, `components/`, `tests/`).
+- Project scaffold in place using the App Router (`app/`, `lib/`, `components/`).
+- React Server Components are the default; add `"use client"` only when a component uses browser APIs (`useEffect`, `useState`, `window`, etc.).
 - Theme system supports a `?theme=` query parameter.
 - Test scripts defined in `package.json` (`lint`, `typecheck`, `test`).
+- Dev server honours a `DEMO_MODE=true` flag that skips restrictive security headers.
+
+For environment variable rules, remote image patterns, and demo mode configuration, see `docs/patterns/configuration.md`.
+
+## Non-Negotiable Technical Rules
+
+These rules prevent the blank-page, CSP, and server/client render mismatches observed in prior builds. For implementation details, see `docs/patterns/cms-rendering.md` and `docs/patterns/csp-demo-mode.md`.
+
+1. **CMS JSON shape is fixed.** `pages.json` MUST use the wrapper `{ "pages": [...] }`. The CMS reader in `lib/cms.ts` must return `parsed.pages || []`, never the raw parsed object.
+2. **Block renderers are Server Components by default.** Do NOT add `"use client"` to `CmsRenderer` or any block function unless they consume browser-only APIs.
+3. **No dynamic Tailwind class construction.** Do not build arbitrary Tailwind classes at runtime. Use inline styles for dynamic background images. For scan-safe markdown docs, see `docs/patterns/tailwind-scanning.md`.
+4. **Theme injection must not block the app shell.** Do not wrap the root layout in a client-side `ThemeProvider` that returns `null`. It must render `children` after applying CSS custom properties.
+5. **Avoid `dynamic = "force-dynamic"` unless required.** Server components can read sync files (`fs`) directly.
+6. **CSP in dev.** When `DEMO_MODE=true`, ensure the proxy skips restrictive headers and the page renders full HTML when fetched with `curl`.
 
 ---
 
@@ -46,11 +61,21 @@ Required: at least one source. If none available, stop and list what is needed.
 
 ### Step 2: Fetch & Scratchpad
 
-For each provided source, fetch and save raw data to `content/scratch/<tenant>/`.
+**Mandatory exhaustive search before declaring a source missing:**
+- For each source type, run targeted searches with `site:` prefix where applicable:
+  - TripAdvisor: `site:tripadvisor.com "<business name>" <city>`
+  - Facebook: `site:facebook.com "<business name>" <city>`
+  - Instagram: `site:instagram.com "<business name>" <city>`
+  - Google Business: `"<business name>" <city> Google Business Profile` or Google Places query
+  - DoorDash: `site:doordash.com "<business name>" <city>`
+  - Menulog: `site:menulog.com "<business name>" <city>`
+- Do not silently skip TripAdvisor or image-heavy sources. If a search result reveals the URL, attempt the fetch/scrape.
+
+For each provided or discovered source, fetch and save raw data to `content/scratch/<tenant>/`.
 
 Implementation details and API endpoints are in `resources/api-hints.md`.
 
-Do not invent data. If a source returns nothing, note the gap in `content/scratch/<tenant>/analysis.md`.
+Do not invent data. If a source returns nothing after exhaustive search, note the gap and its `mediaStatus` in `content/scratch/<tenant>/analysis.md`.
 
 ### Step 3: Analyse & Extract
 
@@ -62,9 +87,11 @@ Write `content/cms/<tenant>/profile.json`.
 - Derive all values from fetched source data. Do not inject preset examples.
 - Infer prices only where clearly hinted (e.g. "$4", "affordable").
 - Keep only the 2–3 strongest testimonials. Tag each with its `source` (e.g. "Google", "TripAdvisor", "Facebook").
-- If no photos exist, leave `media` empty; themes will fall back to CSS gradients / generated assets.
 - Populate `deliveryUrls` if Uber Eats or DoorDash listings are found.
 - Populate `tripAdvisorSummary` from TripAdvisor reviews: aggregate rating, review count, and top descriptive keywords.
+
+**Media gate (mandatory):**
+See `docs/patterns/source-media-gate.md` for the full protocol. In short: if `media.hero` and `media.gallery` are both empty, STOP and request user uploads before generating pages, themes, or catalogue.
 
 ### Step 4: Determine Page Structure
 
@@ -101,6 +128,8 @@ Output a `PageBundle` matching the schema in `resources/schemas.md` (`PageBundle
 
 Write every page in the bundle with at least one block; empty pages are not allowed.
 
+If `media.gallery` is empty (user proceeded without uploads), omit the gallery page and render clearly labelled image placeholders in themes instead of blank CSS gradients, so the demo does not appear broken during preview.
+
 Document the reasoning per page in `content/scratch/<tenant>/page-selection.md`.
 
 ### Step 5: Generate CMS Content
@@ -113,6 +142,7 @@ Write `content/cms/<tenant>/pages.json`, containing the `PageBundle` from Step 4
 - Use actual hours, phone, and address from the profile. Do not invent values.
 - Write one draft only. The owner will edit via `/dashboard/cms`.
 - Use only the block types that Step 4 selected. Do not include empty or placeholder blocks.
+- If `media` is empty, use image blocks with `placeholder: true` and a descriptive label (e.g. "Hero image – awaiting upload") rather than omitting image fields entirely.
 
 ### Step 6: Generate Two Theme Variants
 
@@ -125,6 +155,7 @@ Write:
 - Select two distinct directions from the `vibe.adjectives` list. Each theme should lean toward a different adjective or combination of adjectives.
 - Themes must differ in at least `components.heroStyle`, `components.cardStyle`, and `components.buttonStyle`.
 - Both themes reference the same `media.hero` and `media.logo` paths.
+- If `media.hero` and `media.logo` are empty, set `images.hero` and `images.logo` to `"placeholder"` and choose a neutral default asset path that themes can render as a labelled placeholder until images are uploaded.
 
 `ThemeConfig` shape is defined in `resources/schemas.md`. Do not use preset theme definitions. Generate each theme pair afresh from the current `BusinessProfile`.
 
@@ -139,16 +170,23 @@ Populate from `BusinessProfile.catalogue`. Do not call Square APIs yet.
 Run and verify:
 
 ```bash
-npm install --ignore-scripts   # only if node_modules missing
 npm run lint
 npm run typecheck
 npm test
 ```
 
+If `node_modules` is missing, install with:
+```bash
+npm install --ignore-scripts
+```
+See `docs/patterns/supply-chain-hardening.md` for why `--ignore-scripts` is mandatory.
+
 If tests fail:
 1. Fix before proceeding.
 2. Document unrelated failures in `content/scratch/<tenant>/analysis.md`.
 3. Do not launch until the suite passes.
+
+For ESLint suppression rules by location (e.g. test files), see `docs/patterns/lint-policy.md`.
 
 ### Step 9: Start Dev Server
 
@@ -160,6 +198,12 @@ Wait for readiness (default port 3000). Confirm:
 ```bash
 curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/
 ```
+
+**Blank-page guard (mandatory):**
+```bash
+curl -s http://localhost:3000 | grep -q "Cafe Template\|Aydin's\|Business Name"
+```
+If this returns nothing or the HTML is missing expected page content, see `docs/patterns/cms-rendering.md` for troubleshooting steps. Do not proceed to Step 10 until `curl` returns real content.
 
 ### Step 10: Present Themes & Ask for Choice
 
@@ -224,3 +268,5 @@ Mark as TODOs in `content/scratch/<tenant>/analysis.md`:
 - Regenerate individual sections on demand.
 - Image generation for missing assets via DALL-E / Replicate.
 - WordPress content migration formatting fixes.
+- Enforce mandatory media gate with user upload prompt instead of silent fallback.
+- Add exhaustive `site:`-prefixed search protocol for all source types (especially TripAdvisor) before declaring source gaps.

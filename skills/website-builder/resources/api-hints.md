@@ -2,23 +2,20 @@
 
 This file documents endpoints, request shapes, and scraping notes for each input source. Use these hints when implementing fetchers — do not guess endpoints. Prefer official APIs; fall back to public HTML scraping only when necessary.
 
-## Facebook Page
+## Mandatory Search Protocol (before declaring a source missing)
 
-**Prefer:** Graph API (requires `facebookPageId` + user access token)
+Before marking any source as unavailable, perform the following targeted searches:
 
-```
-GET https://graph.facebook.com/v19.0/<PAGE_ID>
-  ?fields=name,about,category,location,hours,phone,cover,emails,website
-  &access_token=<TOKEN>
-```
+- **TripAdvisor:** `site:tripadvisor.com "<business name>" <city>`
+- **Facebook:** `site:facebook.com "<business name>" <city>`
+- **Instagram:** `site:instagram.com "<business name>" <city>`
+- **Google Business Profile:** `<business name> <city>` Google Business Profile
+- **DoorDash:** `site:doordash.com "<business name>" <city>`
+- **Menulog:** `site:menulog.com "<business name>" <city>`
 
-**Fallback:** Public HTML scrape at `https://www.facebook.com/<page-username>`
-- Extract Open Graph meta tags (`og:title`, `og:description`, `og:image`).
-- Look for structured `ld+json` blocks containing `Organization` or `LocalBusiness`.
-- Note: Facebook aggressively blocks scrapers; Graph API is preferred.
+TripAdvisor is a **priority** source because it often provides both high-res images and review content. Do not skip it even if other delivery platforms are found.
 
-**Fields to extract:**
-- `name`, `about`, `category`, `location`, `hours`, `phone`, `cover.source`, `website`
+If a search reveals a candidate URL, attempt the fetch/scrape and log success or failure in `content/scratch/<tenant>/analysis.md`.
 
 ---
 
@@ -126,8 +123,9 @@ GET https://www.tripadvisor.com.au/Restaurant_Review-<ID>-<NAME>.html
 - Parse Open Graph tags for title, description, images.
 - Extract reviews from structured widgets or visible review text.
 - Note: TripAdvisor may show region-specific content. Match locale to business.
+- **Priority:** TripAdvisor frequently hosts high-res venue and menu images. If found, save photo URLs for `media.hero` and `media.gallery` before falling back to gradients or placeholder requests.
 
-**Fallback:** Google Business reviews can substitute if TripAdvisor fails.
+**Fallback:** Google Business reviews can substitute if TripAdvisor fails, but TripAdvisor images are often richer.
 
 ---
 

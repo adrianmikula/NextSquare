@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+@source "./app";
+@source "./components";
+@source "./pages";
+@source not "./docs";
+@source not "./skills";
+@source not "./content";
+@source not "./content/scratch";
+@source not "./node_modules";
+@source not "./.next";
+
 @theme {
   --color-amber-50: #fffbeb;
   --color-amber-100: #fef3c7;

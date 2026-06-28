@@ -56,3 +56,21 @@ A missing env var is a deployment error. Falling back to a default URL, empty st
 3. Debugging requires tracing through the code to find which env var was missed.
 
 Fail fast with a clear message. It saves time for everyone.
+
+## Demo Mode
+
+When `DEMO_MODE=true` (or `NEXT_PUBLIC_DEMO_MODE=true`), the application disables restrictive Content-Security-Policy headers to avoid blocking inline styles and client-side hydration during development and stakeholder demos. See `docs/patterns/csp-demo-mode.md`.
+
+## Remote Image Patterns
+
+When a tenant uses external image hosts (e.g. RestaurantGuru, Unsplash, TripAdvisor), add each hostname to `next.config.ts` under `images.remotePatterns`. Without this, `<img>` tags and `next/image` will silently fail to load remote assets:
+
+```ts
+images: {
+  remotePatterns: [
+    { protocol: "https", hostname: "images.unsplash.com" },
+    { protocol: "https", hostname: "img3.restaurantguru.com" },
+    { protocol: "https", hostname: "img02.restaurantguru.com" },
+  ],
+}
+```
