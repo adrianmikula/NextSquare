@@ -108,17 +108,77 @@ interface BusinessProfile {
 Defines the complete page structure before content is written.
 
 ```typescript
+interface CmsBlock {
+  type: 'hero' | 'text' | 'gallery' | 'products' | 'services'
+    | 'testimonials' | 'cta' | 'hours' | 'faq' | 'form' | 'promo' | 'delivery';
+  data: Record<string, unknown>;
+}
+
 interface PageBundle {
   pages: Array<{
     slug: string;          // unique URL path segment (kebab-case)
     label: string;         // human-readable nav label
-    blocks: Array<{
-      type: 'hero' | 'text' | 'gallery' | 'hours' | 'testimonials'
-        | 'cta' | 'products' | 'services' | 'form' | 'faq' | 'promo' | 'delivery';
-      data: Record<string, unknown>;
-    }>;
+    blocks: CmsBlock[];
     seo?: { title: string; description: string };
   }>;
+}
+```
+
+---
+
+## LayoutOutput
+
+Returned by archetype selection (Layer 1 of the multi-source pipeline).
+
+```typescript
+interface LayoutOutput {
+  selected: Record<string, string>; // pageSlug -> archetypeName
+  reasoning?: string;
+}
+```
+
+---
+
+## ArchetypeCatalog
+
+Runtime artifact emitted by `skills/website-builder/resources/generate-archetypes.ts` and stored at `content/archetypes/<tenant>.json`.
+
+```typescript
+interface BlockVocabularyEntry {
+  description: string;
+  fields: string[];
+}
+
+interface ArchetypeMetadata {
+  blocks: string[];
+  minData?: Record<string, string>;
+  excludes?: string[];
+  bestFor?: string[];
+  typicalOrder?: number;
+}
+
+interface ArchetypeCatalog {
+  version: string;
+  tenant?: string;
+  blockVocabulary: Record<string, BlockVocabularyEntry>;
+  archetypes: Record<string, ArchetypeMetadata>;
+  selectionRules?: unknown[];
+  generatedAt?: string;
+}
+```
+
+---
+
+## PipelineResult
+
+Returned by `lib/ai/multi-source-pipeline.ts` `runPipeline()`.
+
+```typescript
+interface PipelineResult {
+  bundle: PageBundle;                  // Zod-validated output
+  layout: LayoutOutput;               // archetype selection + reasoning
+  layoutSource: 'llm' | 'fallback';   // how archetypes were selected
+  skippedPages: string[];             // pages omitted by gating
 }
 ```
 

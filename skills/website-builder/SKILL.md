@@ -94,50 +94,158 @@ From the scratchpad, produce a single `BusinessProfile` matching the schema in `
 **Media gate (mandatory):**
 See `docs/patterns/source-media-gate.md` for the full protocol. In short: if `media.hero` and `media.gallery` are both empty, STOP and request user uploads before generating pages, themes, or catalogue.
 
-### Step 4: Determine Page Structure
+### Step 4: Determine Page Structure (Archetype-Based)
 
-Before writing any content, decide which pages the site needs based on the business profile. Do not use a fixed list. Derive from:
+Before writing any content, decide which pages the site needs and which block composition each page uses. All decisions flow from the **archetype catalog** in `resources/archetypes.md`. No hardcoded "always home, add menu if..." rules.
 
-- `type` (e.g. "cafe" → menu-centric; "bakery" → gallery + menu; "caterer" → services + enquiry)
-- `catalogue.categories` (if empty, omit category pages)
-- `services` (if present, add a services page)
-- `features` (e.g. "delivery" → add delivery-info page; "events" → add events page)
-- `media.gallery` length (≥2 → add gallery page)
-- `location` + `hours` (always present → pages can include contact/hours)
-- `audience` (e.g. "tourists" → add local-area / getting-here page)
-- `features` containing "loyalty" or "subscriptions" → add membership page
-- `deliveryUrls` present → add delivery-info block on relevant pages
-- `tripAdvisorSummary.rating` high (≥4.0) → surface "award-winning" or "top-rated" social proof
+#### 4a. Load Archetype Catalog
 
-Output a `PageBundle` matching the schema in `resources/schemas.md` (`PageBundle` interface).
+Read `skills/website-builder/resources/archetypes.md`. You need:
+- The block vocabulary (symbols the platform CMS can render)
+- The archetype definitions (named block compositions for each page type)
+- The selection rules (heuristics mapping BusinessProfile signals to archetypes)
+- The `minData` gates and `excludes` lists per archetype
 
-**Decision rules (apply heuristics, do not hardcode):**
-- Always include `home`.
-- Add `menu` if `catalogue.categories.length` > 0.
-- Add `gallery` if `media.gallery.length` >= 2.
-- Add `contact` if `phone` or `location.address` is present.
-- Add `about` if `description` is substantive (≥50 chars) or there are ≥2 testimonials.
-- Add `testimonials` as a standalone page only if there are >=3 items.
-- Add `services` if `BusinessProfile.services` is defined and non-empty.
-- Add `faq` if a `faq` field was populated during analysis; otherwise omit.
-- Add block types inside pages only when there is data to fill them:
-  - `products` block → if the page is menu-related and catalogue items exist
-  - `services` block → if the page is services-related and services exist
-  - `form` block → if an enquiry or booking mechanism is relevant
-  - `promo` block → if seasonal offers or specials are mentioned in sources
-  - `delivery` block → if `deliveryUrls` is present
+Validate that every block symbol referenced in the catalog is listed in the block vocabulary and has a data shape in `resources/schemas.md`.
+
+#### 4b. Select Archetypes Per Page
+
+Use the rule-based selection protocol in `lib/ai/archetype-selector.ts`:
+
+```typescript
+import { resolveLayout } from "@/lib/ai/archetype-selector"
+
+const selectorInput = {
+  businessProfile: businessProfile,
+  archetypeCatalog: JSON.parse(fs.readFileSync(`content/archetypes/${tenant}.json`, "utf-8")),
+  selectionRules: [
+    { condition: "media.gallery.length >= 5", archetype: "GALLERY_FULL_HOME", page: "home" },
+    { condition: "features contains events", archetype: "EVENTS_HOME", page: "home" },
+    // one entry per archetype rule from archetypes.md
+  ],
+}
+
+const { output: layout, source } = resolveLayout(selectorInput, llmCall) // llmCall optional
+```
+
+1. Load the generated `content/archetypes/<tenant>.json` (produced by `skills/website-builder/resources/generate-archetypes.ts`).
+2. Build the `selectionRules` array from the selection table in `archetypes.md`.
+3. Call `resolveLayout(selectorInput, llmCall?)`. If `llmCall` is provided and configured, it will attempt LLM archetype selection; otherwise it immediately returns the rule-based output.
+4. Validate the returned `layout.selected` with `LayoutOutputSchema` from `lib/schemas.ts`.
+5. Record the selected archetype per page and the source (`llm` or `fallback`).
+
+#### 4c. Expand Archetypes to PageBundle
+
+Use `lib/ai/multi-source-pipeline.ts` `runPipeline()` to orchestrate Layer 1 (Layout) + Layer 2 (Copy) + Layer 3 (Markup):
+
+```typescript
+import { runPipeline } from "@/lib/ai/multi-source-pipeline"
+
+const result = await runPipeline({
+  businessProfile,
+  tenant,
+  pages: [
+    { slug: "home", label: "Home", archetype: "DEFAULT_HOME", seo: { title: "...", description: "..." } },
+    { slug: "menu", label: "Menu", archetype: "MENU_DEFAULT" },
+    // one entry per page selected in 4b
+  ],
+  llmCall, // optional: (prompt, systemPrompt) => Promise<string>
+})
+
+// result.bundle is a validated PageBundle ready for pages.json
+// result.layout is the LayoutOutput (with reasoning if LLM was used)
+// result.skippedPages lists any pages that failed gating
+```
+
+The pipeline performs:
+1. Archetype selection via `lib/ai/archetype-selector.ts` `resolveLayout()`
+2. Deterministic data population from `BusinessProfile` to each block symbol in the archetype
+3. Rendering via `lib/renderer.ts` `renderBundle()` to produce final CMS blocks
+
+**The deterministic renderer is the only permitted way to produce CMS block output.** Claude does not write raw CMS JSON or Gutenberg HTML directly. Claude populates `data` objects; the renderer produces the final `{ type, data }` structure.
+
+```typescript
+// Equivalent manual expansion (if you aren't using runPipeline):
+import { renderBundle } from "@/lib/renderer"
+import { buildDataMap } from "@/lib/ai/multi-source-pipeline"
+
+const pages = {
+  home: {
+    archetype: "DEFAULT_HOME",       // from 4b
+    label: "Home",
+    dataMap: buildDataMap(["hero","text","products","cta"], businessProfile),
+    seo: { title: `${businessProfile.name} - ${businessProfile.tagline}`, description: businessProfile.description.slice(0, 160) },
+  },
+}
+
+const bundle = renderBundle(pages)
+// bundle[0].blocks = [
+//   { type: "hero",    data: { headline: "...", subheadline: "...", ctaLabel: "...", ctaLink: "...", image: "..." } },
+//   { type: "text",    data: { heading: "...", body: "..." } },
+//   { type: "products", data: { title: "...", items: [...] } },
+//   { type: "cta",     data: { heading: "...", subtext: "...", buttonLabel: "...", buttonLink: "..." } },
+// ]
+```
+
+#### 4d. Validate and Document
+
+1. If using `runPipeline`, the returned `bundle` is already Zod-validated. If expanding manually, validate the final `PageBundle` with `PageBundleSchema` from `lib/schemas.ts` before proceeding. Fix any validation errors.
+2. Write `content/scratch/<tenant>/page-selection.md` documenting:
+   - The selected archetype per page, the matching rule, and the selection source (`llm` or `fallback`)
+   - Any pages that were gated/omitted and why (`runPipeline` returns `skippedPages`)
+   - The archetype blocks list vs the final block count (if excludes/gating reduced it)
+3. If `media.gallery` is empty and a gallery page or gallery blocks were selected, note the placeholder strategy.
 
 Write every page in the bundle with at least one block; empty pages are not allowed.
-
-If `media.gallery` is empty (user proceeded without uploads), omit the gallery page and render clearly labelled image placeholders in themes instead of blank CSS gradients, so the demo does not appear broken during preview.
-
-Document the reasoning per page in `content/scratch/<tenant>/page-selection.md`.
 
 ### Step 5: Generate CMS Content
 
 Write `content/cms/<tenant>/pages.json`, containing the `PageBundle` from Step 4 with blocks fully populated.
 
-**Rules:**
+**Validation before write (mandatory):** Run the bundle through `PageBundleSchema` from `lib/schemas.ts`. Fix errors before writing. If using `runPipeline`, the bundle is already validated.
+
+**Rendering rule (non-negotiable):** Claude populates `data` objects for each block. The deterministic `lib/renderer.ts` `renderPage()` function produces the final `{ type, data }` CMS block structure. Claude does **not** write raw CMS JSON or Gutenberg HTML directly.
+
+```typescript
+import { renderBundle } from "@/lib/renderer"
+import { PageBundleSchema } from "@/lib/schemas"
+import { runPipeline } from "@/lib/ai/multi-source-pipeline"
+
+// Preferred: use the pipeline (validated internally)
+const result = await runPipeline({ businessProfile, tenant, pages })
+writeJson(`content/cms/${tenant}/pages.json`, { pages: result.bundle.pages })
+
+// Manual alternative:
+const pages = {
+  home: {
+    archetype: "DEFAULT_HOME",  // from Step 4
+    label: "Home",
+    dataMap: {
+      hero: {
+        headline: businessProfile.name,
+        subheadline: businessProfile.tagline,
+        ctaLabel: "View Menu",
+        ctaLink: "/menu",
+        image: businessProfile.media.hero,
+      },
+      text: { heading: "Welcome", body: businessProfile.description },
+      products: {
+        title: "Popular Right Now",
+        items: businessProfile.catalogue.items.slice(0, 4).map(item => ({
+          name: item.name, description: item.description, price: item.priceHint,
+        })),
+      },
+    },
+    seo: { title: `${businessProfile.name} - ${businessProfile.tagline}`, description: businessProfile.description.slice(0, 160) },
+  },
+}
+
+const rawBundle = renderBundle(pages)  // produces PageBundle
+const validated = PageBundleSchema.parse({ pages: rawBundle })
+writeJson(`content/cms/${tenant}/pages.json`, validated)
+```
+
+**Content rules:**
 - Tone must match `BusinessProfile.tone` and `audience`.
 - Use real testimonials from sources (trim to <=140 characters where needed).
 - Use actual hours, phone, and address from the profile. Do not invent values.
@@ -265,7 +373,7 @@ To publish to Square later:
 
 ## Constraints
 
-- **Do not** call OpenAI, Anthropic, or any LLM API.
+- **LLM APIs**: Phase 9a runs without LLM APIs (rule-based archetype selection, deterministic renderer). Phase 9b+ may use LLM APIs when configured. Always fall back to rule-based if the API fails.
 - **Do not** make Square API calls. The catalogue is staged locally.
 - **Do not** overwrite existing content without explicit user confirmation.
 - **Do not** add `// eslint-disable` comments.
@@ -275,11 +383,13 @@ To publish to Square later:
 
 Mark as TODOs in `content/scratch/<tenant>/analysis.md`:
 
-- Replace heuristic analysis with LLM calls (Phase 14 pipeline).
+- Replace rule-based archetype selection with LLM-assisted selection (Phase 9b).
 - Auto-connect Facebook/Instagram/Google via OAuth.
 - Auto-upload generated catalogue to Square Catalog API.
 - Regenerate individual sections on demand.
 - Image generation for missing assets via DALL-E / Replicate.
 - WordPress content migration formatting fixes.
 - Enforce mandatory media gate with user upload prompt instead of silent fallback.
+- Make archetype catalog open/extensible per vertical (review in Phase 9b).
+- Add CMS block components for `social-proof`, `instagram-feed`, `menu-preview`.
 - Add exhaustive `site:`-prefixed search protocol for all source types (especially TripAdvisor) before declaring source gaps.

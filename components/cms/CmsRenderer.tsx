@@ -46,6 +46,18 @@ export function CmsBlockRenderer({ block }: { block: CmsBlock }) {
       return <CmsFaq data={data as CmsBlock["data"] & { items: Array<{ question: string; answer: string }> }} />
     case "promo":
       return <CmsPromo data={data as CmsBlock["data"] & { heading: string; body: string; ctaLabel: string; ctaLink: string; image?: string }} />
+    case "slideshow":
+      return <CmsSlideshow data={data as CmsBlock["data"] & { images: string[]; caption?: string; interval?: number }} />
+    case "social-icons":
+      return <CmsSocialIcons data={data as CmsBlock["data"] & { platforms: Array<{ name: string; url: string; icon?: string }> }} />
+    case "callout":
+      return <CmsCallout data={data as CmsBlock["data"] & { quote: string; author?: string; role?: string } } />
+    case "hr":
+      return <CmsHR data={data as CmsBlock["data"] & { style?: "solid" | "dashed" | "dotted"; color?: string } } />
+    case "image-text":
+      return <CmsImageText data={data as CmsBlock["data"] & { items: Array<{ image?: string; heading: string; body: string; align?: "left" | "right" }> } } />
+    case "comparison":
+      return <CmsComparison data={data as CmsBlock["data"] & { title?: string; columns: Array<{ header: string; features: Array<{ name: string; included: boolean }> }>; ctaLabel?: string; ctaLink?: string } } />
     default:
       return null
   }
@@ -296,7 +308,7 @@ function CmsForm({ data }: { data: Record<string, unknown> }) {
     <section className={sectionClass("bg-stone-50")}>
       <div className={cn(containerClass(), "max-w-xl")}>
         <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{title}</h2>
-        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-6">
           {fields.map((field) => (
             <div key={field.name}>
               <label htmlFor={field.name} className="block text-sm font-medium text-stone-700 mb-2">
@@ -361,6 +373,152 @@ function CmsPromo({ data }: { data: Record<string, unknown> }) {
           <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline button-themed")}>
             {ctaLabel}
           </Link>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function CmsSlideshow({ data }: { data: Record<string, unknown> }) {
+  const images = (data.images as string[]) || []
+  const caption = data.caption as string | undefined
+  if (images.length === 0) return null
+  return (
+    <section className={sectionClass("bg-white")}>
+      <div className={containerClass()}>
+        {caption && <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{caption}</h2>}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
+          {images.map((src, i) => (
+            <div key={i} className={cn("aspect-video overflow-hidden bg-stone-100 image-themed")}>
+              <img src={src} alt={`Slide ${i + 1}`} className="h-full w-full object-cover" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CmsSocialIcons({ data }: { data: Record<string, unknown> }) {
+  const platforms = (data.platforms as Array<{ name: string; url: string; icon?: string }>) || []
+  if (platforms.length === 0) return null
+  return (
+    <section className={sectionClass("bg-stone-50")}>
+      <div className={cn(containerClass(), "text-center")}>
+        <div className="flex flex-wrap justify-center gap-6">
+          {platforms.map((p) => (
+            <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline" }), "no-underline button-themed")}>
+              {p.icon || p.name}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CmsCallout({ data }: { data: Record<string, unknown> }) {
+  const quote = String(data.quote || "")
+  const author = data.author as string | undefined
+  const role = data.role as string | undefined
+  return (
+    <section className={sectionClass("bg-amber-50")}>
+      <div className={cn(containerClass(), "max-w-3xl text-center")}>
+        <blockquote className="text-2xl font-medium text-stone-900 italic">&ldquo;{quote}&rdquo;</blockquote>
+        {(author || role) && (
+          <div className="mt-4 text-sm text-stone-500">
+            {author && <span className="font-medium text-stone-700">{author}</span>}
+            {author && role && <span> — </span>}
+            {role && <span>{role}</span>}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function CmsHR({ data }: { data: Record<string, unknown> }) {
+  const style = (data.style as string) || "solid"
+  const color = (data.color as string) || "var(--color-stone-200, #e5e7eb)"
+  const borderClass = style === "dashed" ? "border-dashed" : style === "dotted" ? "border-dotted" : "border-solid"
+  return <hr className={`border-t ${borderClass}`} style={{ borderColor: color }} />
+}
+
+function CmsImageText({ data }: { data: Record<string, unknown> }) {
+  const items = (data.items as Array<{ image?: string; heading: string; body: string; align?: "left" | "right" }>) || []
+  return (
+    <section className={sectionClass("bg-white")}>
+      <div className={containerClass()}>
+        <div className="space-y-12">
+          {items.map((item, i) => {
+            const isReversed = item.align === "right"
+            return (
+              <div key={i} className={cn("grid items-center gap-8 md:grid-cols-2", isReversed && "md:direction-rtl")}>
+                <div className={cn("overflow-hidden rounded-xl bg-stone-100 image-themed", isReversed && "md:order-2")}>
+                  {item.image ? (
+                    <img src={item.image} alt={item.heading} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="aspect-video w-full bg-stone-200" />
+                  )}
+                </div>
+                <div className={cn(isReversed && "md:order-1")}>
+                  <h3 className={headingClass("2xl")}>{item.heading}</h3>
+                  <p className="mt-4 text-lg text-stone-600 whitespace-pre-line">{item.body}</p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function CmsComparison({ data }: { data: Record<string, unknown> }) {
+  const title = data.title as string | undefined
+  const columns = (data.columns as Array<{ header: string; features: Array<{ name: string; included: boolean }> }>) || []
+  const ctaLabel = data.ctaLabel as string | undefined
+  const ctaLink = data.ctaLink as string | undefined
+
+  if (columns.length === 0) return null
+  return (
+    <section className={sectionClass("bg-stone-50")}>
+      <div className={containerClass()}>
+        {title && <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{title}</h2>}
+        <div className="overflow-x-auto">
+          <table className="mx-auto min-w-full max-w-3xl border-collapse">
+            <thead>
+              <tr>
+                <th className="p-4 text-left text-sm font-medium text-stone-500">Feature</th>
+                {columns.map((col) => (
+                  <th key={col.header} className="p-4 text-center text-sm font-semibold text-stone-900">{col.header}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-200">
+              {columns[0]?.features.map((feature, i) => (
+                <tr key={feature.name}>
+                  <td className="p-4 text-sm text-stone-700">{feature.name}</td>
+                  {columns.map((col) => (
+                    <td key={col.header} className="p-4 text-center">
+                      {col.features[i]?.included ? (
+                        <span className="text-amber-700">✓</span>
+                      ) : (
+                        <span className="text-stone-300">—</span>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {ctaLabel && ctaLink && (
+          <div className="mt-8 text-center">
+            <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline button-themed")}>
+              {ctaLabel}
+            </Link>
+          </div>
         )}
       </div>
     </section>

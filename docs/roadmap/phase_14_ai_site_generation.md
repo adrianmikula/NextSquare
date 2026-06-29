@@ -6,6 +6,10 @@ Let cafe owners describe their business in plain English and have a fully functi
 
 ---
 
+## Integration Note
+
+This phase (text-description input) builds on the layered structural composition pipeline defined in **Phase 9**. Phase 9 establishes the page archetype catalog, the three-layer architecture (Layout → Copy → Markup), and the deterministic renderer. This phase reuses those components: the archetype selection step (Layer 1) receives text-derived `BusinessProfile` signals, Layer 2 generates copy per block, and Layer 3 renders via the same deterministic renderer. The only Phase 14-specific addition is the text-extraction profiler that converts plain-English descriptions into the structured inputs both phases share.
+
 ## How It Works
 
 ```
@@ -165,6 +169,8 @@ export async function createMenuFromExtraction(
 
 ### 3. Content & Theme Generator
 
+> **Integration note**: Page structure selection is handled by the Phase 9 archetype layer. The text-extraction profiler (Layer 1 of this phase) produces a `BusinessProfile` that feeds into Phase 9's archetype selection + copy + renderer pipeline. This section covers the theme selection aspect specific to text-derived input.
+
 Generates page content and selects a theme based on the cafe's vibe:
 
 | Vibe | Palette | Font Pairing | Hero Style |
@@ -175,6 +181,17 @@ Generates page content and selects a theme based on the cafe's vibe:
 | Minimalist | White, gray, single accent (#FAFAFA, #525252, #000000) | Inter + Inter | Clean, lots of whitespace |
 | Industrial | Charcoal, warm gray, amber (#1A1A1A, #6B7280, #F59E0B) | Montserrat + Roboto | Dark background, bold typography |
 | Eclectic | Vibrant, mixed (#2D2D2D + custom accent) | Any + Any | Dynamic, multi-section |
+
+**Archetype selection** (Phase 9 integration): The vibe and extracted `features` map to archetype choices via `skills/website-builder/resources/archetypes.md`:
+
+| Vibe / Signal | Recommended archetypes |
+|---|---|
+| Cozy | `DEFAULT_HOME`, `ABOUT_STORY` |
+| Modern / Minimalist | `MINIMAL_HOME`, `CONTACT_DIRECT` |
+| Rustic / Industrial | `SERVICES_HOME`, `GALLERY_FIRST` |
+| Eclectic / High engagement | `MENU_FOCUSED`, `SOCIAL_PROOF_HOME` |
+| `media.gallery.length >= 3` (any vibe) | `GALLERY_FIRST` overrides above |
+| `testimonials.length >= 3` | `SOCIAL_PROOF_HOME` eligible |
 
 ```typescript
 // lib/ai/theme-generator.ts
@@ -234,7 +251,8 @@ Step 3: Live!
 | Decision | Choice | Rationale |
 |---|---|---|
 | **LLM** | GPT-4o (OpenAI) | Best structured output. JSON mode. Reliable extraction. |
-| **Response format** | JSON mode | Guarantees parseable output. Schema validated before use. |
+| **Response format** | JSON mode (Phase 9: Zod/Pydantic validation) | Guarantees parseable output. Schema validated before use. |
+| **Structure** | Archetype catalog (Phase 9) + layered pipeline | Governable, varied, inspectable output; supports per-section regeneration. |
 | **Image generation** | DALL-E 3 / Replicate | Optional — only if cafe has no photos. |
 | **Menu creation** | Square Catalog API | Items appear in Square POS immediately. |
 | **Content storage** | Platform CMS (Postgres, structured blocks) | Generated content lives in the SaaS platform DB. Editable via the CMS dashboard. |
@@ -249,11 +267,13 @@ Step 3: Live!
 ```env
 # AI
 OPENAI_API_KEY=
-# Optional: image generation
+# Optional: image generation for missing assets
 REPLICATE_API_KEY=
 # or
 DALLE_API_KEY=
 ```
+
+> See Phase 9 for full structured-output validation stack (Zod / Pydantic schemas) and deterministic renderer dependencies.
 
 ---
 
