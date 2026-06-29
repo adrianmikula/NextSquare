@@ -74,7 +74,7 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci --ignore-scripts
-      - uses: github/codeql-action/init@f3f1edbedfb4a1d188d344570834df2996d45d39
+      - uses: github/codeql-action/init@9cea5827c668a1fe7165dbce6e80c3f9cf3f83ac
         with:
           languages: javascript-typescript
       - uses: github/codeql-action/analyze@f3f1edbedfb4a1d188d344570834df2996d45d39
