@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { getOrCreateLoyaltyAccount, calculateLoyaltyPoints, getLoyaltyProgram } from "@/lib/square/loyalty"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
+import { logger } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   const ip =
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to process loyalty request"
-    console.error("Loyalty API error:", message)
+    logger("loyalty").error("Loyalty API error", error instanceof Error ? error : new Error(message))
     return Response.json({ error: message }, { status: 500 })
   }
 }

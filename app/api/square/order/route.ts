@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { createOrder } from "@/lib/square/orders"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
+import { logger } from "@/lib/logger"
 import type { CreateOrderPayload } from "@/types/order"
 
 export async function POST(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { lineItems, customerInfo, fulfillmentType, fulfillmentDetails, idempotencyKey } = body
 
     if (!lineItems?.length || !customerInfo?.name || !customerInfo?.phone) {
-      console.warn("[orders] Missing required fields", { name: !!customerInfo?.name, phone: !!customerInfo?.phone, items: lineItems?.length })
+      logger("orders").warn("Missing required fields", { name: !!customerInfo?.name, phone: !!customerInfo?.phone, items: lineItems?.length })
       return Response.json({ error: "Missing required fields: lineItems, customer name, and phone" }, { status: 400 })
     }
 
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json({ orderId })
   } catch (error) {
-    console.error("[orders] Order creation error:", error instanceof Error ? error.message : error)
+    logger("orders").error("Order creation error", error instanceof Error ? error : new Error(String(error)))
     return Response.json({ error: "Failed to create order. Please try again." }, { status: 500 })
   }
 }

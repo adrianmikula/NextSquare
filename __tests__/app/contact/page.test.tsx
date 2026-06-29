@@ -13,25 +13,31 @@ describe("ContactPage", () => {
     expect(screen.getByText("Contact Us")).toBeInTheDocument()
   })
 
-  it("renders the subheading", () => {
+  it("renders the hours section", () => {
     render(<ContactPage />)
-    expect(screen.getByText(/We would love to hear from you/)).toBeInTheDocument()
-  })
-
-  it("renders all contact details", () => {
-    render(<ContactPage />)
-    expect(screen.getByText("Address")).toBeInTheDocument()
-    expect(screen.getByText("123 Coffee Lane, Melbourne VIC 3000")).toBeInTheDocument()
-    expect(screen.getByText("Phone")).toBeInTheDocument()
-    expect(screen.getByText("(03) 9000 0000")).toBeInTheDocument()
-    expect(screen.getByText("Email")).toBeInTheDocument()
-    expect(screen.getByText("hello@cafetemplate.com")).toBeInTheDocument()
     expect(screen.getByText("Hours")).toBeInTheDocument()
-    expect(screen.getByText("Mon-Fri 7am-3pm, Sat 8am-4pm, Sun 8am-2pm")).toBeInTheDocument()
+    expect(screen.getByText("Monday")).toBeInTheDocument()
   })
 
-  it("renders the Google Maps embed", () => {
+  it("renders the contact form", () => {
     render(<ContactPage />)
-    expect(screen.getByTestId("google-maps")).toBeInTheDocument()
+    expect(screen.getByText("Name")).toBeInTheDocument()
+    expect(screen.getByText("Email")).toBeInTheDocument()
+    expect(screen.getByText("Message")).toBeInTheDocument()
+  })
+
+  it("renders the submit button", () => {
+    render(<ContactPage />)
+    expect(screen.getByText("Submit")).toBeInTheDocument()
+  })
+
+  it("renders social icons", () => {
+    render(<ContactPage />)
+    expect(screen.getByText("🛵")).toBeInTheDocument()
+  })
+
+  it("renders CTA section", () => {
+    render(<ContactPage />)
+    expect(screen.getByText("Visit Aydin's Cafe")).toBeInTheDocument()
   })
 })

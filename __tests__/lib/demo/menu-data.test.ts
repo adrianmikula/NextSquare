@@ -51,7 +51,7 @@ describe("createDemoOrder", () => {
     const order = createDemoOrder()
     expect(order.id).toContain("demo-order-")
     expect(order.state).toBe("PROPOSED")
-    expect(order.totalMoney.amount).toBe(BigInt(0))
+    expect(order.totalMoney?.amount).toBe(BigInt(0))
   })
 })
 

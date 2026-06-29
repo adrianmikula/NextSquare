@@ -4,9 +4,9 @@ describe("manifest", () => {
   it("returns PWA manifest with correct metadata", async () => {
     const manifest = (await import("@/app/manifest")).default
     const result = manifest()
-    expect(result.name).toBe("Cafe Template")
-    expect(result.short_name).toBe("Cafe")
-    expect(result.description).toBe("Fresh coffee, great food, and a warm atmosphere.")
+    expect(result.name).toBe("Aydin's Cafe")
+    expect(result.short_name).toBe("Aydin's")
+    expect(result.description).toBe("Aydin's Cafe in Joondalup serves fresh breakfast and brunch. Known for burgers made fresh, tasty chips, and hearty breakfast classics.")
     expect(result.start_url).toBe("/")
     expect(result.display).toBe("standalone")
     expect(result.background_color).toBe("#ffffff")

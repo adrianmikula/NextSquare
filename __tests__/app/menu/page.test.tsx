@@ -21,28 +21,29 @@ import { useMenu } from "@/hooks/useMenu"
 const baseItems = [
   {
     id: "item-1",
-    type: "ITEM",
+    type: "ITEM" as const,
     itemData: {
       name: "Flat White",
       description: "Smooth espresso with milk",
       categoryId: "cat-coffee",
-      variations: [{ id: "var-1", itemVariationData: { name: "Regular", pricingType: "FIXED_PRICING", priceMoney: { amount: BigInt(550), currency: "AUD" } } }],
+      variations: [{ id: "var-1", type: "ITEM_VARIATION" as const, itemVariationData: { itemId: "item-1", name: "Regular", pricingType: "FIXED_PRICING" as const, priceMoney: { amount: BigInt(550), currency: "AUD" } } }],
       modifiers: [],
     },
     imageUrl: "/flat-white.jpg",
   },
   {
     id: "item-2",
-    type: "ITEM",
+    type: "ITEM" as const,
     itemData: {
       name: "Latte",
       description: "Espresso with steamed milk",
       categoryId: "cat-coffee",
-      variations: [{ id: "var-2", itemVariationData: { name: "Regular", pricingType: "FIXED_PRICING", priceMoney: { amount: BigInt(600), currency: "AUD" } } }],
+      variations: [{ id: "var-2", type: "ITEM_VARIATION" as const, itemVariationData: { itemId: "item-2", name: "Regular", pricingType: "FIXED_PRICING" as const, priceMoney: { amount: BigInt(600), currency: "AUD" } } }],
       modifiers: [
         {
           id: "mod-list-1",
-          modifierListData: { name: "Milk", selectionType: "SINGLE", modifiers: [{ id: "mod-oat", modifierData: { name: "Oat Milk", priceMoney: { amount: BigInt(100), currency: "AUD" } } }] },
+          type: "MODIFIER_LIST" as const,
+          modifierListData: { name: "Milk", selectionType: "SINGLE" as const, modifiers: [{ id: "mod-oat", type: "MODIFIER" as const, modifierData: { name: "Oat Milk", priceMoney: { amount: BigInt(100), currency: "AUD" } } }] },
         },
       ],
     },
@@ -50,7 +51,7 @@ const baseItems = [
 ]
 
 const categories = [
-  { id: "cat-coffee", categoryData: { name: "Coffee" } },
+  { id: "cat-coffee", type: "CATEGORY" as const, categoryData: { name: "Coffee" } },
 ]
 
 beforeEach(() => {
@@ -85,11 +86,11 @@ describe("MenuPage", () => {
         ...baseItems,
         {
           id: "item-3",
-          type: "ITEM",
-          itemData: { name: "Avocado Toast", categoryId: "cat-food", variations: [{ id: "var-3", itemVariationData: { name: "Regular", pricingType: "FIXED_PRICING", priceMoney: { amount: BigInt(1400), currency: "AUD" } } }], modifiers: [] },
+          type: "ITEM" as const,
+          itemData: { name: "Avocado Toast", categoryId: "cat-food", variations: [{ id: "var-3", type: "ITEM_VARIATION" as const, itemVariationData: { itemId: "item-3", name: "Regular", pricingType: "FIXED_PRICING" as const, priceMoney: { amount: BigInt(1400), currency: "AUD" } } }], modifiers: [] },
         },
       ],
-      categories: [...categories, { id: "cat-food", categoryData: { name: "Food" } }],
+      categories: [...categories, { id: "cat-food", type: "CATEGORY" as const, categoryData: { name: "Food" } }],
       isLoading: false,
       isError: false,
     })

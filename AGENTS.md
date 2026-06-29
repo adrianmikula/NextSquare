@@ -43,4 +43,35 @@ Details: [`docs/patterns/pre-commit-hooks.md`](docs/patterns/pre-commit-hooks.md
 Never run `npm install`, `npm ci`, or `npm audit` without `--ignore-scripts`. Pin GitHub Actions to commit SHAs (never floating tags). Validate `package.json` has direct dependencies for anything imported in source. Weekly dependency updates are handled by Dependabot.
 
 Details: [`docs/patterns/supply-chain-hardening.md`](docs/patterns/supply-chain-hardening.md)
+
+<!-- BEGIN:debugging-rules -->
+# Debugging Workflow
+
+## Prerequisites
+- Dev server must be running: `npm run dev`
+- MCP servers configured in `.mcp.json` (next-devtools, codebase-indexer, github, memory, square, twilio)
+
+## Debugging Runtime Errors
+
+When investigating a runtime error, follow this flow:
+
+1. **Get errors** — Use the MCP `get_errors` tool to capture build/runtime errors from the dev server
+2. **Get logs** — Use the MCP `get_logs` tool to fetch recent console output; filter by context prefix (e.g. `[webhook]`, `[orders]`, `[payments]`)
+3. **Analyze** — Structured logs include timestamps, severity levels, and context names. Look for `ERROR` and `WARN` entries near the failure point
+4. **Fix** — Edit the relevant source file. All logging uses `lib/logger.ts` via `logger("context-name").error|warn|info|debug(message, data)`. Do NOT use `console.*` directly
+5. **Verify** — Run `npm run test:fast` for sub-second feedback, then `npm run lint:quiet` for structural checks
+
+## Logger Usage
+- Import: `import { logger } from "@/lib/logger"`
+- Context names: short kebab-case module identifiers (e.g. `webhook`, `orders`, `payments`, `cart`, `rbac`, `mfa`, `loyalty`, `sms`, `catalog`, `menu-detail`)
+- Error objects are serialized with full stack traces automatically
+- Non-string data is JSON-serialized
+- `LOG_LEVEL` env var controls verbosity (`debug` | `info` | `warn` | `error`); defaults to `debug` in development, `warn` in production
+
+## CI Debugging Workflow
+- Validate pipeline config locally before pushing (dry-run)
+- Run change-aware signal stages: `npm run lint:quiet` → `npm run typecheck` → `npm run test:fast`
+- Only escalate to full CI suite when signal passes
+- Split between "signal" (seconds) and "confidence" (minutes) stages
+<!-- END:debugging-rules -->
 <!-- END:dev-patterns -->

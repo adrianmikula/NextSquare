@@ -4,6 +4,7 @@ import { requireEnvInt } from "@/lib/env"
 import { storeMfaCode, getMfaKey } from "@/lib/auth/mfa"
 import { sendSms } from "@/lib/twilio/client"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
+import { logger } from "@/lib/logger"
 import { Client, Environment } from "square/legacy"
 
 export async function POST(request: NextRequest) {
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
         role = "visitor"
       }
     } catch (error) {
-      console.error("[rbac] Square team lookup failed:", error)
+      logger("rbac").error("Square team lookup failed", error)
       return Response.json(
         { error: "Authentication service temporarily unavailable. Please try again later." },
         { status: 503 }
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       `Your admin verification code is: ${code}`
     )
   } catch (error) {
-    console.error("[mfa] Failed to send SMS:", error)
+    logger("mfa").error("Failed to send SMS", error)
     return Response.json(
       { error: "Failed to send verification code. Please try again." },
       { status: 500 }

@@ -103,6 +103,7 @@ describe("useToastState", () => {
 describe("ToastContext", () => {
   it("provides default empty context", async () => {
     const { ToastContext } = await import("@/hooks/useToast")
-    expect(ToastContext._currentValue).toBeDefined()
+    expect(ToastContext).toBeDefined()
+    expect(ToastContext.Provider).toBeDefined()
   })
 })

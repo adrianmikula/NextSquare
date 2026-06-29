@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { sendSms } from "@/lib/twilio/client"
 import { verifySquareWebhook, parseWebhookEvent } from "@/lib/webhooks/square"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
+import { logger } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   const ip =
@@ -15,13 +16,13 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("x-square-hmacsha256-signature") ?? ""
 
   if (!verifySquareWebhook(body, signature)) {
-    console.warn("[webhook] Invalid signature")
+    logger("webhook").warn("Invalid signature")
     return new Response("Invalid signature", { status: 401 })
   }
 
   const event = parseWebhookEvent(body)
   if (!event) {
-    console.warn("[webhook] Invalid event payload")
+    logger("webhook").warn("Invalid event payload")
     return new Response("Invalid event", { status: 400 })
   }
 
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest) {
     fulfillment?.shipmentDetails?.recipient?.phoneNumber
 
   if (!phone) {
-    console.warn("[webhook] No phone number in order fulfillment", { orderId: order.id })
+    logger("webhook").warn("No phone number in order fulfillment", { orderId: order.id })
     return new Response("No phone number", { status: 200 })
   }
 
@@ -60,15 +61,15 @@ export async function POST(request: NextRequest) {
         : `Your order #${ticketName} is ready for pickup!`
       break
     default:
-      console.info("[webhook] Unhandled fulfillment state", { state, orderId: order.id })
+      logger("webhook").info("Unhandled fulfillment state", { state, orderId: order.id })
   }
 
   if (message) {
     try {
       await sendSms(phone, message)
-      console.info("[webhook] SMS sent", { orderId: order.id, state })
+      logger("webhook").info("SMS sent", { orderId: order.id, state })
     } catch (error) {
-      console.error("[webhook] Failed to send SMS:", error instanceof Error ? error.message : error)
+      logger("webhook").error("Failed to send SMS", error instanceof Error ? error : new Error(String(error)))
     }
   }
 

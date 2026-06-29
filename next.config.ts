@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "2mb",
     },
   },
+  logging: {
+    browserToTerminal: true,
+    fetches: {
+      fullUrl: true,
+    },
+  },
 }
 
 export default nextConfig

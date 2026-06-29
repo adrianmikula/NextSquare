@@ -5,6 +5,7 @@ import type { SquareCatalogItem, SquareModifierList } from "@/types/square"
 import { formatCurrency, toPrice } from "@/lib/utils"
 import { ModifierDialog } from "./ModifierDialog"
 import type { ModifierSelection } from "@/types/cart"
+import { logger } from "@/lib/logger"
 
 interface MenuItemDetailProps {
   item: SquareCatalogItem
@@ -55,7 +56,7 @@ export function MenuItemDetail({
       name: m.name,
       priceMoney: modifierPriceMap[m.id] !== undefined ? { amount: modifierPriceMap[m.id], currency } : undefined,
     }))
-    console.log("=== DIALOG ADD CART DEBUG ===", {
+    logger("menu-detail").debug("Dialog add cart", {
       itemId: item.id,
       itemName: name,
       selectedModifiersCount: allModifiers.length,

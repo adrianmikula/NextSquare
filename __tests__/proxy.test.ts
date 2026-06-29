@@ -8,10 +8,15 @@ vi.mock("@/lib/auth/session", () => ({
   decrypt: mockDecrypt,
 }))
 
-function createRequest(pathname: string, cookieValue?: string) {
+function createRequest(pathname: string, cookieValue?: string): NextRequest {
   const url = new URL(`https://example.com${pathname}`)
   const cookie = cookieValue ? `session=${cookieValue}` : ""
-  return {
+  const request = new Request(url.toString(), {
+    headers: {
+      cookie,
+    },
+  })
+  return Object.assign(request, {
     nextUrl: url,
     cookies: {
       get: (name: string) =>
@@ -19,7 +24,7 @@ function createRequest(pathname: string, cookieValue?: string) {
           ? { name, value: cookieValue }
           : undefined,
     },
-  }
+  }) as NextRequest
 }
 
 beforeEach(() => {

@@ -14,7 +14,7 @@ describe("session", () => {
   it("encrypts and decrypts a session payload", async () => {
     vi.resetModules()
     const { encrypt, decrypt } = await import("@/lib/auth/session")
-    const token = await encrypt({ userId: "admin" })
+    const token = await encrypt({ userId: "admin", roles: ["owner"] })
     expect(token).toBeTruthy()
     expect(typeof token).toBe("string")
 

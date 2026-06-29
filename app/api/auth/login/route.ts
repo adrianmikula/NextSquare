@@ -2,6 +2,7 @@ import { NextRequest } from "next/server"
 import { createSession } from "@/lib/auth/session"
 import { requireEnv, requireEnvListOptional } from "@/lib/env"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
+import { logger } from "@/lib/logger"
 import { Client, Environment } from "square/legacy"
 
 export async function POST(request: NextRequest) {
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
         role = "visitor"
       }
     } catch (error) {
-      console.error("[rbac] Square team lookup failed:", error)
+      logger("rbac").error("Square team lookup failed", error)
       return Response.json(
         { error: "Authentication service temporarily unavailable. Please try again later." },
         { status: 503 }

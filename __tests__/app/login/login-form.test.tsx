@@ -19,7 +19,7 @@ vi.mock("@/components/ui/button", () => ({
   }: {
     children: React.ReactNode
     disabled?: boolean
-    type?: string
+    type?: "submit" | "reset" | "button"
   }) => (
     <button type={type ?? "button"} disabled={disabled}>
       {children}

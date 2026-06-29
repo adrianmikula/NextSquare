@@ -3,6 +3,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { CartItem, FulfillmentType } from "@/types/cart"
+import { logger } from "@/lib/logger"
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -46,7 +47,7 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (item) =>
         set((state) => {
-          console.log("=== CART ADD ITEM DEBUG ===", {
+          logger("cart").debug("Add item", {
             item,
             currentItemsCount: state.items.length,
             currentItems: state.items.map(i => ({ id: i.id, catalogObjectId: i.catalogObjectId, modifiers: i.modifiers })),

@@ -4,6 +4,18 @@
       "command": "npx",
       "args": ["-y", "next-devtools-mcp@1.0.0"]
     },
+    "codebase-indexer": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-codebase-indexer"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-github"]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-memory"]
+    },
     "square": {
       "command": "npx",
       "args": ["-y", "@square/square-mcp-server@1.0.0"],

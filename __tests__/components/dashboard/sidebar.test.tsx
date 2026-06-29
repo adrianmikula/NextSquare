@@ -50,7 +50,7 @@ describe("Sidebar", () => {
     const originalLocation = window.location
     // @ts-expect-error mock
     delete window.location
-    window.location = { href: "", assign: vi.fn() } as unknown as Location
+    window.location = { href: "", assign: vi.fn() } as any
 
     render(<Sidebar />)
     await userEvent.click(screen.getByText("Log out"))

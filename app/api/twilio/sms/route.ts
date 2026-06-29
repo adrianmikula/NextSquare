@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { sendSms } from "@/lib/twilio/client"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
+import { logger } from "@/lib/logger"
 
 export async function POST(request: NextRequest) {
   const ip =
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     await sendSms(to, message)
     return Response.json({ success: true })
   } catch (error) {
-    console.error("SMS sending error:", error)
+    logger("sms").error("SMS sending error", error instanceof Error ? error : new Error(String(error)))
     return Response.json(
       { error: "Failed to send SMS" },
       { status: 500 }

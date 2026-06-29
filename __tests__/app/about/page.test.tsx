@@ -5,26 +5,33 @@ import AboutPage from "@/app/about/page"
 describe("AboutPage", () => {
   it("renders the page heading", () => {
     render(<AboutPage />)
-    expect(screen.getByText("Our Story")).toBeInTheDocument()
+    expect(screen.getByText("Welcome")).toBeInTheDocument()
   })
 
-  it("renders the intro paragraphs", () => {
+  it("renders the intro text", () => {
     render(<AboutPage />)
-    expect(screen.getByText(/Founded in 2020/)).toBeInTheDocument()
-    expect(screen.getByText(/power of simple things done well/)).toBeInTheDocument()
+    expect(screen.getByText(/Aydin's Cafe in Joondalup/)).toBeInTheDocument()
   })
 
-  it("renders all three value cards", () => {
+  it("renders the hours section", () => {
     render(<AboutPage />)
-    expect(screen.getByText("Quality Coffee")).toBeInTheDocument()
-    expect(screen.getByText("Community First")).toBeInTheDocument()
-    expect(screen.getByText("Great Service")).toBeInTheDocument()
+    expect(screen.getByText("Hours")).toBeInTheDocument()
+    expect(screen.getByText("Monday")).toBeInTheDocument()
   })
 
-  it("renders value descriptions", () => {
+  it("renders testimonials section", () => {
     render(<AboutPage />)
-    expect(screen.getByText(/sustainable farms/)).toBeInTheDocument()
-    expect(screen.getByText(/gathering place for friends/)).toBeInTheDocument()
-    expect(screen.getByText(/warm, welcoming experience/)).toBeInTheDocument()
+    expect(screen.getByText("What Our Customers Say")).toBeInTheDocument()
+  })
+
+  it("renders callout section", () => {
+    render(<AboutPage />)
+    const callouts = screen.getAllByText(/Very tasty/)
+    expect(callouts.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it("renders CTA section", () => {
+    render(<AboutPage />)
+    expect(screen.getByText("Visit Aydin's Cafe")).toBeInTheDocument()
   })
 })

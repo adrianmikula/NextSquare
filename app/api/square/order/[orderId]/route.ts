@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server"
 import { getOrder } from "@/lib/square/orders"
 import type { SquareOrderFulfillment } from "@/types/square"
+import { logger } from "@/lib/logger"
 
 function extractPhoneFromFulfillment(fulfillment: SquareOrderFulfillment | undefined) {
   if (!fulfillment) return undefined
@@ -40,7 +41,7 @@ export async function GET(
       customerPhone: extractPhoneFromFulfillment(order.fulfillments?.[0]),
     })
   } catch (error) {
-    console.error("[orders] Order fetch error:", error instanceof Error ? error.message : error)
+    logger("orders").error("Order fetch error", error instanceof Error ? error : new Error(String(error)))
     return Response.json({ error: "Failed to fetch order. Please try again." }, { status: 500 })
   }
 }

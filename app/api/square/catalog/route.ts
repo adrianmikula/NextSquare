@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server"
 import { fetchMenu, fetchItemBySlug } from "@/lib/square/catalog"
+import { logger } from "@/lib/logger"
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
       }
     )
   } catch (error) {
-    console.error("[catalog] Menu fetch error:", error instanceof Error ? error.message : error)
+    logger("catalog").error("Menu fetch error", error instanceof Error ? error : new Error(String(error)))
     return Response.json(
       { error: "Failed to fetch menu. Please try again later." },
       { status: 500 }
