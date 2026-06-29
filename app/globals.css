@@ -11,6 +11,16 @@
 @source not "./.next";
 
 @theme {
+  --color-stone-50: #fafaf9;
+  --color-stone-100: #f5f5f4;
+  --color-stone-200: var(--theme-border-color, #e7e5e4);
+  --color-stone-300: #d6d3d1;
+  --color-stone-400: #a8a29e;
+  --color-stone-500: #78716c;
+  --color-stone-600: #57534e;
+  --color-stone-700: #44403c;
+  --color-stone-900: #1c1917;
+
   --color-amber-50: #fffbeb;
   --color-amber-100: #fef3c7;
   --color-amber-200: #fde68a;
@@ -18,15 +28,86 @@
   --color-amber-600: #d97706;
   --color-amber-700: #b45309;
   --color-amber-900: #78350f;
-  --color-stone-50: #fafaf9;
-  --color-stone-100: #f5f5f4;
-  --color-stone-200: #e7e5e4;
-  --color-stone-300: #d6d3d1;
-  --color-stone-400: #a8a29e;
-  --color-stone-500: #78716c;
-  --color-stone-600: #57534e;
-  --color-stone-700: #44403c;
-  --color-stone-900: #1c1917;
+
+  --radius-theme: var(--theme-border-radius, 0.5rem);
+  --radius-card: var(--theme-card-radius, 0.5rem);
+  --radius-button: var(--theme-button-radius, 0.5rem);
+  --radius-image: var(--theme-image-radius, 0.5rem);
+
+  --shadow-card: var(--theme-shadow-card, 0 4px 6px -1px rgb(0 0 0 / 0.1));
+  --shadow-card-hover: var(--theme-shadow-card-hover, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+
+  --font-heading: var(--font-heading, 'Inter', sans-serif);
+  --font-body: var(--font-body, 'Inter', sans-serif);
+
+  --section-py: var(--section-py, 4rem);
+  --section-px: var(--section-px, 1rem);
+  --container-max: var(--container-max, 72rem);
+}
+
+@layer base {
+  :root {
+    --font-heading: 'Inter', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --text-transform-heading: none;
+    --letter-spacing: normal;
+    --line-height: 1.5;
+    --theme-border-radius: 0.5rem;
+    --theme-card-radius: 0.5rem;
+    --theme-button-radius: 0.5rem;
+    --theme-image-radius: 0.5rem;
+    --theme-border-width: 1px;
+    --theme-shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --theme-shadow-card-hover: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --transition-speed: 300ms;
+    --section-py: 4rem;
+    --section-px: 1rem;
+    --container-max: 72rem;
+    --grid-gap: 1.5rem;
+    --nav-height: 5rem;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-stone-900);
+    background-color: var(--color-stone-50);
+    line-height: var(--line-height);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    text-transform: var(--text-transform-heading);
+    letter-spacing: var(--letter-spacing);
+    line-height: var(--line-height);
+  }
+
+  .section-py { padding-top: var(--section-py); padding-bottom: var(--section-py); }
+  .section-px { padding-left: var(--section-px); padding-right: var(--section-px); }
+  .container-max { max-width: var(--container-max); margin-left: auto; margin-right: auto; }
+}
+
+@layer components {
+  .card-themed {
+    border-radius: var(--theme-card-radius) !important;
+    box-shadow: var(--theme-shadow-card);
+    transition: box-shadow var(--transition-speed, 300ms) ease, transform var(--transition-speed, 300ms) ease;
+    border: var(--theme-border-width, 1px) solid var(--color-stone-200) !important;
+  }
+  .card-themed:hover {
+    box-shadow: var(--theme-shadow-card-hover);
+  }
+  .button-themed {
+    border-radius: var(--theme-button-radius);
+    font-family: var(--font-heading);
+    transition: all var(--transition-speed, 300ms) ease;
+  }
+  .image-themed {
+    border-radius: var(--theme-image-radius);
+  }
+  .divider-themed {
+    height: var(--divider-height, 2rem);
+    background: linear-gradient(to bottom, transparent, var(--color-stone-200), transparent);
+  }
 }
 
 @keyframes slide-down {

@@ -1,9 +1,8 @@
 import type { MetadataRoute } from "next"
-import { listTenants, readSiteProfile } from "@/lib/cms"
+import { getActiveTenant, readSiteProfile } from "@/lib/cms"
 
 export default function manifest(): MetadataRoute.Manifest {
-  const tenants = listTenants()
-  const tenant = tenants[0] || "aydins-cafe"
+  const tenant = getActiveTenant()
   const profile = readSiteProfile(tenant)
 
   return {

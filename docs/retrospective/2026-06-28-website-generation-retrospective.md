@@ -89,3 +89,29 @@ Improve the `website-builder` Claude skill and the Next.js app scaffold so that 
 ### Expected Outcome
 
 A developer or Claude running the website-builder skill should be able to go from "here is a business name and city" to a fully rendered, multi-page CMS-driven website with two theme variants, without ever touching `app/layout.tsx`, `proxy.ts`, or `next.config.ts`. Tenant isolation should be structural: each business lives entirely under `content/<kind>/<tenant>/` and `app/[tenant]/`.
+
+---
+
+## Session Retrospective: Theme System Overhaul (2026-06-29)
+
+### What Changed Since the Original Retrospective
+
+1. **Single-tenant model confirmed.** Multi-tenant runtime switching was removed. `ACTIVE_TENANT` and `THEME_VARIANT` env vars now select the business and theme at build/startup time. The `app/page.tsx` root redirect and `app/layout.tsx` app shell both read from `getActiveTenant()`.
+
+2. **Server-side theme injection wins.** The original retrospective called for server-side injection; this session implemented it. A `<style>` tag is emitted in `app/[tenant]/layout.tsx` with all CSS custom properties set before first paint. This eliminated the orange/blue flash caused by the previous client-side `useEffect` pattern.
+
+3. **ThemeProvider simplified.** It no longer fetches from `/api/cms/theme`. It is now a thin client component that applies the server-provided `cssVars` object. The API route still exists for client-side re-renders if needed.
+
+4. **Tailwind token remapping.** Instead of emitting custom `--theme-*` variables and using `var(--theme-*)` inside `@theme` (which Turbopack did not reliably resolve at runtime), `toCssVars()` now emits **exact Tailwind token names** (`--color-amber-600`, `--color-stone-900`, etc.) with direct hex values. This overrides the static `@theme` defaults on `:root`.
+
+5. **Expanded theme dimensions.** The website-builder skill's Step 6 previously only covered `colors` and `components` (hero/card/button style). It now supports 16 styling dimensions (colour, typography, spacing, shape, borders, shadows, hero, cards, buttons, nav, menu, testimonials, forms, footer, dividers, motion) with a mandatory 8-dimension variance check between any two variants. See `skills/website-builder/resources/theme-dimensions.md`.
+
+6. **CSS specificity guardrail.** `.card-themed` and related classes in `app/globals.css` use `!important` for `border-radius` and `border` to override Tailwind utility specificity. This is now documented as a known gotcha in `docs/patterns/theme-system.md`.
+
+7. **`readTheme()` accepts any variant string.** Removed the `"a" | "b"` union constraint so `theme-c.json`, `theme-d.json`, etc. work without code changes.
+
+### Remaining Gaps
+
+- **Menu page (`app/menu/page.tsx`) does not consume theme dimensions.** `MenuItemCard` still uses hardcoded `border-stone-200`, `shadow-sm`, `bg-amber-600`, etc. Theme-aware variants exist in `theme.json` (`menu.layout`, `menu.hover`, `cards.hover`) but the menu component does not read them. Future work: pass the active `ThemeConfig` to `MenuGrid` and `CategoryNav`.
+- **API route `/api/cms/theme` is now redundant** for the primary theme flow. Consider removing it or keeping it only for client-side preview toggling.
+- **Google Fonts for theme fonts.** `Playfair Display` and `Lora` are referenced in themes but not loaded. The skill must ensure `next/font/google` imports match the theme's `headingFont`/`bodyFont`, or fonts must be self-hosted.

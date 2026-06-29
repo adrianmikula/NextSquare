@@ -145,18 +145,30 @@ Write `content/cms/<tenant>/pages.json`, containing the `PageBundle` from Step 4
 - Use only the block types that Step 4 selected. Do not include empty or placeholder blocks.
 - If `media` is empty, use image blocks with `placeholder: true` and a descriptive label (e.g. "Hero image – awaiting upload") rather than omitting image fields entirely.
 
-### Step 6: Generate Two Theme Variants
+### Step 6: Generate Theme Variants
 
-Write:
+Write one file per variant under `content/themes/<tenant>/`:
 - `content/themes/<tenant>/theme-a.json`
 - `content/themes/<tenant>/theme-b.json`
+- Optionally `theme-c.json`, `theme-d.json`, etc. if the user requests more.
+
+**Consult `resources/theme-dimensions.md`** for the full catalogue of 16 styling dimensions
+(colour, typography, spacing, shape, borders, shadows, hero, cards, buttons, nav, menu,
+testimonials, forms, footer, dividers, motion) and the required variance checklist.
 
 **Rules:**
-- Both themes must derive colours from the `vibe.palette` and `vibe.adjectives` captured in analysis.
-- Select two distinct directions from the `vibe.adjectives` list. Each theme should lean toward a different adjective or combination of adjectives.
-- Themes must differ in at least `components.heroStyle`, `components.cardStyle`, and `components.buttonStyle`.
+- Every theme MUST derive colours from the `vibe.palette` and `vibe.adjectives` captured in analysis.
+- **Mandatory distinctness check (non-negotiable).** Before writing any theme file, perform this check against every previously written theme for the same tenant. Two themes are considered too similar if ALL of the following are true:
+  1. Their primary colours fall within **30° of hue** on the HSL colour wheel, **OR** within **20% relative luminance** difference.
+  2. Their background colours are within **10%** luminance of each other.
+  3. They differ in fewer than **three** of the following component properties: `heroStyle`, `cardStyle`, `buttonStyle`, `navStyle`, `sectionPadding`.
+- **Full variance requirement.** Each new theme variant must differ from every previously written variant in at least **8 of the 16 dimension categories** defined in `resources/theme-dimensions.md`. At minimum, themes must differ in: colour palette, typography, card style, hero style, plus four additional dimensions (e.g. nav, spacing, shape, buttons, menu, motion, shadows, borders, dividers, heroes, cards, testimonials, forms, footer).
+- If two themes fail the check, the weaker one must be regenerated with a **contrasting adjective** from the adjective list. Do not emit both themes with the same dominant hue family (e.g., two different warm browns).
+- If `vibe.adjectives` contains fewer than 2 items, **invent no more than one additional direction keyword** that contrasts the existing one. Build the second theme from that keyword + the contrasting half of the palette extraction (darkest colour becomes primary, lightest becomes secondary, mid-tone becomes accent — do not use the same extraction order for both themes).
+- For additional variants beyond A/B (C, D...), each new variant must differ from **every previously written variant** by at least **two** of: dominant hue, lightness band, saturation band, heroStyle, cardStyle, buttonStyle, navStyle, sectionPadding, shape, motion, typography.
 - Image URLs (hero, gallery) live in the CMS pages and `site-profile.json`, not in theme files. Theme JSON should contain only colours, typography, and component style flags.
 - Consult `resources/theme-examples.md` for industry-specific palettes, typography, and direction keywords. Match the business `type` to the corresponding subcategory section and use that as a starting point.
+- Themes must never reuse names from other tenants. Names should reflect the chosen direction keyword for this specific tenant (e.g. `"Rustic Warmth"`, `"Cool Minimal"`).
 
 `ThemeConfig` shape is defined in `resources/schemas.md`. Do not use preset theme definitions. Generate each theme pair afresh from the current `BusinessProfile`.
 

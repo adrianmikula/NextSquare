@@ -8,13 +8,12 @@ import { ToastProvider } from "@/components/ui/ToastProvider"
 import { DemoBadge } from "@/components/demo/DemoBadge"
 import { ToastContainer } from "@/components/ui/toast"
 import { requireEnv } from "@/lib/env"
-import { listTenants, readSiteProfile } from "@/lib/cms"
+import { getActiveTenant, readSiteProfile } from "@/lib/cms"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export async function generateMetadata(): Promise<Metadata> {
-  const tenants = listTenants()
-  const tenant = tenants[0] || "aydins-cafe"
+  const tenant = getActiveTenant()
   const profile = readSiteProfile(tenant)
   const title = profile?.seo?.title || profile?.siteName || "Cafe Template"
   const description = profile?.seo?.description || profile?.description || ""
@@ -39,8 +38,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const tenants = listTenants()
-  const tenant = tenants[0] || "aydins-cafe"
+  const tenant = getActiveTenant()
   const siteProfile = readSiteProfile(tenant)
 
   return (

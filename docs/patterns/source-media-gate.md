@@ -41,7 +41,7 @@ This prevents generating a shell website with no visuals, which is the most comm
 
 When images are missing but the user explicitly proceeds past the media gate:
 
-- Set `theme.images.hero` and `theme.images.logo` to `"placeholder"`.
+- Set `image` fields in CMS hero/gallery/promo blocks to `"placeholder"`.
 - Use a neutral gradient or labelled placeholder in theme rendering (not a broken image link).
 - Do not use empty strings or `null` for image fields in CMS pages; use a consistent `"placeholder"` sentinel.
 

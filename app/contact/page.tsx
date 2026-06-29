@@ -1,10 +1,9 @@
 import type { Metadata } from "next"
 import { MapPin, Phone, Mail, Clock } from "lucide-react"
 import { GoogleMaps } from "@/components/google-maps"
-import { readSiteProfile } from "@/lib/cms"
+import { getActiveTenant, readSiteProfile } from "@/lib/cms"
 
-const tenants = ["aydins-cafe"]
-const tenant = tenants[0] || "aydins-cafe"
+const tenant = getActiveTenant()
 const profile = readSiteProfile(tenant)
 
 const address = profile?.address

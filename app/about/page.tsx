@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Heart, Coffee, Users } from "lucide-react"
-import { readSiteProfile } from "@/lib/cms"
+import { getActiveTenant, readSiteProfile } from "@/lib/cms"
 
 function FallbackValues() {
   return {
@@ -28,8 +28,7 @@ function FallbackValues() {
   }
 }
 
-const tenants = ["aydins-cafe"]
-const tenant = tenants[0] || "aydins-cafe"
+const tenant = getActiveTenant()
 const profile = readSiteProfile(tenant)
 const { story, values } = profile
   ? {

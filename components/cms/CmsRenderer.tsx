@@ -51,6 +51,31 @@ export function CmsBlockRenderer({ block }: { block: CmsBlock }) {
   }
 }
 
+function sectionClass(bg: string) {
+  return `${bg} section-py section-px`
+}
+
+function containerClass() {
+  return "mx-auto container-max px-4 sm:px-6"
+}
+
+function cardClass(extra = "") {
+  return cn(
+    "card-themed rounded-xl border bg-white p-6",
+    extra
+  )
+}
+
+function headingClass(size: string = "3xl") {
+  const sizes: Record<string, string> = {
+    "4xl": "text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl",
+    "3xl": "text-3xl font-bold tracking-tight sm:text-4xl",
+    "2xl": "text-2xl font-bold",
+    xl: "text-xl font-semibold",
+  }
+  return cn("text-stone-900", sizes[size] || sizes["3xl"])
+}
+
 function CmsHero({ data }: { data: Record<string, unknown> }) {
   const headline = String(data.headline || "")
   const subheadline = String(data.subheadline || "")
@@ -60,7 +85,7 @@ function CmsHero({ data }: { data: Record<string, unknown> }) {
   const hasImage = image && !image.includes("placeholder")
 
   return (
-    <section className="relative overflow-hidden bg-stone-900 py-24 sm:py-32">
+    <section className={cn(sectionClass("relative overflow-hidden bg-stone-900"), "py-24 sm:py-32")}>
       {hasImage ? (
         <div
           className="absolute inset-0 bg-cover bg-center opacity-40"
@@ -69,8 +94,8 @@ function CmsHero({ data }: { data: Record<string, unknown> }) {
       ) : (
         <div className="absolute inset-0 bg-gradient-to-b from-stone-900/70 to-stone-900" />
       )}
-      <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6">
-        <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">
+      <div className={cn(containerClass(), "relative text-center")}>
+        <h1 className={headingClass("4xl") + " text-white"}>
           {headline}
         </h1>
         {subheadline && (
@@ -78,7 +103,7 @@ function CmsHero({ data }: { data: Record<string, unknown> }) {
         )}
         {ctaLabel && (
           <div className="mt-8 flex items-center justify-center gap-4">
-            <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline")}>
+            <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline button-themed")}>
               {ctaLabel}
             </Link>
           </div>
@@ -92,9 +117,9 @@ function CmsText({ data }: { data: Record<string, unknown> }) {
   const heading = String(data.heading || "")
   const body = String(data.body || "")
   return (
-    <section className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        {heading && <h2 className="text-3xl font-bold tracking-tight text-stone-900 mb-6">{heading}</h2>}
+    <section className={sectionClass("bg-white")}>
+      <div className={containerClass()}>
+        {heading && <h2 className={cn(headingClass("3xl"), "mb-6")}>{heading}</h2>}
         <p className="text-lg text-stone-600 whitespace-pre-line">{body}</p>
       </div>
     </section>
@@ -105,14 +130,14 @@ function CmsProducts({ data }: { data: Record<string, unknown> }) {
   const title = String(data.title || "")
   const items = (data.items as Array<{ name: string; description: string; price?: number }>) || []
   return (
-    <section className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className={sectionClass("bg-white")}>
+      <div className={containerClass()}>
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">{title}</h2>
+          <h2 className={headingClass("3xl")}>{title}</h2>
         </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
+        <div className="mt-12 grid gap-6 sm:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
           {items.map((item) => (
-            <div key={item.name} className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+            <div key={item.name} className={cardClass()}>
               <h3 className="font-semibold text-stone-900 leading-none tracking-tight">{item.name}</h3>
               <p className="mt-2 text-sm text-stone-500">{item.description}</p>
               {item.price !== undefined && (
@@ -129,14 +154,14 @@ function CmsProducts({ data }: { data: Record<string, unknown> }) {
 function CmsTestimonials({ data }: { data: Record<string, unknown> }) {
   const items = (data.items as Array<{ author: string; text: string; source?: string }>) || []
   return (
-    <section className="bg-stone-50 py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className={sectionClass("bg-stone-50")}>
+      <div className={containerClass()}>
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">What Our Customers Say</h2>
+          <h2 className={headingClass("3xl")}>What Our Customers Say</h2>
         </div>
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
+        <div className="mt-12 grid gap-6 sm:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
           {items.map((item) => (
-            <div key={item.author} className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+            <div key={item.author} className={cardClass()}>
               <div className="mb-3 flex gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
@@ -160,13 +185,13 @@ function CmsDelivery({ data }: { data: Record<string, unknown> }) {
   const body = String(data.body || "")
   const platforms = (data.platforms as Array<{ name: string; url: string; label: string }>) || []
   return (
-    <section className="bg-amber-50 py-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 text-center">
-        {heading && <h2 className="text-3xl font-bold text-stone-900 mb-4">{heading}</h2>}
+    <section className={cn(sectionClass("bg-amber-50"), "py-16")}>
+      <div className={cn(containerClass(), "text-center")}>
+        {heading && <h2 className={cn(headingClass("3xl"), "mb-4")}>{heading}</h2>}
         {body && <p className="text-lg text-stone-600 mb-8">{body}</p>}
         <div className="flex flex-wrap justify-center gap-4">
           {platforms.map((p) => (
-            <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants(), "no-underline")}>
+            <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants(), "no-underline button-themed")}>
               {p.label || p.name}
             </a>
           ))}
@@ -179,11 +204,11 @@ function CmsDelivery({ data }: { data: Record<string, unknown> }) {
 function CmsHours({ data }: { data: Record<string, unknown> }) {
   const schedule = (data.schedule as Array<{ day: string; open: string; close: string }>) || []
   return (
-    <section className="bg-stone-50 py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className={sectionClass("bg-stone-50")}>
+      <div className={containerClass()}>
         <div className="flex items-center gap-3 mb-6">
           <Clock className="h-6 w-6 text-amber-700" />
-          <h2 className="text-2xl font-bold text-stone-900">Hours</h2>
+          <h2 className={headingClass("2xl")}>Hours</h2>
         </div>
         <dl className="space-y-3 max-w-xl">
           {schedule.map((row) => (
@@ -205,12 +230,12 @@ function CmsGallery({ data }: { data: Record<string, unknown> }) {
   const caption = data.caption as string | undefined
   if (images.length === 0) return null
   return (
-    <section className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        {caption && <h2 className="text-3xl font-bold text-stone-900 mb-8 text-center">{caption}</h2>}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <section className={sectionClass("bg-white")}>
+      <div className={containerClass()}>
+        {caption && <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{caption}</h2>}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: "var(--grid-gap)" }}>
           {images.map((src, i) => (
-            <div key={i} className="aspect-square overflow-hidden rounded-xl bg-stone-100">
+            <div key={i} className={cn("aspect-square overflow-hidden bg-stone-100 image-themed")}>
               <img src={src} alt={`Gallery ${i + 1}`} className="h-full w-full object-cover" />
             </div>
           ))}
@@ -226,12 +251,12 @@ function CmsCta({ data }: { data: Record<string, unknown> }) {
   const buttonLabel = String(data.buttonLabel || "")
   const buttonLink = String(data.buttonLink || "/menu")
   return (
-    <section className="bg-amber-700 py-16">
-      <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
-        <h2 className="text-3xl font-bold text-white mb-4">{heading}</h2>
+    <section className={cn(sectionClass("bg-amber-700"), "py-16")}>
+      <div className={cn(containerClass(), "text-center")}>
+        <h2 className={cn("text-3xl font-bold text-white mb-4", headingClass("3xl"))}>{heading}</h2>
         {subtext && <p className="text-lg text-amber-100 mb-8">{subtext}</p>}
         {buttonLabel && (
-          <Link href={buttonLink} className={cn(buttonVariants({ size: "lg", variant: "secondary" }), "no-underline")}>
+          <Link href={buttonLink} className={cn(buttonVariants({ size: "lg", variant: "secondary" }), "no-underline button-themed")}>
             {buttonLabel}
           </Link>
         )}
@@ -244,12 +269,12 @@ function CmsServices({ data }: { data: Record<string, unknown> }) {
   const title = String(data.title || "")
   const items = (data.items as Array<{ name: string; description: string; priceHint?: number; duration?: string }>) || []
   return (
-    <section className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <h2 className="text-3xl font-bold text-stone-900 mb-8 text-center">{title}</h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <section className={sectionClass("bg-white")}>
+      <div className={containerClass()}>
+        <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{title}</h2>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
           {items.map((item) => (
-            <div key={item.name} className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+            <div key={item.name} className={cardClass()}>
               <h3 className="font-semibold text-stone-900">{item.name}</h3>
               <p className="mt-2 text-sm text-stone-500">{item.description}</p>
               <div className="mt-4 flex items-center justify-between text-sm">
@@ -268,9 +293,9 @@ function CmsForm({ data }: { data: Record<string, unknown> }) {
   const title = String(data.title || "")
   const fields = (data.fields as Array<{ name: string; type: string; label: string; required: boolean }>) || []
   return (
-    <section className="bg-stone-50 py-20">
-      <div className="mx-auto max-w-xl px-4 sm:px-6">
-        <h2 className="text-3xl font-bold text-stone-900 mb-8 text-center">{title}</h2>
+    <section className={sectionClass("bg-stone-50")}>
+      <div className={cn(containerClass(), "max-w-xl")}>
+        <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{title}</h2>
         <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
           {fields.map((field) => (
             <div key={field.name}>
@@ -278,13 +303,13 @@ function CmsForm({ data }: { data: Record<string, unknown> }) {
                 {field.label} {field.required && <span className="text-red-500">*</span>}
               </label>
               {field.type === "textarea" ? (
-                <textarea id={field.name} name={field.name} required={field.required} rows={4} className="w-full rounded-lg border border-stone-300 p-3" />
+                <textarea id={field.name} name={field.name} required={field.required} rows={4} className="w-full rounded-lg border border-stone-300 p-3" style={{ borderRadius: "var(--theme-border-radius)" }} />
               ) : (
-                <input id={field.name} name={field.name} type={field.type} required={field.required} className="w-full rounded-lg border border-stone-300 p-3" />
+                <input id={field.name} name={field.name} type={field.type} required={field.required} className="w-full rounded-lg border border-stone-300 p-3" style={{ borderRadius: "var(--theme-border-radius)" }} />
               )}
             </div>
           ))}
-          <button type="submit" className={cn(buttonVariants(), "w-full")}>
+          <button type="submit" className={cn(buttonVariants(), "w-full button-themed")}>
             Submit
           </button>
         </form>
@@ -296,12 +321,12 @@ function CmsForm({ data }: { data: Record<string, unknown> }) {
 function CmsFaq({ data }: { data: Record<string, unknown> }) {
   const items = (data.items as Array<{ question: string; answer: string }>) || []
   return (
-    <section className="bg-white py-20">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <h2 className="text-3xl font-bold text-stone-900 mb-8 text-center">Frequently Asked Questions</h2>
+    <section className={sectionClass("bg-white")}>
+      <div className={cn(containerClass(), "max-w-3xl")}>
+        <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>Frequently Asked Questions</h2>
         <div className="space-y-6">
           {items.map((item, i) => (
-            <div key={i} className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+            <div key={i} className={cardClass()}>
               <h3 className="font-semibold text-stone-900 mb-2">{item.question}</h3>
               <p className="text-sm text-stone-600">{item.answer}</p>
             </div>
@@ -320,7 +345,7 @@ function CmsPromo({ data }: { data: Record<string, unknown> }) {
   const image = data.image as string | undefined
   const hasImage = image && !image.includes("placeholder")
   return (
-    <section className="relative overflow-hidden bg-stone-900 py-20">
+    <section className={cn(sectionClass("relative overflow-hidden bg-stone-900"), "py-20")}>
       {hasImage ? (
         <div
           className="absolute inset-0 bg-cover bg-center opacity-30"
@@ -329,11 +354,11 @@ function CmsPromo({ data }: { data: Record<string, unknown> }) {
       ) : (
         <div className="absolute inset-0 bg-gradient-to-r from-amber-900/80 to-stone-900" />
       )}
-      <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6">
-        <h2 className="text-3xl font-bold text-white mb-4">{heading}</h2>
+      <div className={cn(containerClass(), "relative text-center")}>
+        <h2 className={cn(headingClass("3xl"), "mb-4 text-white")}>{heading}</h2>
         <p className="text-lg text-stone-300 mb-8">{body}</p>
         {ctaLabel && (
-          <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline")}>
+          <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline button-themed")}>
             {ctaLabel}
           </Link>
         )}

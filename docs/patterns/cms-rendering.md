@@ -44,41 +44,36 @@ A client component used for theme injection should return its children after app
 "use client"
 
 import { useEffect } from "react"
-import { useSearchParams } from "next/navigation"
 
-export function ThemeProvider({ tenant, children }: { tenant: string; children: React.ReactNode }) {
-  const searchParams = useSearchParams()
-  const themeVariant = searchParams.get("theme") || "a"
-
+export function ThemeProvider({ cssVars, children }: { cssVars?: Record<string, string>; children: React.ReactNode }) {
   useEffect(() => {
-    const params = new URLSearchParams({ tenant, variant: themeVariant })
-    fetch(`/api/cms/theme?${params.toString()}`)
-      .then((res) => res.json())
-      .then((theme) => {
-        if (!theme?.colors) return
-        const root = document.documentElement
-        const colors = theme.colors as Record<string, string>
-        root.style.setProperty("--theme-primary", colors.primary || "#212121")
-        // ... other theme vars
-      })
-      .catch(() => {})
-  }, [tenant, themeVariant])
+    if (!cssVars) return
+    const root = document.documentElement
+    Object.entries(cssVars).forEach(([key, value]) => {
+      root.style.setProperty(key, value)
+    })
+  }, [cssVars])
 
   return <>{children}</>  // MUST render children
 }
 ```
 
-Wrap it in `app/layout.tsx` at the top level so the app shell always paints:
+The server-side layout in `app/[tenant]/layout.tsx` now reads the theme from `content/themes/<tenant>/theme-<variant>.json` using `ACTIVE_TENANT` and `THEME_VARIANT` env vars, converts it with `toCssVars()`, and injects a `<style>` tag on `:root` before first paint. The client-side `ThemeProvider` only reapplies if the variant changes without a full reload.
 
 ```tsx
-<ThemeProvider tenant="aydins-cafe">
-  <div className="flex min-h-screen flex-col">
-    <Header />
-    <main className="flex-1">{children}</main>
-    <Footer />
-  </div>
-</ThemeProvider>
+// app/[tenant]/layout.tsx
+const theme = readTheme(activeTenant, themeVariant)
+const cssVars = theme ? toCssVars(theme, themeVariant) : undefined
+
+return (
+  <ThemeProvider tenant={activeTenant} cssVars={cssVars}>
+    <style dangerouslySetInnerHTML={{ __html: `:root{${cssVarsStyle}}` }} />
+    {children}
+  </ThemeProvider>
+)
 ```
+
+**Old behaviour (removed):** client-side `fetch('/api/cms/theme?...')` based on `useSearchParams()`. This caused a visible flash of default colours before the theme loaded.
 
 ### 3. Avoid `dynamic = "force-dynamic"` unless required
 

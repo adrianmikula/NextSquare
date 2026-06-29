@@ -1,10 +1,9 @@
 import { redirect } from "next/navigation"
-import { listTenants } from "@/lib/cms"
+import { getActiveTenant } from "@/lib/cms"
 
 export const dynamic = "force-dynamic"
 
 export default function RootPage() {
-  const tenants = listTenants()
-  const defaultTenant = tenants[0] || "aydins-cafe"
-  redirect(`/${defaultTenant}`)
+  const tenant = getActiveTenant()
+  redirect(`/${tenant}`)
 }

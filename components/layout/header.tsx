@@ -18,11 +18,29 @@ export function Header({ siteProfile }: { siteProfile?: SiteProfile | null }) {
   const name = siteProfile?.siteName || FALLBACK_NAME
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-stone-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+    <header
+      className="sticky top-0 z-50 w-full backdrop-blur supports-[backdrop-filter]:bg-white/60"
+      style={{
+         height: "var(--nav-height, 5rem)",
+        borderBottom: "var(--theme-border-width, 1px) solid var(--color-stone-200)",
+        backgroundColor: `rgba(255,255,255, var(--nav-bg-opacity, 0.95))`,
+      }}
+    >
+      <div
+        className="flex items-center justify-between"
+        style={{
+          maxWidth: "var(--container-max, 72rem)",
+          paddingLeft: "var(--section-px, 1rem)",
+          paddingRight: "var(--section-px, 1rem)",
+          marginLeft: "auto",
+          marginRight: "auto",
+          height: "100%",
+        }}
+      >
         <Link
           href="/"
           className="text-xl font-bold tracking-tight text-stone-900"
+          style={{ fontFamily: "var(--font-heading)" }}
         >
           <span className="text-amber-600">☕</span> {name}
         </Link>
@@ -33,6 +51,7 @@ export function Header({ siteProfile }: { siteProfile?: SiteProfile | null }) {
               key={link.href}
               href={link.href}
               className="text-sm font-medium text-stone-600 transition-colors hover:text-amber-700"
+              style={{ fontFamily: "var(--font-body)" }}
             >
               {link.label}
             </Link>
