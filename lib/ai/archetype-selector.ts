@@ -4,7 +4,13 @@ import { LayoutOutputSchema } from "@/lib/schemas"
 export type ArchetypeSelectorInput = {
   businessProfile: Record<string, unknown>
   archetypeCatalog: {
-    archetypes: Record<string, { blocks: string[]; bestFor?: string[]; minData?: Record<string, string> }>
+    archetypes: Record<string, {
+      blocks: string[]
+      bestFor?: string[]
+      minData?: Record<string, string>
+      excludes?: string[]
+      typicalOrder?: number
+    }>
     blockVocabulary: Record<string, { description: string }>
   }
   selectionRules: Array<{ condition: string; archetype: string; page: string }>
@@ -17,21 +23,39 @@ export type ArchetypeSelectorResult = {
   error?: string
 }
 
-const SYSTEM_PROMPT = `You are a website structure assistant. Given a business profile and an archetype catalog, select the single best archetype for each requested page.
+const SYSTEM_PROMPT = `You are a web designer selecting page layouts and block orders for a small business website.
 
 Rules:
 1. Only select from the provided archetype names.
-2. Respect minData gates: if the profile lacks required data, do not select that archetype.
-3. Match the business type and features from the profile to the archetype's bestFor list.
-4. Return exactly the JSON schema provided.
-5. Do not invent archetype names not in the catalog.
-6. If unsure, prefer the default archetype for the page type.
+2. For each page, select the best archetype and produce TWO distinct block orderings.
+3. Both orderings must use only blocks from the selected archetype's set.
+4. Variant A should be feature-forward (lift gallery/testimonials/services based on business strengths).
+5. Variant B should be conservative (closer to the archetype's typicalOrder hint).
+6. hero must always be first if present in the archetype block set.
+7. cta must be placed no earlier than position 2.
+8. Respect minData gates: if the profile lacks required data, do not select that archetype.
+9. Return exactly the JSON schema provided.
+10. Do not invent archetype names not in the catalog.
 
-Output format: JSON array with entries: { "page": "<page-slug>", "archetype": "<ARCHETYPE_NAME>", "reasoning": "<one sentence>" }`
+Output format per page:
+{
+  "page": "<page-slug>",
+  "archetype": "<ARCHETYPE_NAME>",
+  "variants": [
+    { "id": "A", "order": ["hero","gallery","text","products","cta"], "reasoning": "Feature-forward for visually-rich business" },
+    { "id": "B", "order": ["hero","text","products","cta"], "reasoning": "Conservative default" }
+  ]
+}`
 
 const RESPONSE_SCHEMA_DESCRIPTION = `{
   "selected": {
-    "<page-slug>": "<ARCHETYPE_NAME>"
+    "<page-slug>": {
+      "archetype": "<ARCHETYPE_NAME>",
+      "variants": [
+        { "id": "A", "order": ["hero","text","products","cta"], "reasoning": "..." },
+        { "id": "B", "order": ["hero","products","text","cta"], "reasoning": "..." }
+      ]
+    }
   },
   "reasoning": "<optional summary of choices>"
 }`
@@ -54,7 +78,7 @@ export async function selectArchetypesWithLLM(
 }
 
 export function selectArchetypesFallback(input: ArchetypeSelectorInput): LayoutOutput {
-  const selected: Record<string, string> = {}
+  const selected: Record<string, { archetype: string; variants: LayoutVariant[] }> = {}
 
   for (const rule of input.selectionRules) {
     const page = rule.page
@@ -62,12 +86,77 @@ export function selectArchetypesFallback(input: ArchetypeSelectorInput): LayoutO
 
     if (evaluateCondition(rule.condition, input.businessProfile)) {
       if (archetypePassesGate(rule.archetype, input.businessProfile, input.archetypeCatalog)) {
-        selected[page] = rule.archetype
+        const archetypeBlocks = input.archetypeCatalog.archetypes[rule.archetype]?.blocks ?? []
+        selected[page] = {
+          archetype: rule.archetype,
+          variants: buildFallbackVariants(rule.archetype, archetypeBlocks, input.businessProfile),
+        }
       }
     }
   }
 
-  return { selected, reasoning: "Rule-based fallback selection." }
+  return { selected, reasoning: "Rule-based fallback selection with two layout variants." }
+}
+
+function buildFallbackVariants(
+  archetypeName: string,
+  blocks: string[],
+  _profile: Record<string, unknown>
+): LayoutVariant[] {
+  const canonical = [...blocks]
+  const featureForward = arrangeFeatureForward(archetypeName, [...blocks])
+
+  return [
+    {
+      id: "A",
+      archetype: archetypeName,
+      order: featureForward,
+      reasoning: `Feature-forward ordering for ${archetypeName} based on business signals.`,
+    },
+    {
+      id: "B",
+      archetype: archetypeName,
+      order: canonical,
+      reasoning: `Conservative canonical ordering for ${archetypeName}.`,
+    },
+  ]
+}
+
+function arrangeFeatureForward(archetypeName: string, order: string[]): string[] {
+  const heroIdx = order.indexOf("hero")
+  if (heroIdx > 0) {
+    order.unshift(order.splice(heroIdx, 1)[0])
+  }
+
+  const featureBlocks = ["gallery", "testimonials", "services", "products"]
+  let lifted: string | null = null
+  for (const block of featureBlocks) {
+    if (order.includes(block)) {
+      lifted = block
+      break
+    }
+  }
+
+  if (lifted && lifted !== "hero") {
+    const idx = order.indexOf(lifted)
+    if (idx > 1) {
+      order.unshift(order.splice(idx, 1)[0])
+    }
+  }
+
+  const ctaIdx = order.indexOf("cta")
+  if (ctaIdx >= 0 && ctaIdx < 2) {
+    order.splice(ctaIdx, 1)
+    order.push("cta")
+  }
+
+  if (order[0] !== "hero" && order.includes("hero")) {
+    const hIdx = order.indexOf("hero")
+    const [hero] = order.splice(hIdx, 1)
+    order.unshift(hero)
+  }
+
+  return order
 }
 
 function buildUserPrompt(input: ArchetypeSelectorInput): string {
@@ -88,7 +177,7 @@ ${profileJson}
 Return a JSON object matching this schema:
 ${RESPONSE_SCHEMA_DESCRIPTION}
 
-Select an archetype for each of these pages: ${input.selectionRules.map(r => r.page).join(", ")}.
+Select an archetype with two layout variants for each of these pages: ${input.selectionRules.map(r => r.page).join(", ")}.
 
 Respond with ONLY the JSON object.`
 }
@@ -123,6 +212,13 @@ function evaluateCondition(condition: string, profile: Record<string, unknown>):
   }
   if (condition.includes("features") && condition.includes("faq") && Array.isArray(safeProfile.features)) {
     if ((safeProfile.features as string[]).includes("faq")) return true
+  }
+  if (condition.includes("type in") && typeof safeProfile.type === "string") {
+    const match = condition.match(/\{(.+?)\}/)
+    if (match) {
+      const allowedTypes = match[1].split(",").map((t) => t.trim())
+      if (allowedTypes.includes((safeProfile.type as string).toLowerCase())) return true
+    }
   }
 
   return false

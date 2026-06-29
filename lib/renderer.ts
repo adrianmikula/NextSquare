@@ -143,7 +143,31 @@ function renderComparison(data: BlockData): BlockData {
   }
 }
 
-// ── Dispatch ──────────────────────────────────────────────────────────────────
+function renderMap(data: BlockData): BlockData {
+  return {
+    address: String(data.address ?? ""),
+    suburb: String(data.suburb ?? ""),
+    city: String(data.city ?? ""),
+    embedUrl: data.embedUrl as string | undefined,
+    directionsUrl: data.directionsUrl as string | undefined,
+  }
+}
+
+function renderTeam(data: BlockData): BlockData {
+  return {
+    title: String(data.title ?? "Our Team"),
+    items: (data.items as Array<{ name: string; role: string; bio?: string; photo?: string }>) ?? [],
+  }
+}
+
+function renderReservation(data: BlockData): BlockData {
+  return {
+    title: String(data.title ?? "Make a Reservation"),
+    fields: (data.fields as Array<{ name: string; type: string; label: string; required: boolean }>) ?? [],
+    prefillName: data.prefillName as string | undefined,
+    prefillPhone: data.prefillPhone as string | undefined,
+  }
+}
 
 const RENDERERS: Record<string, (data: BlockData) => BlockData> = {
   hero: renderHero,
@@ -164,14 +188,41 @@ const RENDERERS: Record<string, (data: BlockData) => BlockData> = {
   hr: renderHr,
   "image-text": renderImageText,
   comparison: renderComparison,
+  map: renderMap,
+  team: renderTeam,
+  reservation: renderReservation,
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
-/**
- * Render a single block symbol with its data into a CMS block.
- * @throws Error if the symbol is not a known CMS block type.
- */
+export interface PageVariantConfig {
+  id: string
+  reasoning?: string
+  order: string[]
+}
+
+export interface RenderPageConfig {
+  label: string
+  archetype?: string
+  order?: string[]
+  variants?: PageVariantConfig[]
+  dataMap: Record<string, BlockData>
+  seo?: { title: string; description: string }
+}
+
+export interface RenderedPage {
+  slug: string
+  label: string
+  archetype: string
+  variants: Array<{
+    id: string
+    reasoning: string
+    order: string[]
+    blocks: CmsBlock[]
+  }>
+  seo?: { title: string; description: string }
+}
+
 export function renderBlock(symbol: string, data: BlockData = {}): CmsBlock {
   const renderer = RENDERERS[symbol]
   if (!renderer) {
@@ -180,57 +231,52 @@ export function renderBlock(symbol: string, data: BlockData = {}): CmsBlock {
   return { type: symbol, data: renderer(data) }
 }
 
-/**
- * Render an archetype (ordered list of block symbols) into a CMS page's block array.
- *
- * @param archetypeBlocks - Ordered list of block symbols (e.g. ["hero", "text", "products", "cta"])
- * @param dataMap - Map of symbol → data object. Missing symbols get empty data.
- * @returns Array of CMS blocks ready for `pages.json`
- *
- * @example
- * renderPage(["hero", "text", "products"], {
- *   hero: { headline: "Welcome", subheadline: "...", ctaLabel: "Menu", ctaLink: "/menu" },
- *   text: { heading: "About", body: "We are..." },
- *   products: { title: "Popular", items: [...] }
- * })
- */
-export function renderPage(archetypeBlocks: string[], dataMap: Record<string, BlockData> = {}): CmsBlock[] {
-  return archetypeBlocks.map((symbol) => {
+export function renderPage(orderedBlocks: string[], dataMap: Record<string, BlockData> = {}): CmsBlock[] {
+  return orderedBlocks.map((symbol) => {
     const data = dataMap[symbol] ?? {}
     return renderBlock(symbol, data)
   })
 }
 
-/**
- * Render a full PageBundle from an archetype selection + data map.
- *
- * @param pages - Map of page slug → { archetype, label, dataMap, seo? }
- * @returns PageBundle ready for `pages.json`
- */
-export function renderBundle(
-  pages: Record<
-    string,
-    {
-      archetype: string
-      label: string
-      dataMap: Record<string, BlockData>
-      seo?: { title: string; description: string }
+function resolveBlockOrder(page: RenderPageConfig): string[] {
+  if (page.order) return page.order
+  if (page.variants && page.variants.length > 0) return page.variants[0].order
+  if (page.archetype && ARCHETYPE_BLOCKS[page.archetype]) return ARCHETYPE_BLOCKS[page.archetype]
+  return page.archetype ? [page.archetype] : []
+}
+
+export function renderBundle(pages: Record<string, RenderPageConfig>): RenderedPage[] {
+  return Object.entries(pages).map(([slug, page]) => {
+    const archetypeName = page.archetype ?? ""
+    const variants = page.variants && page.variants.length > 0
+      ? page.variants.map((v) => ({
+          id: v.id,
+          reasoning: v.reasoning ?? "",
+          order: v.order,
+          blocks: renderPage(v.order, page.dataMap),
+        }))
+      : [
+          {
+            id: "A",
+            reasoning: "Default arrangement",
+            order: resolveBlockOrder(page),
+            blocks: renderPage(resolveBlockOrder(page), page.dataMap),
+          },
+        ]
+
+    return {
+     slug,
+      label: page.label,
+      archetype: archetypeName,
+      variants,
+      seo: page.seo,
     }
-  >
-): { slug: string; label: string; blocks: CmsBlock[]; seo?: { title: string; description: string } }[] {
-  // Look up the archetype definitions. These come from the archetype catalog (archetypes.json)
-  // or are passed in directly. For now, we expect the caller to pass the block list.
-  return Object.entries(pages).map(([slug, page]) => ({
-    slug,
-    label: page.label,
-    blocks: renderPage(page.archetype ? ARCHETYPE_BLOCKS[page.archetype] ?? [page.archetype] : [], page.dataMap),
-    seo: page.seo,
-  }))
+  })
 }
 
 // ── Archetype Block Registry ──────────────────────────────────────────────────
 // This registry maps archetype names to their block sequences.
-// It is populated at build time from `content/archetypes/<tenant>.json`
+// It is populated at build time from `content/archetypes/catalog.json`
 // or from the hardcoded fallbacks below.
 
 const ARCHETYPE_BLOCKS: Record<string, string[]> = {
@@ -254,4 +300,18 @@ const ARCHETYPE_BLOCKS: Record<string, string[]> = {
   PRICING_PAGE: ["hero", "services", "comparison", "cta"],
   STORY_IMAGE: ["hero", "image-text", "cta"],
   GALLERY_FULL_HOME_ALT: ["hero", "slideshow", "text", "products", "cta"],
+  TEAM_HOME: ["hero", "team", "text", "products", "cta"],
+  TEAM_PAGE: ["hero", "team", "text", "cta"],
+  RESERVATIONS_PAGE: ["hero", "text", "reservation", "hours", "map", "cta"],
+  LOCATIONS_PAGE: ["hours", "map", "text", "cta"],
+  MINIMAL_HEADER: ["nav", "logo"],
+  STANDARD_HEADER: ["announcement", "nav", "logo"],
+  BRANDED_HEADER: ["announcement", "nav", "logo", "cta"],
+  MINIMAL_FOOTER: ["hours", "social-icons"],
+  STANDARD_FOOTER: ["hours", "social-icons", "cta"],
+  SOCIAL_FOOTER: ["social-icons", "cta", "hours"],
+}
+
+export function getArchetypeBlocks(archetype: string): string[] {
+  return ARCHETYPE_BLOCKS[archetype] ?? [archetype]
 }

@@ -1,33 +1,20 @@
 import fs from "fs"
 import path from "path"
 
-const CMS_ROOT = path.join(process.cwd(), "content", "cms")
+const CMS_ROOT = path.join(process.cwd(), "content", "cms", "site")
 const THEMES_ROOT = path.join(process.cwd(), "content", "themes")
-const SITE_PROFILE_ROOT = path.join(process.cwd(), "content", "site-profile")
+const ARCHETYPES_ROOT = path.join(process.cwd(), "content", "archetypes")
+const SITE_PROFILE_PATH = path.join(process.cwd(), "content", "site-profile", "demo", "site-profile.json")
+const CATALOGUE_PATH = path.join(process.cwd(), "content", "catalogue", "demo", "catalogue.json")
 
-export function readSiteProfile(tenant: string): SiteProfile | null {
-  const file = path.join(SITE_PROFILE_ROOT, tenant, "site-profile.json")
-  if (!fs.existsSync(file)) return null
-  return readJson<SiteProfile>(file)
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-export function getTenantDir(tenant: string, kind: "cms" | "themes" | "catalogue" | "site-profile") {
-  return path.join(process.cwd(), "content", kind, tenant)
-}
-
-export function readJson<T>(filePath: string): T {
+function readJson<T>(filePath: string): T {
   const raw = fs.readFileSync(filePath, "utf-8")
   return JSON.parse(raw) as T
 }
 
-export function listTenants(kind: "cms" | "themes" | "catalogue" | "site-profile" = "cms"): string[] {
-  const root = path.join(process.cwd(), "content", kind)
-  if (!fs.existsSync(root)) return []
-  return fs
-    .readdirSync(root, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => d.name)
-}
+// ── Site Profile ──────────────────────────────────────────────────────────────
 
 export interface SiteProfile {
   siteName: string
@@ -63,6 +50,98 @@ export interface SiteProfile {
   }
   [key: string]: unknown
 }
+
+export function readSiteProfile(): SiteProfile | null {
+  if (!fs.existsSync(SITE_PROFILE_PATH)) return null
+  return readJson<SiteProfile>(SITE_PROFILE_PATH)
+}
+
+// ── CMS Pages ─────────────────────────────────────────────────────────────────
+
+export interface CmsBlock {
+  type: string
+  data: Record<string, unknown>
+}
+
+export interface CmsPage {
+  slug: string
+  label: string
+  blocks: CmsBlock[]
+  seo?: { title: string; description: string }
+}
+
+export interface CmsPageWithVariants {
+  slug: string
+  label: string
+  blocks: CmsBlock[]
+  variants: Array<{
+    id: string
+    order: string[]
+    reasoning?: string
+    blocks: CmsBlock[]
+  }>
+  seo?: { title: string; description: string }
+  [key: string]: unknown
+}
+
+export function readCmsPages(): CmsPage[] {
+  const file = path.join(CMS_ROOT, "pages.json")
+  if (!fs.existsSync(file)) return []
+  const parsed = readJson<{
+    pages?: Array<CmsPage & { variants?: Array<{ id: string; blocks: CmsBlock[] }>; archetype?: string }>
+  }>(file)
+  const rawPages = parsed.pages ?? []
+  return rawPages.map((p) => {
+    if (p.variants && p.variants.length > 0) {
+      const defaultVariant = p.variants.find((v) => v.id === "A") ?? p.variants[0]
+      const resolvedBlocks = defaultVariant.blocks.map((b) => resolveVariantA(b))
+      return {
+        slug: p.slug,
+        label: p.label,
+        blocks: resolvedBlocks,
+        seo: p.seo,
+      }
+    }
+    return p
+  })
+}
+
+function resolveVariantA(block: CmsBlock): CmsBlock {
+  const resolvedData = resolveDataForVariant(block.data, "a")
+  return { ...block, data: resolvedData }
+}
+
+function resolveDataForVariant(
+  data: Record<string, unknown>,
+  variant: "a" | "b"
+): Record<string, unknown> {
+  const resolved: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof value === "object" && value !== null && "a" in (value as Record<string, unknown>)) {
+      resolved[key] = (value as Record<string, unknown>)[variant]
+    } else if (Array.isArray(value)) {
+      resolved[key] = value.map((item) =>
+        typeof item === "object" && item !== null
+          ? resolveDataForVariant(item as Record<string, unknown>, variant)
+          : item
+      )
+    } else if (typeof value === "object" && value !== null) {
+      resolved[key] = resolveDataForVariant(value as Record<string, unknown>, variant)
+    } else {
+      resolved[key] = value
+    }
+  }
+  return resolved
+}
+
+export function readCmsPageVariants(slug: string): CmsPageWithVariants | null {
+  const file = path.join(CMS_ROOT, "pages.json")
+  if (!fs.existsSync(file)) return null
+  const parsed = readJson<{ pages?: CmsPageWithVariants[] }>(file)
+  return (parsed.pages ?? []).find((p) => p.slug === slug) ?? null
+}
+
+// ── Themes ────────────────────────────────────────────────────────────────────
 
 export interface ThemeConfig {
   name: string
@@ -180,17 +259,45 @@ export interface ThemeConfig {
   [key: string]: unknown
 }
 
-export interface CmsBlock {
-  type: string
-  data: Record<string, unknown>
+export function readTheme(variant: string): ThemeConfig | null {
+  const file = path.join(THEMES_ROOT, `theme-${variant}.json`)
+  if (!fs.existsSync(file)) return null
+  return readJson<Record<string, unknown>>(file) as ThemeConfig
 }
 
-export interface CmsPage {
-  slug: string
-  label: string
-  blocks: CmsBlock[]
-  seo?: { title: string; description: string }
+export function listThemeVariants(): string[] {
+  if (!fs.existsSync(THEMES_ROOT)) return []
+  return fs
+    .readdirSync(THEMES_ROOT)
+    .filter((f) => f.startsWith("theme-") && f.endsWith(".json"))
+    .map((f) => f.replace("theme-", "").replace(".json", ""))
 }
+
+export const ACTIVE_THEME_VARIANT = process.env.THEME_VARIANT || "a"
+
+// ── Archetype Catalog ─────────────────────────────────────────────────────────
+
+export function readArchetypeCatalog(): ArchetypeCatalog | null {
+  const file = path.join(ARCHETYPES_ROOT, "catalog.json")
+  if (!fs.existsSync(file)) return null
+  return readJson<ArchetypeCatalog>(file)
+}
+
+export interface ArchetypeCatalog {
+  version: string
+  blockVocabulary: Record<string, { description: string; fields: string[] }>
+  archetypes: Record<string, {
+    blocks: string[]
+    minData?: Record<string, string>
+    excludes?: string[]
+    bestFor?: string[]
+    typicalOrder?: number
+  }>
+  selectionRules?: Array<{ condition: string; archetype: string; page: string }>
+  generatedAt?: string
+}
+
+// ── Catalogue ─────────────────────────────────────────────────────────────────
 
 export interface CatalogueDoc {
   categories?: Array<{
@@ -205,6 +312,13 @@ export interface CatalogueDoc {
   }>
   [key: string]: unknown
 }
+
+export function readCatalogue(): CatalogueDoc | null {
+  if (!fs.existsSync(CATALOGUE_PATH)) return null
+  return readJson<Record<string, unknown>>(CATALOGUE_PATH) as CatalogueDoc
+}
+
+// ── CSS Vars ──────────────────────────────────────────────────────────────────
 
 export function toCssVars(theme: ThemeConfig, variant: string = "a"): Record<string, string> {
   const colors = theme.colors || {}
@@ -289,40 +403,4 @@ export function toCssVars(theme: ThemeConfig, variant: string = "a"): Record<str
     "--nav-bg-opacity": String(nav.backgroundOpacity ?? 0.95),
     "--transition-speed": speed,
   }
-}
-
-export function readCmsPages(tenant: string): CmsPage[] {
-  const file = path.join(CMS_ROOT, tenant, "pages.json")
-  if (!fs.existsSync(file)) return []
-  const parsed = readJson<{ pages?: CmsPage[] }>(file)
-  return parsed.pages || []
-}
-
-export function readTheme(tenant: string, variant: string): ThemeConfig | null {
-  const file = path.join(THEMES_ROOT, tenant, `theme-${variant}.json`)
-  if (!fs.existsSync(file)) return null
-  return readJson<Record<string, unknown>>(file) as ThemeConfig
-}
-
-export function listThemeVariants(tenant: string): string[] {
-  const dir = path.join(THEMES_ROOT, tenant)
-  if (!fs.existsSync(dir)) return []
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.startsWith("theme-") && f.endsWith(".json"))
-    .map((f) => f.replace("theme-", "").replace(".json", ""))
-}
-
-export function getActiveTenant(): string {
-  return process.env.ACTIVE_TENANT || "demo"
-}
-
-export function getActiveThemeVariant(): string {
-  return process.env.THEME_VARIANT || "a"
-}
-
-export function readCatalogue(tenant: string): CatalogueDoc | null {
-  const file = path.join(process.cwd(), "content", "catalogue", tenant, "catalogue.json")
-  if (!fs.existsSync(file)) return null
-  return readJson<Record<string, unknown>>(file)
 }

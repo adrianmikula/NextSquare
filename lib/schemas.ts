@@ -1,27 +1,29 @@
 import { z } from "zod"
 
+export const VariantString = z.union([z.string(), z.object({ a: z.string(), b: z.string() })])
+
 // ── Block Data Schemas ────────────────────────────────────────────────────────
 
 export const HeroBlockDataSchema = z.object({
-  headline: z.string(),
-  subheadline: z.string(),
-  ctaLabel: z.string(),
+  headline: VariantString,
+  subheadline: VariantString,
+  ctaLabel: VariantString,
   ctaLink: z.string(),
   image: z.string().optional(),
 })
 
 export const TextBlockDataSchema = z.object({
-  heading: z.string(),
-  body: z.string(),
+  heading: VariantString,
+  body: VariantString,
 })
 
 export const GalleryBlockDataSchema = z.object({
   images: z.array(z.string()),
-  caption: z.string().optional(),
+  caption: VariantString.optional(),
 })
 
 export const ProductsBlockDataSchema = z.object({
-  title: z.string(),
+  title: VariantString,
   items: z.array(
     z.object({
       name: z.string(),
@@ -33,7 +35,7 @@ export const ProductsBlockDataSchema = z.object({
 })
 
 export const ServicesBlockDataSchema = z.object({
-  title: z.string(),
+  title: VariantString,
   items: z.array(
     z.object({
       name: z.string(),
@@ -48,16 +50,16 @@ export const TestimonialsBlockDataSchema = z.object({
   items: z.array(
     z.object({
       author: z.string(),
-      text: z.string(),
+      text: VariantString,
       source: z.string().optional(),
     })
   ),
 })
 
 export const CtaBlockDataSchema = z.object({
-  heading: z.string(),
-  subtext: z.string(),
-  buttonLabel: z.string(),
+  heading: VariantString,
+  subtext: VariantString,
+  buttonLabel: VariantString,
   buttonLink: z.string(),
 })
 
@@ -81,28 +83,28 @@ export const FaqBlockDataSchema = z.object({
 })
 
 export const FormBlockDataSchema = z.object({
-  title: z.string(),
+  title: VariantString,
   fields: z.array(
     z.object({
       name: z.string(),
       type: z.enum(["text", "email", "tel", "textarea"]),
-      label: z.string(),
+      label: VariantString,
       required: z.boolean(),
     })
   ),
 })
 
 export const PromoBlockDataSchema = z.object({
-  heading: z.string(),
-  body: z.string(),
-  ctaLabel: z.string(),
+  heading: VariantString,
+  body: VariantString,
+  ctaLabel: VariantString,
   ctaLink: z.string(),
   image: z.string().optional(),
 })
 
 export const DeliveryBlockDataSchema = z.object({
-  heading: z.string(),
-  body: z.string(),
+  heading: VariantString,
+  body: VariantString,
   platforms: z.array(
     z.object({
       name: z.string(),
@@ -114,7 +116,7 @@ export const DeliveryBlockDataSchema = z.object({
 
 export const SlideshowBlockDataSchema = z.object({
   images: z.array(z.string()),
-  caption: z.string().optional(),
+  caption: VariantString.optional(),
   interval: z.number().optional(),
 })
 
@@ -129,7 +131,7 @@ export const SocialIconsBlockDataSchema = z.object({
 })
 
 export const CalloutBlockDataSchema = z.object({
-  quote: z.string(),
+  quote: VariantString,
   author: z.string().optional(),
   role: z.string().optional(),
 })
@@ -143,18 +145,18 @@ export const ImageTextBlockDataSchema = z.object({
   items: z.array(
     z.object({
       image: z.string().optional(),
-      heading: z.string(),
-      body: z.string(),
+      heading: VariantString,
+      body: VariantString,
       align: z.enum(["left", "right"]).optional(),
     })
   ),
 })
 
 export const ComparisonBlockDataSchema = z.object({
-  title: z.string().optional(),
+  title: VariantString.optional(),
   columns: z.array(
     z.object({
-      header: z.string(),
+      header: VariantString,
       features: z.array(
         z.object({
           name: z.string(),
@@ -163,8 +165,42 @@ export const ComparisonBlockDataSchema = z.object({
       ),
     })
   ),
-  ctaLabel: z.string().optional(),
+  ctaLabel: VariantString.optional(),
   ctaLink: z.string().optional(),
+})
+
+export const MapBlockDataSchema = z.object({
+  address: z.string(),
+  suburb: z.string(),
+  city: z.string(),
+  embedUrl: z.string().optional(),
+  directionsUrl: z.string().optional(),
+})
+
+export const TeamBlockDataSchema = z.object({
+  title: z.string().optional(),
+  items: z.array(
+    z.object({
+      name: z.string(),
+      role: z.string(),
+      bio: z.string().optional(),
+      photo: z.string().optional(),
+    })
+  ),
+})
+
+export const ReservationBlockDataSchema = z.object({
+  title: z.string().optional(),
+  fields: z.array(
+    z.object({
+      name: z.string(),
+      type: z.string(),
+      label: z.string(),
+      required: z.boolean(),
+    })
+  ),
+  prefillName: z.string().optional(),
+  prefillPhone: z.string().optional(),
 })
 
 export const BlockDataSchema = z.union([
@@ -186,12 +222,27 @@ export const BlockDataSchema = z.union([
   HrBlockDataSchema,
   ImageTextBlockDataSchema,
   ComparisonBlockDataSchema,
+  MapBlockDataSchema,
+  TeamBlockDataSchema,
+  ReservationBlockDataSchema,
 ])
 
 // ── Layer 1: Layout Output ────────────────────────────────────────────────────
 
+export const LayoutVariantSchema = z.object({
+  id: z.string().default("A"),
+  archetype: z.string(),
+  order: z.array(z.string()),
+  reasoning: z.string().optional(),
+})
+
 export const LayoutOutputSchema = z.object({
-  selected: z.record(z.string()),
+  selected: z.record(
+    z.object({
+      archetype: z.string(),
+      variants: z.array(LayoutVariantSchema),
+    })
+  ),
   reasoning: z.string().optional(),
 })
 
@@ -199,9 +250,18 @@ export type LayoutOutput = z.infer<typeof LayoutOutputSchema>
 
 // ── Layer 2: Copy Output ─────────────────────────────────────────────────────
 
+export const TextVariantSchema = z.object({
+  symbol: z.string(),
+  a: z.record(z.any()),
+  b: z.record(z.any()),
+})
+
 export const CopyBlockSchema = z.object({
   symbol: z.string(),
-  data: BlockDataSchema,
+  wordingVariants: z.object({
+    a: z.record(z.any()),
+    b: z.record(z.any()),
+  }),
 })
 
 export const CopyOutputSchema = z.object({
@@ -209,6 +269,9 @@ export const CopyOutputSchema = z.object({
 })
 
 export type CopyOutput = z.infer<typeof CopyOutputSchema>
+
+export type LayoutVariant = z.infer<typeof LayoutVariantSchema>
+export type TextVariant = z.infer<typeof TextVariantSchema>
 
 // ── Layer 3 / Final: Page Bundle ─────────────────────────────────────────────
 
@@ -229,11 +292,32 @@ export const CmsPageSchema = z.object({
     .optional(),
 })
 
+export const PageVariantSchema = z.object({
+  id: z.string(),
+  reasoning: z.string().optional(),
+  order: z.array(z.string()),
+  blocks: z.array(CmsBlockSchema),
+})
+
 export const PageBundleSchema = z.object({
-  pages: z.array(CmsPageSchema),
+  pages: z.array(
+    z.object({
+      slug: z.string(),
+      label: z.string(),
+      archetype: z.string(),
+      variants: z.array(PageVariantSchema),
+      seo: z
+        .object({
+          title: z.string(),
+          description: z.string(),
+        })
+        .optional(),
+    })
+  ),
 })
 
 export type PageBundle = z.infer<typeof PageBundleSchema>
+export type PageVariant = z.infer<typeof PageVariantSchema>
 
 // ── Archetype Catalog ─────────────────────────────────────────────────────────
 

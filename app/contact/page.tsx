@@ -1,9 +1,7 @@
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
 import { CmsBlockRenderer } from "@/components/cms/CmsRenderer"
-import { readCmsPages, getActiveTenant } from "@/lib/cms"
-
-const tenant = getActiveTenant()
-const contactCms = readCmsPages(tenant).find((p) => p.slug === "contact")
+import { readCmsPages } from "@/lib/cms"
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -11,13 +9,16 @@ export const metadata: Metadata = {
 }
 
 export default function ContactPage() {
-  if (!contactCms || contactCms.blocks.length === 0) {
-    return notFound()
+  const pages = readCmsPages()
+  const contact = pages.find((p) => p.slug === "contact")
+
+  if (!contact) {
+    notFound()
   }
 
   return (
     <div>
-      {contactCms.blocks.map((block, idx) => (
+      {contact.blocks.map((block, idx) => (
         <CmsBlockRenderer key={`${block.type}-${idx}`} block={block} />
       ))}
     </div>

@@ -92,7 +92,7 @@ This separation is the single highest-leverage improvement available for content
 
 ### 1. Page Archetypes (Structural Vocabulary)
 
-Define a catalog of named page archetypes — pre-composed sequences of block types that encode proven layout patterns. Each archetype maps directly to a sequence of the block types already rendered by the platform.
+Define a catalog of named page archetypes — each specifies a **set of eligible block types** that encode proven layout patterns. The agent arranges these blocks into an order tailored to the specific business. Each archetype maps to a set of the block types already rendered by the platform.
 
 **`skills/website-builder/resources/archetypes.md`** — the authoritative block vocabulary:
 
@@ -113,46 +113,42 @@ BLOCK VOCABULARY:
 
 > **Note**: `social-proof`, `instagram-feed`, and `menu-preview` are not yet wired to CMS block components. They remain in the vocabulary as future extensions. Do not use them in archetype definitions until `CmsRenderer` cases exist.
 
-Archetype definitions (home page examples):
+Archetype definitions specify which blocks are eligible; arrangement is agent-dispatched (home page examples):
 
 ```
-DEFAULT_HOME        → hero, text, products, cta
-GALLERY_FIRST       → hero, gallery, text, cta, hours
-GALLERY_FULL_HOME   → hero, gallery, text, products, cta
-SERVICES_HOME       → hero, services, text, testimonials, cta, hours
-SOCIAL_PROOF_HOME   → hero, testimonials, text, products, cta, testimonials
-MINIMAL_HOME        → hero, text, cta
-MENU_FOCUSED        → hero, products, text, cta
-EVENTS_HOME         → hero, text, promo, services, cta, hours
-LOYALTY_HOME        → hero, text, products, cta, testimonials
+DEFAULT_HOME        blocks: {hero, text, products, cta}
+GALLERY_FIRST       blocks: {hero, gallery, text, cta, hours}
+GALLERY_FULL_HOME   blocks: {hero, gallery, text, products, cta}
+SERVICES_HOME       blocks: {hero, services, text, testimonials, cta, hours}
+SOCIAL_PROOF_HOME   blocks: {hero, testimonials, text, products, cta, testimonials}
+MINIMAL_HOME        blocks: {hero, text, cta}
+MENU_FOCUSED        blocks: {hero, products, text, cta}
+EVENTS_HOME         blocks: {hero, text, promo, services, cta, hours}
+LOYALTY_HOME        blocks: {hero, text, products, cta, testimonials}
 ```
 
 Inner page archetypes:
 
 ```
-MENU_DEFAULT        → hero, products, cta
-ABOUT_STORY         → hours, text, testimonials, faq, cta
-CONTACT_DIRECT      → hours, text, form, cta
-FAQ_FULL            → faq, text, cta
-GALLERY_FULL        → gallery, text, cta
-EVENTS_PAGE         → hero, promo, text, form, cta
-LOYALTY_PAGE        → hero, text, testimonials, cta
-MEMBERSHIP_PAGE     → hero, text, form, cta
-PRICING_PAGE        → hero, services, text, cta
+MENU_DEFAULT        blocks: {hero, products, cta}
+ABOUT_STORY         blocks: {hours, text, testimonials, faq, cta}
+CONTACT_DIRECT      blocks: {hours, text, form, cta}
+FAQ_FULL            blocks: {faq, text, cta}
+GALLERY_FULL        blocks: {gallery, text, cta}
+EVENTS_PAGE         blocks: {hero, promo, text, form, cta}
+LOYALTY_PAGE        blocks: {hero, text, testimonials, cta}
+MEMBERSHIP_PAGE     blocks: {hero, text, form, cta}
+PRICING_PAGE        blocks: {hero, services, text, cta}
 ```
 
-**Selection logic (rule-based, applied to BusinessProfile):**
+**Archetype selection (rule-based, applied to BusinessProfile)** chooses which archetype fits; the agent then arranges its block set. Archetypes define eligibility and structural vocabulary; the agent composes the sequence.
 
-| Signal | Archetype preference |
-|---|---|
-| `media.gallery.length >= 3` | GALLERY_FIRST over DEFAULT |
-| `services` is non-empty AND `type` ∈ `{ bakery, caterer, cleaner, handyman, salon, consultant }` | `SERVICES_HOME` |
-| `testimonials.length >= 3` AND `type` ∈ `{ salon, restaurant, cafe, hotel }` | `SOCIAL_PROOF_HOME` |
-| `features` contains "events" OR `audience` = "tourists" | `MENU_FOCUSED` |
-| `media.gallery` empty AND `features` length < 2 | `MINIMAL_HOME` |
-| Default fallback | `DEFAULT_HOME` |
-
-Archetype selection is a **branching** step in the generation pipeline — different inputs produce different structural compositions without rewriting copy or markup logic.
+**Agent arrangement priorities:**
+1. `hero` leads if in the set
+2. Feature-driven lift: `gallery` lifted for visually-rich businesses; `testimonials` lifted for review-heavy businesses; `services` lifted when services are non-empty
+3. `cta` anchors the bottom (index ≥ 2, max index 3)
+4. Content density: sparse profiles short-circuit; rich profiles use the archetype's full set
+5. Excluded blocks are never in the set — the agent cannot place them
 
 ### 2. Three-Layer Generation Pipeline
 
@@ -160,19 +156,21 @@ Inspired by the AiWordpressGenerator pipeline (layout → copy → content). Eac
 
 ```
 Layer 1: Layout
-  Input:  BusinessProfile, selected archetypes
-  Output: { page: [BLOCK_SYMBOL, ...], ... }
-  LLM call: "Design a layout for this business using these block symbols"
+  Input:  BusinessProfile
+  Output: { page: { archetype: string, variants: [{ order: [BLOCK_SYMBOL, ...], reasoning }] }, ... }
+  Agent:  Selects archetype from BusinessProfile signals, then produces two orderings
+          (Variant A: feature-forward, Variant B: conservative). Archetype defines
+          eligibility; agent composes sequence for owner choice.
 
 Layer 2: Copy (per block, parallel)
-  Input:  page, block symbol list, BusinessProfile
+  Input:  page, shared dataMap (identical for both variants), BusinessProfile
   Output: { blocks: [ { symbol, ...fields }, ... ] }
   LLM call: "Write copy for block X of page Y, given this context"
 
-Layer 3: Markup (per page, concurrent)
-  Input:  page, block symbols, copy blocks
+Layer 3: Markup (per variant, concurrent, deterministic)
+  Input:  page, ordered block symbols, copy blocks
   Output: Gutenberg HTML / CMS block JSON
-  LLM call: "Render these blocks as CMS markup using this schema"
+  Renderer: renderPage(orderedBlocks, dataMap) — no LLM needed
 ```
 
 **Why layering works:**
@@ -180,9 +178,9 @@ Layer 3: Markup (per page, concurrent)
 - **Smaller LLM contexts**: Each call focuses on one task. A layout call doesn't waste tokens on copywriting; a copy call doesn't waste tokens on tag balancing.
 - **Independent retry**: A failed markup layer retries without regenerating copy. Failed copy for one block doesn't corrupt the other blocks on the same page.
 - **Parallelism**: Copy layer fans out across all blocks simultaneously. Markup layer fans out across all pages simultaneously. This is the parallel fan-out pattern from the AiWordpressGenerator pipeline.
-- **Interceptability**: Each layer's output is inspectable. If the owner wants a different layout, only Layer 1 reruns; Layers 2 and 3 adapt to the new structure.
+- **Interceptability**: Each layer's output is inspectable. If the owner wants a different arrangement, only Layer 1 reruns; Layers 2 and 3 adapt to the new structure.
 
-**The key invariant: layers reference blocks by symbol, not by position.** This means a layout change (swap FEATURE_GRID_3 for FEATURE_LIST) automatically propagates through all downstream layers without manual re-prompting.
+**The key invariant: layers reference blocks by symbol, in explicit order.** The agent determines placement based on business signals. An archetype defines eligibility; the agent determines sequence. Downstream layers consume the ordered block list directly.
 
 ### 3. The Archetype Catalog as a Governable Module
 
@@ -203,7 +201,9 @@ DEFAULT_HOME:
   typicalOrder: 4
 ```
 
-This metadata drives progressive enhancement: `minData` gates prevent selecting an archetype with empty data (archetypal media gate); `excludes` prevents blocks that have no backing data.
+`blocks` is a **set** (membership). `typicalOrder` is a non-binding hint (approximate ideal block count), not a sequence. The agent arranges blocks during generation.
+
+This metadata drives progressive enhancement: `minData` gates prevent selecting an archetype with empty data; `excludes` prevents blocks that have no backing data. Eligible blocks are then arranged by the agent based on business-specific feature signals.
 
 ### 4. 2026 Tools That Make Layered Generation Production-Ready
 
@@ -328,16 +328,16 @@ This registry serves three purposes:
 
 | Step | Action | Deliverable |
 |---|---|---|
-| **9.1** | Create `skills/website-builder/resources/archetypes.md` with block vocabulary + archetype definitions + selection rules | Data file, no code |
-| **9.2** | Create `lib/renderer.ts` (deterministic block renderer) mirroring AiWordpressGenerator's pattern | TypeScript module |
-| **9.3** | Add Layer 1 (Layout) to `lib/ai/multi-source-pipeline.ts` — LLM or heuristic archetype selection | Pipeline module |
-| **9.4** | Add Layer 2 (Copy) — one LLM call per block symbol, parallel fan-out | Pipeline module |
-| **9.5** | Remove Layer 3 LLM call; replace with deterministic `renderer.ts` | Code removal + renderer |
-| **9.6** | Add Zod schema validation on Layer 1 + Layer 2 outputs | Validation layer |
-| **9.7** | Add DSPy GEPA optimization for archetype selection + copy prompts | Optimization module (future) |
+| **9.1** | Create `skills/website-builder/resources/archetypes.md` with block vocabulary + archetype definitions as **block sets** (unordered) + `typicalOrder` hint + selection rules | Data file, no code |
+| **9.2** | Create `lib/renderer.ts` (deterministic block renderer) — accepts an explicitly ordered `string[]` from the agent; same `dataMap` reused across 2 layout variants | TypeScript module |
+| **9.3** | Layer 1: agent selects archetype + produces **two orderings** (Variant A feature-forward, Variant B conservative); layout output is `{ archetype, variants: [{ order, reasoning }] }` | Pipeline + agent protocol |
+| **9.4** | Add Layer 2 (Copy) — one LLM call per block symbol, parallel fan-out; shared across both layout variants for the same page | Pipeline module |
+| **9.5** | Remove Layer 3 LLM call; replace with deterministic `renderer.ts` (called once per variant) | Code removal + renderer |
+| **9.6** | Add Zod schema validation on Layer 1 output (`{ archetype, variants }`) + Layer 2 outputs | Validation layer |
+| **9.7** | Add DSPy GEPA optimization for archetype selection + arrangement prompts | Optimization module (future) |
 | **9.8** | When LLM APIs are enabled, scaffold LangGraph state machine for the pipeline | Orchestration layer (Phase 14+) |
 
-**Quick win**: Steps 9.1 + 9.2 deliver the highest value with the least risk. The archetype catalog makes output immediately more varied and governable; the deterministic renderer removes the most failure-prone LLM call. Both are pure skill/code changes that don't require new infrastructure.
+**Quick win**: Steps 9.1 + 9.2 deliver the highest value with the least risk. Archetypes as block sets give the agent structural vocabulary without constraining placement; the deterministic renderer removes the most failure-prone LLM call. Both are pure skill/code changes. Two layout variants and two wordings per block give the owner a meaningful choice without backend complexity.
 
 ---
 
@@ -480,51 +480,11 @@ export async function buildCatalogue(
 }
 ```
 
-### 4. Content Copywriter
+### 4. Content Copywriter (Skill-Backed Layer 2)
 
-Generates the CMS page content, tone-matched to the audience:
+The runtime pipeline does **not** contain a coded LLM copywriter module — `content-copywriter.ts` is **absent** from the codebase. Layer 2 (copy) is handled by the **Claude skill** (`skills/website-builder/SKILL.md`) when invoked by a coding agent or IDE. The agent uses the deterministic `buildDataMap()` and `BLOCK_DATA_BUILDERS` in `lib/ai/multi-source-pipeline.ts` to populate each block's `data` fields from the `BusinessProfile`, then calls `renderPage(orderedBlocks)` / `renderBundle()` to produce final CMS block JSON.
 
-```typescript
-// lib/ai/content-copywriter.ts
-
-interface CMSPageContent {
-  slug: string;
-  title: string;
-  blocks: {
-    type: 'hero' | 'text' | 'gallery' | 'cta' | 'hours' | 'testimonials';
-    data: Record<string, unknown>;
-  }[];
-  seo: { title: string; description: string; keywords: string };
-}
-
-export async function generateContent(
-  profile: CanonicalBusinessProfile,
-  catalogue: GeneratedCatalogue
-): Promise<CMSPageContent[]> {
-  const pages = ['home', 'about', 'menu', 'contact'];
-
-  return Promise.all(
-    pages.map((slug) =>
-      openai.chat.completions.create({
-        model: 'gpt-4o',
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content: `Generate structured CMS page content for a ${profile.type}.
-              Audience: ${profile.primaryAudience}.
-              Tone: ${profile.toneOfVoice}.
-              Use the business name "${profile.name}" and location "${profile.location}".
-              Weave in testimonials naturally.
-              Prioritise conversion: clear CTAs, phone/address prominent.`,
-          },
-          { role: 'user', content: `Generate the "${slug}" page.` },
-        ],
-      }).then((r) => r.choices[0].message.content!)
-    )
-  ).then((results) => results.map((r) => JSON.parse(r)));
-}
-```
+This means the "LLM engine" for copy is the agent executing the skill instructions, not an API call in the library. No API key is required at runtime for content generation. The skill provides tone-matching, audience-aware, conversion-optimized copy instructions for the agent to follow when populating fields.
 
 **CMS structure (single draft, owner-editable):**
 
@@ -703,12 +663,15 @@ WORDPRESS_APPLICATION_PASSWORD=
 |---|---|---|
 | **LLM** | GPT-4o | Structured JSON output, strong extraction and tone analysis |
 | **Theme count** | 2 variants | Owner choice without overwhelm; both tied to real brand inputs |
+| **Layout count** | 2 orderings per page | Agent arranges archetype block set two ways (feature-forward / conservative); same dataMap, different sequence |
+| **Text count** | 2 wordings per block | A/B lexical variants per text field; owner toggles live in Demo Mode |
 | **CMS storage** | Single draft in platform CMS | Owner edits primary copy; themes are JSON configs |
 | **Catalogue** | Square Catalog API first | Items appear in POS immediately; CMS references them |
 | **Image strategy** | Extract + fill-gap generation | Use real photos first; DALL-E/Replicate for missing assets only |
 | **Review integration** | Google + Facebook reviews → testimonials | Social proof directly lifts conversion |
 | **Tone analysis** | Cross-source sentiment + caption style | Consistent voice across generated copy |
-| **Preview step** | Mandatory | Owner must approve before site goes live |
+| **Demo mode** | Theme × Layout × Text matrix | View-layer toggles; owner iterates with Claude until happy, then finalises |
+| **Finalise step** | Prune + promote | Keeps core schema clean; discards non-default variants before production |
 | **Structure** | Archetype catalog + layered pipeline | Separates layout, copy, and markup; enables independent retry, parallelism, and governable output variety |
 | **Markup rendering** | Deterministic renderer (no LLM) | Eliminates the most failure-prone generation step; guaranteed block structure; zero additional inference cost |
 | **Validation** | Zod / Pydantic schema on Layer 1 + Layer 2 | Structured output enforcement eliminates shape errors; repair logic only needed as fallback |
@@ -726,209 +689,5 @@ WORDPRESS_APPLICATION_PASSWORD=
 - Legacy WordPress content migrated where useful; broken/missing content auto-generated
 
 ---
-
-## Phase 9b: Archetype-Driven Generation with LLM Selection
-
-Phase 9b completes the archetype infrastructure and activates the LLM pipeline. All changes from Phase 9a (archetype catalog, layered pipeline, deterministic renderer, Zod validation) remain; this phase adds LLM-backed archetype selection, removes the no-API constraint, and wires everything together end-to-end.
-
-### 1. Archetype File Format: Markdown + JSON
-
-The canonical archetype definitions live in `skills/website-builder/resources/archetypes.md` (human-editable by Claude during generation). A runtime-consumable JSON artifact is generated from it:
-
-**Source of truth**: `skills/website-builder/resources/archetypes.md`
-- Edited by Claude during site generation
-- Contains block vocabulary, field contracts, archetype definitions, selection rules, metadata
-
-**Runtime artifact**: `content/archetypes/<tenant>.json`
-- Emitted by a build script (`skills/website-builder/resources/generate-archetypes.ts`) after generation completes
-- Consumed by `lib/renderer.ts`, `lib/validate.ts`, and the CMS layer
-- No markdown parsing required at runtime
-
-Example `content/archetypes/<tenant>.json`:
-```json
-{
-  "version": "1.0",
-  "blockVocabulary": { ... },
-  "archetypes": {
-    "DEFAULT_HOME": {
-      "blocks": ["hero", "text", "products", "cta"],
-      "minData": { "catalogue": "nonEmpty" },
-      "excludes": ["gallery", "delivery", "instagram-feed"],
-      "bestFor": ["cafe", "restaurant", "bakery", "retail"],
-      "typicalOrder": 4
-    },
-    ...
-  },
-  "selectionRules": [ ... ]
-}
-```
-
-### 2. LLM Archetype Selection (Layer 1)
-
-Rule-based selection remains the default. An LLM-assisted selection path is added as the preferred mode when APIs are available.
-
-**Rule-based path** (fallback, no API required):
-- Heuristics match `BusinessProfile` signals to archetype catalog
-- Deterministic, inspectable, no cost
-
-**LLM-based path** (preferred when API available):
-- Single LLM call receives `BusinessProfile` + archetype catalog
-- Returns `{ selected: { page: archetypeName }, reasoning?: string }`
-- Validated against Zod schema `LayoutOutput`
-- Falls back to rule-based selection on API failure
-
-**Prompt for LLM archetype selection:**
-```
-You are a web designer selecting page layouts for a small business website.
-
-Business profile:
-  type: {type}
-  audience: {audience}
-  features: {features}
-  media: {hero: {hero}, galleryLength: {galleryLength}}
-  testimonials: {testimonialCount}
-  catalogue: {categoryCount} categories, {itemCount} items
-
-Available page archetypes (block compositions):
-{archetypeCatalogSummarized}
-
-Select the best archetype for each page needed (home, menu, about, contact, faq, gallery).
-Consider: gallery-first if many photos; testimonials-heavy if many reviews; minimal if sparse content.
-Return ONLY valid JSON:
-{ "selected": { "home": "ARCHETYPE", "menu": "ARCHETYPE", ... }, "reasoning": "..." }
-```
-
-### 3. Expanded Fixed Archetype Catalog
-
-Additional archetypes added to `skills/website-builder/resources/archetypes.md`:
-
-**Home page:**
-```
-GALLERY_FULL_HOME   → hero, gallery, text, products, cta
-EVENTS_HOME         → hero, text, promo, services, cta, hours
-LOYALTY_HOME        → hero, text, products, cta, testimonials
-```
-
-**Inner pages:**
-```
-FAQ_FULL            → faq, text, cta
-EVENTS_PAGE         → hero, promo, text, form, cta
-LOYALTY_PAGE        → hero, text, testimonials, cta
-MEMBERSHIP_PAGE     → hero, text, form, cta
-PRICING_PAGE        → hero, services, text, cta
-```
-
-Total after expansion: 9 home archetypes, 9 inner archetypes. Covers all current platform page types plus `events`, `membership`, `pricing` as future-ready additions.
-
-Selection rules extended:
-
-| Condition | Archetype |
-|---|---|
-| `features` contains "events" | `EVENTS_HOME` or `EVENTS_PAGE` |
-| `features` contains "loyalty" or "subscriptions" | `LOYALTY_HOME` or `LOYALTY_PAGE` |
-| `audience` = "tourists" AND `media.gallery.length >= 3` | `GALLERY_FULL_HOME` |
-| `services` defined AND `type` ∈ `{ salon, spa, consultant }` | `PRICING_PAGE` |
-
-### 4. Deterministic Renderer (Phase 9b Implementation)
-
-`lib/renderer.ts` maps each block symbol to CMS block JSON using the shapes defined in `schemas.md`. No LLM involved in rendering.
-
-```typescript
-// lib/renderer.ts
-import type { CmsBlock } from "@/lib/cms"
-
-export function renderBlock(symbol: string, data: BlockData = {}): CmsBlock {
-  const renderer = RENDERERS[symbol]
-  if (!renderer) throw new Error(`Unknown block symbol: ${symbol}. Known symbols: ${Object.keys(RENDERERS).join(", ")}`)
-  return { type: symbol, data: renderer(data) }
-}
-
-export function renderPage(archetypeBlocks: string[], dataMap: Record<string, BlockData> = {}): CmsBlock[] {
-  return archetypeBlocks.map((symbol) => {
-    const data = dataMap[symbol] ?? {}
-    return renderBlock(symbol, data)
-  })
-}
-```
-
-**This is the file the Claude skill calls in Step 5 instead of writing raw markup.** The skill populates `data` for each block symbol from the BusinessProfile, then calls `renderPage()` to get CMS-ready block JSON.
-
-### 5. Zod Schema Validation
-
-`lib/schemas.ts` defines runtime schemas for every Layer 1 and Layer 2 output.
-
-```typescript
-// lib/schemas.ts
-import { z } from 'zod';
-
-export const LayoutOutputSchema = z.object({
-  selected: z.record(z.string()),   // page -> archetypeName
-  reasoning: z.string().optional(),
-});
-
-export const CopyBlockSchema = z.object({
-  symbol: z.string(),
-  // ... union of all block data shapes
-});
-
-export const CopyOutputSchema = z.object({
-  blocks: z.array(CopyBlockSchema),
-});
-
-export const ArchetypeCatalogSchema = z.object({
-  version: z.string(),
-  blockVocabulary: z.record(z.object({
-    description: z.string(),
-    fields: z.array(z.string()),
-  })),
-  archetypes: z.record(z.object({
-    blocks: z.array(z.string()),
-    minData: z.record(z.string()).optional(),
-    excludes: z.array(z.string()).optional(),
-    bestFor: z.array(z.string()).optional(),
-    typicalOrder: z.number().optional(),
-  })),
-});
-```
-
-Every LLM response passes through its Zod schema before proceeding. Failed validations trigger a retry with the validation errors appended to the prompt (AiWordpressGenerator's validateAndRepair pattern, but with Zod as the source of truth).
-
-### 6. Skill Step 4 Rewrite: Archetype-Only Selection
-
-The current Step 4 in `SKILL.md` uses flat heuristics ("add menu if categories exist"). This is replaced by the archetype selection protocol.
-
-**New Step 4 protocol:**
-1. Load `skills/website-builder/resources/archetypes.md`
-2. Apply rule-based selection for each needed page using BusinessProfile signals
-3. If LLM APIs available (Phase 9b), optionally override with LLM selection
-4. Validate selected archetypes exist in the catalog (Zod)
-5. Produce `PageBundle` by expanding each selected archetype into blocks
-6. Gate each block: if the block's `minData` requirement is unmet, drop it
-7. Document reasoning per page in `content/scratch/<tenant>/page-selection.md`
-
-No hardcoded "always home, add menu if..." rules. All page-type decisions flow from the archetype catalog.
-
-### 7. Constraint Removed for Phase 9b
-
-The constraint "Do not call OpenAI, Anthropic, or any LLM API" is removed in Phase 9b. The pipeline now supports both paths:
-- Rule-based: runs without any API (preserves offline/dev capability)
-- LLM-based: runs when API keys are configured, falls back to rule-based on failure
-
-### 8. Adoption Path (Phase 9b Actions)
-
-| Step | Action | File |
-|---|---|---|
-| **9b.1** | Expand `archetypes.md` with 9 new archetypes + extended selection rules | `skills/website-builder/resources/archetypes.md` |
-| **9b.2** | Create `lib/renderer.ts` — deterministic block-to-CMS renderer | `lib/renderer.ts` |
-| **9b.3** | Create `lib/schemas.ts` — Zod schemas for LayoutOutput, CopyOutput, ArchetypeCatalog | `lib/schemas.ts` |
-| **9b.4** | Create `skills/website-builder/resources/generate-archetypes.ts` — MD → JSON emitter | `skills/website-builder/resources/generate-archetypes.ts` |
-| **9b.5** | Rewrite `SKILL.md` Step 4 to use archetype-only selection | `skills/website-builder/SKILL.md` |
-| **9b.6** | Add LLM archetype selection prompt + fallback to rule-based | `lib/ai/archetype-selector.ts` |
-| **9b.7** | Remove "Do not call OpenAI/Anthropic" constraint from SKILL.md Constraints section | `skills/website-builder/SKILL.md` |
-| **9b.8** | Wire renderer into Step 5 (Generate CMS Content) — LLM writes `data`, renderer writes `type` | `skills/website-builder/SKILL.md` |
-
-### 9. Metadata Review Decision
-
-Kept all metadata fields (`minData`, `excludes`, `bestFor`, `typicalOrder`) in Phase 9b. Review scheduled for Phase 10 (publishing pipeline) based on operator feedback. If `bestFor` proves redundant with selection rules, it can be dropped; if `typicalOrder` is never consumed, it can be dropped. Both are non-breaking to remove.
 
 ---

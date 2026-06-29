@@ -1,8 +1,7 @@
 import { MapPin, Clock } from "lucide-react"
-import { getActiveTenant, readSiteProfile } from "@/lib/cms"
+import { readSiteProfile } from "@/lib/cms"
 
-const tenant = getActiveTenant()
-const profile = readSiteProfile(tenant)
+const profile = readSiteProfile()
 
 const hours = [
   { day: "Monday - Friday", time: profile?.contact?.hours?.weekdays || "7:00 AM - 3:00 PM" },

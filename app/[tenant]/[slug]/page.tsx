@@ -1,26 +1,30 @@
 import { notFound } from "next/navigation"
 import { CmsBlockRenderer } from "@/components/cms/CmsRenderer"
-import { readCmsPages, getActiveTenant } from "@/lib/cms"
+import { readCmsPageVariants } from "@/lib/cms"
+import { parseDemoState, resolvePageBlocks, resolveBlockData } from "@/lib/demo/demo-state"
 
-interface TenantSlugPageProps {
-  params: Promise<{ tenant: string; slug: string }>
+interface SlugPageProps {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ theme?: string; layout?: string; text?: string }>
 }
 
-export default async function TenantSlugPage({ params }: TenantSlugPageProps) {
-  const { tenant, slug } = await params
-  const activeTenant = getActiveTenant()
-  const pages = readCmsPages(activeTenant)
-  const page = pages.find((p) => p.slug === slug)
+export default async function SlugPage({ params, searchParams }: SlugPageProps) {
+  const { slug } = await params
+  const sp = await searchParams
+  const state = parseDemoState(new URLSearchParams(
+    Object.entries(sp).filter(([, v]) => v != null).map(([k, v]) => `${k}=${v}`).join("&")
+  ))
+  const page = readCmsPageVariants(slug)
 
-  if (!page || page.blocks.length === 0) {
+  if (!page || page.variants.length === 0) {
     notFound()
   }
 
-  return (
-    <>
-      {page.blocks.map((block, idx) => (
-        <CmsBlockRenderer key={`${block.type}-${idx}`} block={block} />
-      ))}
-    </>
-  )
+  const blocks = resolvePageBlocks(page, state.layout)
+  const resolvedBlocks = blocks.map((block, idx) => {
+    const resolved = state.text ? resolveBlockData(block, state.text) : block
+    return <CmsBlockRenderer key={`${resolved.type}-${idx}`} block={resolved} />
+  })
+
+  return <>{resolvedBlocks}</>
 }

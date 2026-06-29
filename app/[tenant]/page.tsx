@@ -1,25 +1,28 @@
 import { notFound } from "next/navigation"
 import { CmsBlockRenderer } from "@/components/cms/CmsRenderer"
-import { readCmsPages } from "@/lib/cms"
+import { readCmsPageVariants, readArchetypeCatalog } from "@/lib/cms"
+import { parseDemoState, resolvePageBlocks, resolveBlockData } from "@/lib/demo/demo-state"
 
-interface TenantPageProps {
-  params: Promise<{ tenant: string }>
+interface PageProps {
+  searchParams: Promise<{ theme?: string; layout?: string; text?: string }>
 }
 
-export default async function TenantPage({ params }: TenantPageProps) {
-  const { tenant } = await params
-  const pages = readCmsPages(tenant)
-  const home = pages.find((p) => p.slug === "home")
+export default async function HomePage({ searchParams }: PageProps) {
+  const sp = await searchParams
+  const state = parseDemoState(new URLSearchParams(
+    Object.entries(sp).filter(([, v]) => v != null).map(([k, v]) => `${k}=${v}`).join("&")
+  ))
+  const page = readCmsPageVariants("home")
 
-  if (!home) {
+  if (!page || page.variants.length === 0) {
     notFound()
   }
 
-  return (
-    <>
-      {home.blocks.map((block, idx) => (
-        <CmsBlockRenderer key={`${block.type}-${idx}`} block={block} />
-      ))}
-    </>
-  )
+  const blocks = resolvePageBlocks(page, state.layout)
+  const resolvedBlocks = blocks.map((block, idx) => {
+    const resolved = state.text ? resolveBlockData(block, state.text) : block
+    return <CmsBlockRenderer key={`${resolved.type}-${idx}`} block={resolved} />
+  })
+
+  return <>{resolvedBlocks}</>
 }

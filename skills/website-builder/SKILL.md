@@ -72,17 +72,17 @@ Required: at least one source. If none available, stop and list what is needed.
   - Menulog: `site:menulog.com "<business name>" <city>`
 - Do not silently skip TripAdvisor or image-heavy sources. If a search result reveals the URL, attempt the fetch/scrape.
 
-For each provided or discovered source, fetch and save raw data to `content/scratch/<tenant>/`.
+For each provided or discovered source, fetch and save raw data to `content/scratch/`.
 
 Implementation details and API endpoints are in `resources/api-hints.md`.
 
-Do not invent data. If a source returns nothing after exhaustive search, note the gap and its `mediaStatus` in `content/scratch/<tenant>/analysis.md`.
+Do not invent data. If a source returns nothing after exhaustive search, note the gap and its `mediaStatus` in `content/scratch/analysis.md`.
 
 ### Step 3: Analyse & Extract
 
 From the scratchpad, produce a single `BusinessProfile` matching the schema in `resources/schemas.md` (`BusinessProfile` interface).
 
-**Do not write `BusinessProfile` to a file.** It exists as working memory only. All persisted tenant data flows through `SiteProfile` (written in Step 5).
+**Do not write `BusinessProfile` to a file.** It exists as working memory only. All persisted site data flows through `SiteProfile` (written in Step 5).
 
 **Rules:**
 - Derive all values from fetched source data. Do not inject preset examples.
@@ -102,7 +102,7 @@ Before writing any content, decide which pages the site needs and which block co
 
 Read `skills/website-builder/resources/archetypes.md`. You need:
 - The block vocabulary (symbols the platform CMS can render)
-- The archetype definitions (named block compositions for each page type)
+- The archetype definitions (named block sets for each page type)
 - The selection rules (heuristics mapping BusinessProfile signals to archetypes)
 - The `minData` gates and `excludes` lists per archetype
 
@@ -110,14 +110,14 @@ Validate that every block symbol referenced in the catalog is listed in the bloc
 
 #### 4b. Select Archetypes Per Page
 
-Use the rule-based selection protocol in `lib/ai/archetype-selector.ts`:
+Use `lib/ai/archetype-selector.ts` `resolveLayout()`:
 
 ```typescript
 import { resolveLayout } from "@/lib/ai/archetype-selector"
 
 const selectorInput = {
   businessProfile: businessProfile,
-  archetypeCatalog: JSON.parse(fs.readFileSync(`content/archetypes/${tenant}.json`, "utf-8")),
+  archetypeCatalog: JSON.parse(fs.readFileSync(`content/archetypes/catalog.json`, "utf-8")),
   selectionRules: [
     { condition: "media.gallery.length >= 5", archetype: "GALLERY_FULL_HOME", page: "home" },
     { condition: "features contains events", archetype: "EVENTS_HOME", page: "home" },
@@ -128,83 +128,51 @@ const selectorInput = {
 const { output: layout, source } = resolveLayout(selectorInput, llmCall) // llmCall optional
 ```
 
-1. Load the generated `content/archetypes/<tenant>.json` (produced by `skills/website-builder/resources/generate-archetypes.ts`).
+1. Load the generated `content/archetypes/catalog.json` (produced by `skills/website-builder/resources/generate-archetypes.ts`).
 2. Build the `selectionRules` array from the selection table in `archetypes.md`.
-3. Call `resolveLayout(selectorInput, llmCall?)`. If `llmCall` is provided and configured, it will attempt LLM archetype selection; otherwise it immediately returns the rule-based output.
+3. Call `resolveLayout(selectorInput, llmCall?)`. If `llmCall` is provided and configured, it will attempt LLM archetype selection; otherwise it falls back to rule-based.
 4. Validate the returned `layout.selected` with `LayoutOutputSchema` from `lib/schemas.ts`.
 5. Record the selected archetype per page and the source (`llm` or `fallback`).
+6. Each page entry in `layout.selected[page].variants` contains two block orderings:
+   - **Variant A (feature-forward):** Lifts blocks matching the business's strongest signals.
+   - **Variant B (conservative):** Sticks closer to the archetype's canonical order.
 
-#### 4c. Expand Archetypes to PageBundle
+#### 4c. Arrange Blocks and Populate Variants
 
-Use `lib/ai/multi-source-pipeline.ts` `runPipeline()` to orchestrate Layer 1 (Layout) + Layer 2 (Copy) + Layer 3 (Markup):
+For each page selected in 4b:
 
-```typescript
-import { runPipeline } from "@/lib/ai/multi-source-pipeline"
-
-const result = await runPipeline({
-  businessProfile,
-  tenant,
-  pages: [
-    { slug: "home", label: "Home", archetype: "DEFAULT_HOME", seo: { title: "...", description: "..." } },
-    { slug: "menu", label: "Menu", archetype: "MENU_DEFAULT" },
-    // one entry per page selected in 4b
-  ],
-  llmCall, // optional: (prompt, systemPrompt) => Promise<string>
-})
-
-// result.bundle is a validated PageBundle ready for pages.json
-// result.layout is the LayoutOutput (with reasoning if LLM was used)
-// result.skippedPages lists any pages that failed gating
-```
-
-The pipeline performs:
-1. Archetype selection via `lib/ai/archetype-selector.ts` `resolveLayout()`
-2. Deterministic data population from `BusinessProfile` to each block symbol in the archetype
-3. Rendering via `lib/renderer.ts` `renderBundle()` to produce final CMS blocks
-
-**The deterministic renderer is the only permitted way to produce CMS block output.** Claude does not write raw CMS JSON or Gutenberg HTML directly. Claude populates `data` objects; the renderer produces the final `{ type, data }` structure.
-
-```typescript
-// Equivalent manual expansion (if you aren't using runPipeline):
-import { renderBundle } from "@/lib/renderer"
-import { buildDataMap } from "@/lib/ai/multi-source-pipeline"
-
-const pages = {
-  home: {
-    archetype: "DEFAULT_HOME",       // from 4b
-    label: "Home",
-    dataMap: buildDataMap(["hero","text","products","cta"], businessProfile),
-    seo: { title: `${businessProfile.name} - ${businessProfile.tagline}`, description: businessProfile.description.slice(0, 160) },
-  },
-}
-
-const bundle = renderBundle(pages)
-// bundle[0].blocks = [
-//   { type: "hero",    data: { headline: "...", subheadline: "...", ctaLabel: "...", ctaLink: "...", image: "..." } },
-//   { type: "text",    data: { heading: "...", body: "..." } },
-//   { type: "products", data: { title: "...", items: [...] } },
-//   { type: "cta",     data: { heading: "...", subtext: "...", buttonLabel: "...", buttonLink: "..." } },
-// ]
-```
+1. Load the archetype's block set from the catalog.
+2. Apply the **arrangement priorities** (from the archetype block set):
+   - **Hero first** — `hero` (if present) always leads the page.
+   - **Feature-driven lift** — pull `gallery` (visually-driven), `testimonials` (review-heavy), `services` (services-defined) forward based on BusinessProfile signals. This produces Variant A.
+   - **Conversion drives the close** — `cta` is placed no earlier than block index 2.
+   - **Content density dictates middle** — sparse profiles minimize middle blocks; rich profiles fill up to the archetype's block set.
+   - **Excluded blocks are not in the set** — `excludes` from the archetype are stripped before arrangement begins.
+3. Variant B uses the archetype's canonical block order (no rearrangement).
+4. Populate `dataMap` for each block symbol from the BusinessProfile. For every text-bearing field (heading, body, subheading, CTA label), generate **two wordings**:
+   - **Variant A** — feature-forward copy that leads with the business's strongest value proposition.
+   - **Variant B** — softer / more descriptive copy that favours context and tone-matching over conversion.
+5. Store both wordings side-by-side in the block data: `{ a: "Variant A text", b: "Variant B text" }`.
 
 #### 4d. Validate and Document
 
-1. If using `runPipeline`, the returned `bundle` is already Zod-validated. If expanding manually, validate the final `PageBundle` with `PageBundleSchema` from `lib/schemas.ts` before proceeding. Fix any validation errors.
-2. Write `content/scratch/<tenant>/page-selection.md` documenting:
-   - The selected archetype per page, the matching rule, and the selection source (`llm` or `fallback`)
-   - Any pages that were gated/omitted and why (`runPipeline` returns `skippedPages`)
-   - The archetype blocks list vs the final block count (if excludes/gating reduced it)
+1. Validate each variant's ordered block list: every symbol must exist in `blockVocabulary`, and all blocks must satisfy their `minData` gate.
+2. Write `content/scratch/page-selection.md` documenting:
+   - The selected archetype per page and the matching rule
+   - Both variant orderings per page with reasoning
+   - Selection source (`llm` or `fallback`)
+   - Any pages that were gated/omitted and why
 3. If `media.gallery` is empty and a gallery page or gallery blocks were selected, note the placeholder strategy.
 
 Write every page in the bundle with at least one block; empty pages are not allowed.
 
 ### Step 5: Generate CMS Content
 
-Write `content/cms/<tenant>/pages.json`, containing the `PageBundle` from Step 4 with blocks fully populated.
+Write `content/cms/site/pages.json`, containing the `PageBundle` from Step 4 with blocks fully populated.
 
 **Validation before write (mandatory):** Run the bundle through `PageBundleSchema` from `lib/schemas.ts`. Fix errors before writing. If using `runPipeline`, the bundle is already validated.
 
-**Rendering rule (non-negotiable):** Claude populates `data` objects for each block. The deterministic `lib/renderer.ts` `renderPage()` function produces the final `{ type, data }` CMS block structure. Claude does **not** write raw CMS JSON or Gutenberg HTML directly.
+**Rendering rule (non-negotiable):** Claude populates `data` objects for each block including both wording variants. The deterministic `lib/renderer.ts` `renderPage()` function produces the final `{ type, data }` CMS block structure. Claude does **not** write raw CMS JSON or Gutenberg HTML directly.
 
 ```typescript
 import { renderBundle } from "@/lib/renderer"
@@ -212,37 +180,8 @@ import { PageBundleSchema } from "@/lib/schemas"
 import { runPipeline } from "@/lib/ai/multi-source-pipeline"
 
 // Preferred: use the pipeline (validated internally)
-const result = await runPipeline({ businessProfile, tenant, pages })
-writeJson(`content/cms/${tenant}/pages.json`, { pages: result.bundle.pages })
-
-// Manual alternative:
-const pages = {
-  home: {
-    archetype: "DEFAULT_HOME",  // from Step 4
-    label: "Home",
-    dataMap: {
-      hero: {
-        headline: businessProfile.name,
-        subheadline: businessProfile.tagline,
-        ctaLabel: "View Menu",
-        ctaLink: "/menu",
-        image: businessProfile.media.hero,
-      },
-      text: { heading: "Welcome", body: businessProfile.description },
-      products: {
-        title: "Popular Right Now",
-        items: businessProfile.catalogue.items.slice(0, 4).map(item => ({
-          name: item.name, description: item.description, price: item.priceHint,
-        })),
-      },
-    },
-    seo: { title: `${businessProfile.name} - ${businessProfile.tagline}`, description: businessProfile.description.slice(0, 160) },
-  },
-}
-
-const rawBundle = renderBundle(pages)  // produces PageBundle
-const validated = PageBundleSchema.parse({ pages: rawBundle })
-writeJson(`content/cms/${tenant}/pages.json`, validated)
+const result = await runPipeline({ businessProfile, pages })
+writeJson(`content/cms/site/pages.json`, { pages: result.bundle.pages })
 ```
 
 **Content rules:**
@@ -251,14 +190,14 @@ writeJson(`content/cms/${tenant}/pages.json`, validated)
 - Use actual hours, phone, and address from the profile. Do not invent values.
 - Write one draft only. The owner will edit via `/dashboard/cms`.
 - Use only the block types that Step 4 selected. Do not include empty or placeholder blocks.
+- Each text-bearing field must contain both `a` and `b` wording variants.
 - If `media` is empty, use image blocks with `placeholder: true` and a descriptive label (e.g. "Hero image – awaiting upload") rather than omitting image fields entirely.
 
 ### Step 6: Generate Theme Variants
 
-Write one file per variant under `content/themes/<tenant>/`:
-- `content/themes/<tenant>/theme-a.json`
-- `content/themes/<tenant>/theme-b.json`
-- Optionally `theme-c.json`, `theme-d.json`, etc. if the user requests more.
+Write any single file under `content/themes/`:
+- `content/themes/theme-a.json`
+- `content/themes/theme-b.json`
 
 **Consult `resources/theme-dimensions.md`** for the full catalogue of 16 styling dimensions
 (colour, typography, spacing, shape, borders, shadows, hero, cards, buttons, nav, menu,
@@ -266,7 +205,7 @@ testimonials, forms, footer, dividers, motion) and the required variance checkli
 
 **Rules:**
 - Every theme MUST derive colours from the `vibe.palette` and `vibe.adjectives` captured in analysis.
-- **Mandatory distinctness check (non-negotiable).** Before writing any theme file, perform this check against every previously written theme for the same tenant. Two themes are considered too similar if ALL of the following are true:
+- **Mandatory distinctness check (non-negotiable).** Before writing any theme file, perform this check against every previously written theme. Two themes are considered too similar if ALL of the following are true:
   1. Their primary colours fall within **30° of hue** on the HSL colour wheel, **OR** within **20% relative luminance** difference.
   2. Their background colours are within **10%** luminance of each other.
   3. They differ in fewer than **three** of the following component properties: `heroStyle`, `cardStyle`, `buttonStyle`, `navStyle`, `sectionPadding`.
@@ -276,13 +215,13 @@ testimonials, forms, footer, dividers, motion) and the required variance checkli
 - For additional variants beyond A/B (C, D...), each new variant must differ from **every previously written variant** by at least **two** of: dominant hue, lightness band, saturation band, heroStyle, cardStyle, buttonStyle, navStyle, sectionPadding, shape, motion, typography.
 - Image URLs (hero, gallery) live in the CMS pages and `site-profile.json`, not in theme files. Theme JSON should contain only colours, typography, and component style flags.
 - Consult `resources/theme-examples.md` for industry-specific palettes, typography, and direction keywords. Match the business `type` to the corresponding subcategory section and use that as a starting point.
-- Themes must never reuse names from other tenants. Names should reflect the chosen direction keyword for this specific tenant (e.g. `"Rustic Warmth"`, `"Cool Minimal"`).
+- Themes must never reuse names from other sites. Names should reflect the chosen direction keyword (e.g. `"Rustic Warmth"`, `"Cool Minimal"`).
 
 `ThemeConfig` shape is defined in `resources/schemas.md`. Do not use preset theme definitions. Generate each theme pair afresh from the current `BusinessProfile`.
 
 ### Step 7: Scaffold Square Catalogue (Stub)
 
-Write `content/catalogue/<tenant>/catalogue.json` using the `CatalogueDoc` schema in `resources/schemas.md`.
+Write `content/catalogue/catalogue.json` using the `CatalogueDoc` schema in `resources/schemas.md`.
 
 Populate from `BusinessProfile.catalogue`. Do not call Square APIs yet.
 
@@ -304,7 +243,7 @@ See `docs/patterns/supply-chain-hardening.md` for why `--ignore-scripts` is mand
 
 If tests fail:
 1. Fix before proceeding.
-2. Document unrelated failures in `content/scratch/<tenant>/analysis.md`.
+2. Document unrelated failures in `content/scratch/analysis.md`.
 3. Do not launch until the suite passes.
 
 For ESLint suppression rules by location (e.g. test files), see `docs/patterns/lint-policy.md`.
@@ -326,22 +265,24 @@ curl -s http://localhost:3000 | grep -q "Cafe Template\|Aydin's\|Business Name"
 ```
 If this returns nothing or the HTML is missing expected page content, see `docs/patterns/cms-rendering.md` for troubleshooting steps. Do not proceed to Step 10 until `curl` returns real content.
 
-### Step 10: Present Themes & Ask for Choice
+### Step 10: Present Themes & Layout Variants & Ask for Choice
 
 Report:
 
 ```
 Generated assets are in:
-  content/cms/<tenant>/pages.json
-  content/themes/<tenant>/theme-a.json  →  Theme: "<name from file>"
-  content/themes/<tenant>/theme-b.json  →  Theme: "<name from file>"
-  content/catalogue/<tenant>/catalogue.json
+  content/cms/site/pages.json
+  content/themes/theme-a.json  →  Theme: "<name from file>"
+  content/themes/theme-b.json  →  Theme: "<name from file>"
+  content/catalogue/catalogue.json
 
 Dev server running at http://localhost:3000
 
 Preview both themes at:
-  http://localhost:3000/?theme=theme-a
-  http://localhost:3000/?theme=theme-b
+  http://localhost:3000/?theme=a
+  http://localhost:3000/?theme=b
+
+Each page has two layout variants (A: feature-forward, B: conservative) and two wording variants (A, B).
 
 Which theme would you like to try first? (A / B)
 ```
@@ -371,6 +312,41 @@ To publish to Square later:
 
 ---
 
+
+## Step 6: Finalise Website
+
+After the owner confirms their choices (theme + layout + text), run the finalisation sequence to prune non-default variants and promote the chosen configuration to production.
+
+```
+Step 6 — Finalise Website
+  1. Discard unwanted variants: delete everything not selected as default for each axis
+     - Remove layout variant B if owner chose layout A
+     - Remove text wording variant B if owner chose wording A
+  2. Promote selected variants to defaults:
+     - Set layout.default = "A" in the runtime config
+     - Inline the chosen wording into each block's text-bearing field (flatten { a, b } → string)
+  3. Strip remaining variant labels from copy:
+     - Remove `wordingVariants` / `{ a, b }` wrappers from block data
+     - Keep only the chosen wording as a plain string
+  4. Update `content/archetypes/catalog.json`:
+     - Remove unused variants from each page entry
+     - Collapse `dataMap` to single wording per field
+  5. Write finalised CMS pages to `content/cms/site/pages.json` (overwriting draft)
+     Each page has one `blocks` array (the chosen variant's rendered blocks)
+  6. Confirm to owner: "Website finalised with layout A, text A. All unused variants have been removed."
+
+Production bundle then contains:
+  - One theme config per page (the chosen one)
+  - One ordered block list per page (the chosen layout variant)
+  - One wording per field (the chosen copy variant)
+  - No discarded variants or dead A/B state in the shipped code
+```
+
+**Core architecture invariant:** The finalise step is a **pruning and promotion** operation, not a rebuild. It removes the non-defaults and flattens the chosen variant into the runtime structure. No new schemas, no extra fields, no reintroduction of variant state in production.
+
+---
+
+
 ## Constraints
 
 - **LLM APIs**: Phase 9a runs without LLM APIs (rule-based archetype selection, deterministic renderer). Phase 9b+ may use LLM APIs when configured. Always fall back to rule-based if the API fails.
@@ -381,7 +357,7 @@ To publish to Square later:
 
 ## Future (Out of Scope)
 
-Mark as TODOs in `content/scratch/<tenant>/analysis.md`:
+Mark as TODOs in `content/scratch/analysis.md`:
 
 - Replace rule-based archetype selection with LLM-assisted selection (Phase 9b).
 - Auto-connect Facebook/Instagram/Google via OAuth.

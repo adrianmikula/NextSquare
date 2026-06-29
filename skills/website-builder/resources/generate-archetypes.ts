@@ -2,25 +2,21 @@
  * generate-archetypes.ts
  *
  * Reads `skills/website-builder/resources/archetypes.md` and emits a runtime
- * JSON artifact to `content/archetypes/<tenant>.json`.
+ * JSON artifact to `content/archetypes/catalog.json`.
  *
  * Usage:
- *   npx tsx skills/website-builder/resources/generate-archetypes.ts --tenant demo
+ *   npx tsx skills/website-builder/resources/generate-archetypes.ts
  *
- * The JSON is consumed by `lib/renderer.ts` and the CMS layer.
+ * Single-tenant: output is always catalog.json.
  * No markdown parsing happens at runtime.
  */
 
 import fs from "fs"
 import path from "path"
 
-// ── Configuration ─────────────────────────────────────────────────────────────
-
 const SKILL_DIR = path.join(process.cwd(), "skills", "website-builder")
 const ARCHETYPES_MD = path.join(SKILL_DIR, "resources", "archetypes.md")
 const CONTENT_DIR = path.join(process.cwd(), "content", "archetypes")
-
-// ── Archetype block registry (mirrors lib/renderer.ts ARCHETYPE_BLOCKS) ────────
 
 const ARCHETYPE_BLOCKS: Record<string, string[]> = {
   DEFAULT_HOME: ["hero", "text", "products", "cta"],
@@ -43,38 +39,35 @@ const ARCHETYPE_BLOCKS: Record<string, string[]> = {
   PRICING_PAGE: ["hero", "services", "comparison", "cta"],
   STORY_IMAGE: ["hero", "image-text", "cta"],
   GALLERY_FULL_HOME_ALT: ["hero", "slideshow", "text", "products", "cta"],
+  TEAM_HOME: ["hero", "team", "text", "products", "cta"],
+  TEAM_PAGE: ["hero", "team", "text", "cta"],
+  RESERVATIONS_PAGE: ["hero", "text", "reservation", "hours", "map", "cta"],
+  LOCATIONS_PAGE: ["hours", "map", "text", "cta"],
+  MINIMAL_HEADER: ["nav", "logo"],
+  STANDARD_HEADER: ["announcement", "nav", "logo"],
+  BRANDED_HEADER: ["announcement", "nav", "logo", "cta"],
+  MINIMAL_FOOTER: ["hours", "social-icons"],
+  STANDARD_FOOTER: ["hours", "social-icons", "cta"],
+  SOCIAL_FOOTER: ["social-icons", "cta", "hours"],
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
-
-function getTenant(): string {
-  const idx = process.argv.indexOf("--tenant")
-  if (idx === -1 || !process.argv[idx + 1]) {
-    console.error("Usage: generate-archetypes.ts --tenant <tenant-id>")
-    process.exit(1)
-  }
-  return process.argv[idx + 1]
-}
-
-function generate(tenant: string) {
+function generate() {
   const md = fs.readFileSync(ARCHETYPES_MD, "utf-8")
 
-  // Extract block vocabulary from markdown table
   const vocab: Record<string, { description: string; fields: string[] }> = {}
-  const tableRows = md.match(/\| `([^`]+)` \| ([^|]+) \|/g) ?? []
+  const tableRows = md.match(/\| `([^`]+)` \| (.+) \|/g) ?? []
   for (const row of tableRows) {
-    const match = row.match(/\| `([^`]+)` \| (.+?) \|$/)
-    if (match) {
-      const symbol = match[1]
-      const desc = match[2].trim()
-      vocab[symbol] = {
-        description: desc,
-        fields: extractFieldsForSymbol(md, symbol),
-      }
+    const match = row.match(/^\| `([^`]+)` \| (.+) \|$/)
+    if (!match) continue
+    const symbol = match[1]
+    const desc = match[2].trim()
+    if (symbol === "Symbol") continue
+    vocab[symbol] = {
+      description: desc,
+      fields: extractFieldsForSymbol(md, symbol),
     }
   }
 
-  // Build archetypes from the hardcoded registry + metadata from markdown
   const archetypes: Record<string, {
     blocks: string[]
     minData?: Record<string, string>
@@ -82,88 +75,82 @@ function generate(tenant: string) {
     bestFor?: string[]
     typicalOrder?: number
   }> = {}
-
-  // Extract archetype metadata blocks from markdown
-  const metadataMatch = md.match(/```\n([\s\S]*?)\n```/)
-  if (metadataMatch) {
-    // Parse YAML-like metadata
-    const currentArchetype = parseMetadataBlock(metadataMatch[1])
-    for (const [name, meta] of Object.entries(currentArchetype)) {
-      archetypes[name] = {
-        blocks: ARCHETYPE_BLOCKS[name] ?? [],
-        ...meta,
-      }
-    }
-  }
-
-  // Fallback: ensure all registry entries exist (overwrites any parsed metadata)
   for (const [name, blocks] of Object.entries(ARCHETYPE_BLOCKS)) {
     archetypes[name] = { blocks }
   }
 
+  const rules = parseSelectionRules(md)
+
   const output = {
     version: "1.0",
-    tenant,
     blockVocabulary: vocab,
     archetypes,
-    selectionRules: [],
+    selectionRules: rules,
     generatedAt: new Date().toISOString(),
   }
 
   fs.mkdirSync(CONTENT_DIR, { recursive: true })
-  const outPath = path.join(CONTENT_DIR, `${tenant}.json`)
+  const outPath = path.join(CONTENT_DIR, "catalog.json")
   fs.writeFileSync(outPath, JSON.stringify(output, null, 2) + "\n")
-  console.log(`Wrote ${outPath} (${Object.keys(archetypes).length} archetypes, ${Object.keys(vocab).length} block symbols)`)
+  console.log(`Wrote ${outPath} (${Object.keys(archetypes).length} archetypes, ${Object.keys(vocab).length} block symbols, ${rules.length} selection rules)`)
 }
 
 function extractFieldsForSymbol(md: string, symbol: string): string[] {
-  // Find the field contract section for this symbol
   const sectionMatch = md.match(new RegExp(`\\*\\*${symbol}\\*\\* — ([^\\n]+)`))
   if (!sectionMatch) return []
   const fieldsStr = sectionMatch[1]
-  // Extract field names (before any `?` or `:`)
-  return fieldsStr.split(",").map((f) => f.trim().replace(/\?$/, "").replace(/:.*$/, ""))
+  return fieldsStr.split(",").map((f) => f.trim().replace(/\?$/, "").replace(/:.*$/, "").replace(/`/g, ""))
 }
 
-function parseMetadataBlock(block: string): Record<string, Record<string, unknown>> {
-  const result: Record<string, Record<string, unknown>> = {}
-  const lines = block.split("\n")
-  let current: string | null = null
-  let currentObj: Record<string, unknown> = {}
+function parseSelectionRules(md: string): Array<{ condition: string; archetype: string; page: string }> {
+  const rules: Array<{ condition: string; archetype: string; page: string }> = []
 
-  for (const line of lines) {
-    const archetypeMatch = line.match(/^(\w+):\s*$/)
-    if (archetypeMatch) {
-      if (current) result[current] = currentObj
-      current = archetypeMatch[1]
-      currentObj = {}
-      continue
+  const homeSection = md.match(/\*\*Home page selection:\*\*\n\n(\|.+\|\n(?:\|[-| ]+\|\n)?(?:\|.+\|\n)*)/)
+  if (homeSection) {
+    const rows = homeSection[1].split("\n").filter((r) => r.trim().startsWith("|"))
+    for (const row of rows) {
+      const cells = row.split("|").map((c) => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
+      if (cells.length < 2 || cells[0] === "Condition" || cells[0] === "Default fallback") continue
+      rules.push({ condition: cells[0], archetype: cells[1], page: "home" })
     }
-    if (!current) continue
-
-    const kvMatch = line.match(/^\s+(\w+):\s*(.+)$/)
-    if (kvMatch) {
-      const key = kvMatch[1]
-      const rawVal = kvMatch[2].trim()
-
-      if (rawVal.startsWith("[") && rawVal.endsWith("]")) {
-        const arrStr = rawVal.slice(1, -1)
-        const items = arrStr.split(",").map((s) => s.trim().replace(/['"]/g, ""))
-        currentObj[key] = items
-      } else if (rawVal.startsWith('"') || rawVal.startsWith("'")) {
-        currentObj[key] = rawVal.replace(/^['"]|['"]$/g, "")
-      } else if (rawVal === "true" || rawVal === "false") {
-        currentObj[key] = rawVal === "true"
-      } else if (!isNaN(Number(rawVal))) {
-        currentObj[key] = Number(rawVal)
-      } else {
-        currentObj[key] = rawVal
+    const fallbackRow = rows.find((r) => r.includes("Default fallback"))
+    if (fallbackRow) {
+      const cells = fallbackRow.split("|").map((c) => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
+      if (cells.length >= 2) {
+        rules.push({ condition: "true", archetype: cells[1], page: "home" })
       }
     }
   }
 
-  if (current) result[current] = currentObj
-  return result
+  const innerSection = md.match(/\*\*Inner page selection:\*\*\n\n(\|.+\|\n(?:\|[-| ]+\|\n)?(?:\|.+\|\n)*)/)
+  if (innerSection) {
+    const rows = innerSection[1].split("\n").filter((r) => r.trim().startsWith("|"))
+    const pageToSlug: Record<string, string> = {
+      menu: "menu",
+      about: "about",
+      contact: "contact",
+      faq: "faq",
+      gallery: "gallery",
+      events: "events",
+      loyalty: "loyalty",
+      membership: "membership",
+      pricing: "pricing",
+      team: "team",
+      reservations: "reservations",
+      locations: "locations",
+    }
+    for (const row of rows) {
+      const cells = row.split("|").map((c) => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
+      if (cells.length < 3 || cells[0] === "Page" || cells[0] === "---") continue
+      const slug = pageToSlug[cells[0].toLowerCase()]
+      const archetype = cells[1]
+      if (slug && archetype) {
+        rules.push({ condition: cells[2], archetype, page: slug })
+      }
+    }
+  }
+
+  return rules
 }
 
-generate(getTenant())
+generate()

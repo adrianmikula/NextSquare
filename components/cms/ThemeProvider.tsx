@@ -10,11 +10,9 @@ const MOTION_SPEED: Record<string, string> = {
 }
 
 export function ThemeProvider({
-  tenant,
   cssVars,
   children,
 }: {
-  tenant: string
   cssVars?: Record<string, string>
   children: React.ReactNode
 }) {

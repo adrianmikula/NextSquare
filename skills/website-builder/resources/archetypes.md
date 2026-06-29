@@ -30,6 +30,9 @@ The complete set of block symbols available for composition:
 | `hr` | Horizontal rule / section separator. |
 | `image-text` | Alternating image + text sections (left/right layout). |
 | `comparison` | Feature comparison table or pricing tiers. |
+| `map` | Embedded map with address details and directions link. |
+| `team` | Staff grid with name, role, photo, and short bio. |
+| `reservation` | Booking form with date, time, party size, name, and phone fields. |
 
 > **Note**: `social-proof`, `instagram-feed`, and `menu-preview` are not yet wired to CMS block components. They remain in the vocabulary as future extensions. Do not use them in archetype definitions until `CmsRenderer` cases exist.
 
@@ -73,6 +76,12 @@ Full shapes are in `schemas.md` (`Block Data Shapes`). The key fields per symbol
 
 **comparison** — `title?`, `columns: [{ header, features: [{ name, included }] }]`, `ctaLabel?`, `ctaLink?`.
 
+**map** — `address`, `suburb`, `city`, `embedUrl?` (Google Maps embed), `directionsUrl?`.
+
+**team** — `title?` (e.g. "Our Team"), `items: [{ name, role, bio?, photo? }]`.
+
+**reservation** — `title?`, `fields: [{ name, type, label, required }]` where type is typically `date`, `time`, `select`, `tel`. Also `prefillName?`, `prefillPhone?`.
+
 ---
 
 ## Archetype Definitions
@@ -92,6 +101,7 @@ MENU_FOCUSED      → hero, products, text, cta
 EVENTS_HOME       → hero, text, promo, services, cta, hours
 LOYALTY_HOME      → hero, text, products, cta, testimonials
 GALLERY_FULL_HOME_ALT → hero, slideshow, text, products, cta
+TEAM_HOME         → hero, team, text, products, cta
 ```
 
 ### Inner Page Archetypes
@@ -107,6 +117,9 @@ LOYALTY_PAGE      → hero, text, testimonials, cta
 MEMBERSHIP_PAGE   → hero, text, form, cta
 PRICING_PAGE      → hero, services, comparison, cta
 STORY_IMAGE       → hero, image-text, cta
+TEAM_PAGE         → hero, team, text, cta
+RESERVATIONS_PAGE → hero, text, reservation, hours, map, cta
+LOCATIONS_PAGE    → hours, map, text, cta
 ```
 
 ---
@@ -126,6 +139,7 @@ Apply these heuristics to the `BusinessProfile` to pick the best archetype for e
 | `features` contains "events" | `EVENTS_HOME` |
 | `features` contains "loyalty" or "subscriptions" or "membership" | `LOYALTY_HOME` |
 | `features` contains "events" OR `audience` = "tourists" | `MENU_FOCUSED` |
+| `features` contains "team" or "staff" | `TEAM_HOME` |
 | `media.gallery` empty AND `features` length < 2 | `MINIMAL_HOME` |
 | Default fallback | `DEFAULT_HOME` |
 
@@ -142,6 +156,9 @@ Apply these heuristics to the `BusinessProfile` to pick the best archetype for e
 | `loyalty` | `LOYALTY_PAGE` | `features` contains "loyalty" or "subscriptions" |
 | `membership` | `MEMBERSHIP_PAGE` | `features` contains "membership" |
 | `pricing` | `PRICING_PAGE` | `services` is non-empty AND `type` ∈ `{ salon, spa, consultant }` |
+| `team` | `TEAM_PAGE` | `features` contains "team" or "staff" |
+| `reservations` | `RESERVATIONS_PAGE` | `features` contains "reservations" OR `type` ∈ `{ restaurant, cafe, hotel }` |
+| `locations` | `LOCATIONS_PAGE` | `features` contains "multi-location" OR `locations.length > 1` |
 
 **Gate enforcement:** If a gate condition is not met, omit the page entirely rather than rendering an empty page. Document the omission in `content/scratch/<tenant>/page-selection.md`.
 

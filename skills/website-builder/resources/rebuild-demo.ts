@@ -1,8 +1,7 @@
 /**
  * rebuild-demo.ts
  *
- * Rebuilds the Aydin's Cafe (demo tenant) website from scratch using
- * the archetype-driven pipeline.
+ * Rebuilds the demo website from scratch using the archetype-driven pipeline.
  *
  * Usage:
  *   npx tsx skills/website-builder/resources/rebuild-demo.ts
@@ -17,16 +16,24 @@ import { runPipeline } from "@/lib/ai/multi-source-pipeline"
 const SITE_PROFILE_PATH = path.join(process.cwd(), "content", "site-profile", "demo", "site-profile.json")
 const CATALOGUE_PATH = path.join(process.cwd(), "content", "catalogue", "demo", "catalogue.json")
 
-const siteProfile = JSON.parse(fs.readFileSync(SITE_PROFILE_PATH, "utf-8"))
-const catalogue = JSON.parse(fs.readFileSync(CATALOGUE_PATH, "utf-8"))
+const siteProfile = JSON.parse(fs.readFileSync(SITE_PROFILE_PATH, "utf-8")) as {
+  siteName: string
+  tagline?: string
+  description?: string
+  address: { full: string; suburb: string; state: string }
+  contact: { phone: string }
+}
+const catalogue = JSON.parse(fs.readFileSync(CATALOGUE_PATH, "utf-8")) as {
+  categories: Array<{ name: string; items: Array<{ name: string; description: string; price: number }> }>
+}
 
 // ── Construct BusinessProfile ─────────────────────────────────────────────────
 
 const businessProfile = {
   name: siteProfile.siteName,
-  type: "cafe",
-  tagline: siteProfile.tagline,
-  description: siteProfile.description,
+  type: "cafe" as const,
+  tagline: siteProfile.tagline ?? "",
+  description: siteProfile.description ?? "",
   location: {
     address: siteProfile.address.full,
     suburb: siteProfile.address.suburb,
@@ -41,13 +48,13 @@ const businessProfile = {
     { day: "Saturday", open: "08:00", close: "14:00" },
     { day: "Sunday", open: "Closed", close: "Closed" },
   ],
-  phone: siteProfile.contact.phone,
+  phone: siteProfile.contact.phone ?? "",
   vibe: {
     palette: ["#8B5E3C", "#D4A574", "#F5E6D3", "#2C1810", "#E8D5C4"],
     adjectives: ["casual", "friendly", "fresh"],
   },
   audience: "locals",
-  tone: "casual",
+  tone: "casual" as const,
   features: ["breakfast", "brunch", "delivery"],
   testimonials: [
     {
@@ -67,9 +74,9 @@ const businessProfile = {
     },
   ],
   catalogue: {
-    categories: catalogue.categories.map((c: { name: string }) => c.name),
-    items: catalogue.categories.flatMap((c: { items: Array<{ name: string; description: string; price: number }> }) =>
-      c.items.map((item: { name: string; description: string; price: number }) => ({
+    categories: (catalogue.categories as Array<{ name: string }>).map((c) => c.name),
+    items: (catalogue.categories as Array<{ name: string; items: Array<{ name: string; description: string; price: number }> }>).flatMap((c) =>
+      c.items.map((item) => ({
         name: item.name,
         description: item.description,
         category: c.name,
@@ -98,32 +105,22 @@ const businessProfile = {
 // ── Run pipeline ─────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log("Rebuilding Aydin's Cafe (demo tenant) with archetype pipeline...")
+  console.log("Rebuilding demo website with archetype pipeline...")
 
-  const tenant = "demo"
-  const result = await runPipeline({
-    businessProfile,
-    tenant,
-    pages: [
-      { slug: "home", label: "Home", archetype: "DEFAULT_HOME", seo: { title: `${siteProfile.siteName} - ${siteProfile.tagline}`, description: siteProfile.description } },
-      { slug: "menu", label: "Menu", archetype: "MENU_DEFAULT" },
-      { slug: "about", label: "About", archetype: "ABOUT_STORY", seo: { title: "About - Aydin's Cafe", description: siteProfile.description } },
-      { slug: "contact", label: "Contact", archetype: "CONTACT_DIRECT", seo: { title: "Contact - Aydin's Cafe", description: "Find Aydin's Cafe in Joondalup, view opening hours, and order delivery." } },
-    ],
-  })
+  const result = await runPipeline({ businessProfile })
 
   console.log(`Layout source: ${result.layoutSource}`)
   console.log(`Skipped pages: ${result.skippedPages.join(", ") || "none"}`)
 
   // Write CMS output
-  const cmsDir = path.join(process.cwd(), "content", "cms", tenant)
+  const cmsDir = path.join(process.cwd(), "content", "cms", "site")
   fs.mkdirSync(cmsDir, { recursive: true })
   const pagesPath = path.join(cmsDir, "pages.json")
   fs.writeFileSync(pagesPath, JSON.stringify(result.bundle, null, 2) + "\n")
   console.log(`Wrote ${pagesPath}`)
 
   // Write page-selection.md
-  const scratchDir = path.join(process.cwd(), "content", "scratch", tenant)
+  const scratchDir = path.join(process.cwd(), "content", "scratch")
   fs.mkdirSync(scratchDir, { recursive: true })
   const selectionDoc = `# Page Selection — ${siteProfile.siteName}
 
@@ -131,7 +128,10 @@ async function main() {
 
 | Page | Archetype | Source |
 |------|-----------|--------|
-${Object.entries(result.layout.selected).map(([page, archetype]) => `| ${page} | ${archetype} | ${result.layoutSource} |`).join("\n")}
+${Object.entries(result.layout.selected).map(([page, entry]) => {
+  const archetypeName = typeof entry === "string" ? entry : entry.archetype
+  return `| ${page} | ${archetypeName} | ${result.layoutSource} |`
+}).join("\n")}
 
 ## Omitted Pages
 

@@ -6,15 +6,16 @@ import { Footer } from "@/components/layout/footer"
 import { CartDrawer } from "@/components/cart/CartDrawer"
 import { ToastProvider } from "@/components/ui/ToastProvider"
 import { DemoBadge } from "@/components/demo/DemoBadge"
+import { DemoModePopup } from "@/components/demo/DemoModePopup"
+import { ClientThemeSync } from "@/components/demo/ClientThemeSync"
 import { ToastContainer } from "@/components/ui/toast"
 import { requireEnv } from "@/lib/env"
-import { getActiveTenant, readSiteProfile } from "@/lib/cms"
+import { readSiteProfile } from "@/lib/cms"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export async function generateMetadata(): Promise<Metadata> {
-  const tenant = getActiveTenant()
-  const profile = readSiteProfile(tenant)
+  const profile = readSiteProfile()
   const title = profile?.seo?.title || profile?.siteName || "Cafe Template"
   const description = profile?.seo?.description || profile?.description || ""
 
@@ -38,8 +39,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const tenant = getActiveTenant()
-  const siteProfile = readSiteProfile(tenant)
+  const siteProfile = readSiteProfile()
 
   return (
     <html lang="en">
@@ -51,6 +51,8 @@ export default function RootLayout({
         </ToastProvider>
         <ToastContainer />
         <DemoBadge />
+        <ClientThemeSync />
+        <DemoModePopup />
         <CartDrawer />
       </body>
     </html>
