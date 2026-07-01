@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { CmsBlockRenderer } from "@/components/cms/CmsRenderer"
-import { readCmsPageVariants, readArchetypeCatalog } from "@/lib/cms"
+import { readCmsPageVariants, resolvePageLayoutCssVars } from "@/lib/cms"
 import { parseDemoState, resolvePageBlocks, resolveBlockData } from "@/lib/demo/demo-state"
 
 interface PageProps {
@@ -19,10 +19,19 @@ export default async function HomePage({ searchParams }: PageProps) {
   }
 
   const blocks = resolvePageBlocks(page, state.layout)
-  const resolvedBlocks = blocks.map((block, idx) => {
-    const resolved = state.text ? resolveBlockData(block, state.text) : block
+  const layoutCssVars = resolvePageLayoutCssVars(page, state.layout)
+  const contentBlocks = blocks.filter((b) => b.type !== "page-layout")
+  const resolvedBlocks = contentBlocks.map((block, idx) => {
+    const resolved = resolveBlockData(block, state.text || "A")
     return <CmsBlockRenderer key={`${resolved.type}-${idx}`} block={resolved} />
   })
 
-  return <>{resolvedBlocks}</>
+  return (
+    <>
+      {layoutCssVars && (
+        <style dangerouslySetInnerHTML={{ __html: `:root{${layoutCssVars}}` }} />
+      )}
+      {resolvedBlocks}
+    </>
+  )
 }

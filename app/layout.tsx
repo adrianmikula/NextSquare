@@ -10,7 +10,9 @@ import { DemoModePopup } from "@/components/demo/DemoModePopup"
 import { ClientThemeSync } from "@/components/demo/ClientThemeSync"
 import { ToastContainer } from "@/components/ui/toast"
 import { requireEnv } from "@/lib/env"
-import { readSiteProfile } from "@/lib/cms"
+import { readSiteProfile, readCmsPageVariants } from "@/lib/cms"
+import { parseDemoState, resolvePageBlocks } from "@/lib/demo/demo-state"
+import type { CmsBlock } from "@/lib/cms"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -34,20 +36,33 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
+  searchParams,
 }: Readonly<{
   children: React.ReactNode
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }>) {
   const siteProfile = readSiteProfile()
+  const headerPage = readCmsPageVariants("header")
+  const footerPage = readCmsPageVariants("footer")
+  const layoutPage = readCmsPageVariants("page-layout")
+
+  const sp = await searchParams
+  const state = parseDemoState(new URLSearchParams(
+    Object.entries(sp).filter(([, v]) => v != null).map(([k, v]) => `${k}=${Array.isArray(v) ? v[0] : v}`).join("&")
+  ))
+
+  const headerBlocks: CmsBlock[] = headerPage ? resolvePageBlocks(headerPage, state.layout) : []
+  const footerBlocks: CmsBlock[] = footerPage ? resolvePageBlocks(footerPage, state.layout) : []
 
   return (
     <html lang="en">
       <body className={inter.className}>
         <ToastProvider>
-          <Header siteProfile={siteProfile} />
+          <Header siteProfile={siteProfile} blocks={headerBlocks} />
           <main className="flex-1">{children}</main>
-          <Footer siteProfile={siteProfile} />
+          <Footer siteProfile={siteProfile} blocks={footerBlocks} />
         </ToastProvider>
         <ToastContainer />
         <DemoBadge />

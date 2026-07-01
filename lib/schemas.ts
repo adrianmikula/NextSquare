@@ -10,6 +10,13 @@ export const HeroBlockDataSchema = z.object({
   ctaLabel: VariantString,
   ctaLink: z.string(),
   image: z.string().optional(),
+  variant: z.object({
+    height: z.string().optional(),
+    overlayOpacity: z.number().optional(),
+    textAlign: z.enum(["left", "center", "right"]).optional(),
+    headingSize: z.enum(["2xl", "3xl", "4xl", "5xl", "6xl"]).optional(),
+    backgroundStyle: z.enum(["gradient", "image", "solid"]).optional(),
+  }).optional(),
 })
 
 export const TextBlockDataSchema = z.object({
@@ -203,6 +210,71 @@ export const ReservationBlockDataSchema = z.object({
   prefillPhone: z.string().optional(),
 })
 
+export const LogoBlockDataSchema = z.object({
+  image: z.string().optional(),
+  text: z.string().optional(),
+  link: z.string().optional(),
+})
+
+export const BusinessNameBlockDataSchema = z.object({
+  text: z.string(),
+  link: z.string().optional(),
+})
+
+export const SloganBlockDataSchema = z.object({
+  text: z.string(),
+})
+
+export const NavBlockDataSchema = z.object({
+  links: z.array(
+    z.object({
+      href: z.string(),
+      label: z.string(),
+    })
+  ),
+  sticky: z.boolean().optional(),
+  variant: z.enum(["home", "page"]).optional(),
+})
+
+export const SitemapBlockDataSchema = z.object({
+  columns: z.array(
+    z.object({
+      title: z.string(),
+      links: z.array(
+        z.object({
+          href: z.string(),
+          label: z.string(),
+        })
+      ),
+    })
+  ),
+})
+
+export const AnnouncementBlockDataSchema = z.object({
+  text: z.string(),
+  link: z.string().optional(),
+  linkLabel: z.string().optional(),
+})
+
+export const CopyrightBlockDataSchema = z.object({
+  text: z.string().optional(),
+  name: z.string().optional(),
+  year: z.number().optional(),
+})
+
+export const PhoneBlockDataSchema = z.object({
+  number: z.string(),
+  display: z.string().optional(),
+  label: z.string().optional(),
+})
+
+export const PageLayoutBlockDataSchema = z.object({
+  maxWidth: z.enum(["narrow", "standard", "wide", "full"]).optional(),
+  contentAlign: z.enum(["left", "center"]).optional(),
+  sectionSpacing: z.enum(["compact", "standard", "spacious"]).optional(),
+  sidebarPosition: z.enum(["left", "right", "none"]).optional(),
+})
+
 export const BlockDataSchema = z.union([
   HeroBlockDataSchema,
   TextBlockDataSchema,
@@ -225,6 +297,14 @@ export const BlockDataSchema = z.union([
   MapBlockDataSchema,
   TeamBlockDataSchema,
   ReservationBlockDataSchema,
+  LogoBlockDataSchema,
+  BusinessNameBlockDataSchema,
+  SloganBlockDataSchema,
+  NavBlockDataSchema,
+  SitemapBlockDataSchema,
+  AnnouncementBlockDataSchema,
+  CopyrightBlockDataSchema,
+  PhoneBlockDataSchema,
 ])
 
 // ── Layer 1: Layout Output ────────────────────────────────────────────────────

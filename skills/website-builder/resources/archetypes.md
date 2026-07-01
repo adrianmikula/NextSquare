@@ -33,6 +33,15 @@ The complete set of block symbols available for composition:
 | `map` | Embedded map with address details and directions link. |
 | `team` | Staff grid with name, role, photo, and short bio. |
 | `reservation` | Booking form with date, time, party size, name, and phone fields. |
+| `logo` | Brand logo image and/or business name text. |
+| `business-name` | Business name text with optional link. |
+| `slogan` | Short tagline or slogan text. |
+| `nav` | Navigation links with optional sticky behavior and home/page variant. |
+| `sitemap` | Multi-column sitemap with grouped links. |
+| `announcement` | Top banner with announcement text and optional CTA link. |
+| `copyright` | Copyright notice with dynamic year and business name. |
+| `phone` | Clickable phone number with optional label and display text. |
+| `page-layout` | Top-level page container settings (max width, content alignment, section spacing, sidebar). |
 
 > **Note**: `social-proof`, `instagram-feed`, and `menu-preview` are not yet wired to CMS block components. They remain in the vocabulary as future extensions. Do not use them in archetype definitions until `CmsRenderer` cases exist.
 
@@ -82,6 +91,24 @@ Full shapes are in `schemas.md` (`Block Data Shapes`). The key fields per symbol
 
 **reservation** — `title?`, `fields: [{ name, type, label, required }]` where type is typically `date`, `time`, `select`, `tel`. Also `prefillName?`, `prefillPhone?`.
 
+**logo** — `image?`, `text?`, `link?`.
+
+**business-name** — `text`, `link?`.
+
+**slogan** — `text`.
+
+**nav** — `links: [{ href, label }]`, `sticky?`, `variant?` (home/page).
+
+**sitemap** — `columns: [{ title, links: [{ href, label }] }]`.
+
+**announcement** — `text`, `link?`, `linkLabel?`.
+
+**copyright** — `text?`, `name?`, `year?`.
+
+**phone** — `number`, `display?`, `label?`.
+
+**page-layout** — `maxWidth?` (narrow|standard|wide|full), `contentAlign?` (left|center), `sectionSpacing?` (compact|standard|spacious), `sidebarPosition?` (left|right|none).
+
 ---
 
 ## Archetype Definitions
@@ -103,6 +130,44 @@ LOYALTY_HOME      → hero, text, products, cta, testimonials
 GALLERY_FULL_HOME_ALT → hero, slideshow, text, products, cta
 TEAM_HOME         → hero, team, text, products, cta
 ```
+
+### Header Archetypes
+
+```
+MINIMAL_HEADER    → logo
+STANDARD_HEADER   → announcement, nav, logo
+BRANDED_HEADER    → announcement, nav, logo, phone, slogan
+```
+
+### Footer Archetypes
+
+```
+MINIMAL_FOOTER    → copyright, social-icons
+STANDARD_FOOTER   → copyright, social-icons, phone, sitemap
+LOCAL_FOOTER      → copyright, phone, social-icons, address
+```
+
+### Page Layout Archetypes
+
+```
+STANDARD_CONTAINER → page-layout(maxWidth: standard, contentAlign: center, sectionSpacing: standard)
+NARROW_PROSE       → page-layout(maxWidth: narrow, contentAlign: center, sectionSpacing: standard)
+WIDE_MARGIN        → page-layout(maxWidth: standard, contentAlign: center, sectionSpacing: spacious)
+COMPACT_MARGIN     → page-layout(maxWidth: standard, contentAlign: left, sectionSpacing: compact)
+ASYMMETRIC         → page-layout(maxWidth: wide, contentAlign: left, sectionSpacing: spacious)
+SIDEBAR_RIGHT      → page-layout(maxWidth: standard, contentAlign: left, sectionSpacing: standard, sidebarPosition: right)
+```
+
+- `maxWidth`: `standard` = 1140–1280px (SMB default), `narrow` = 640–760px (reading-optimised), `wide` = 1440px (visual/portfolio), `full` = 100% (immersive/full-bleed)
+- `contentAlign`: `left` drives asymmetric F-pattern reading; `center` suits single-column/scannable layouts
+- `sectionSpacing`: `compact` = local service density, `standard` = balanced, `spacious` = luxury/brand storytelling
+- `sidebarPosition`: reserved for future sidebar component expansion; currently applied as CSS grid cue
+
+Research-backed defaults (2026):
+- 55%+ mobile traffic → single-column/narrow-width dominates best-performing small-business sites
+- 1140–1280px content container is the readability-safe default for desktop
+- Service pages perform better with left-aligned text and tighter vertical rhythm
+- Full-bleed images with contained text (hybrid) outperform either extreme
 
 ### Inner Page Archetypes
 
@@ -160,9 +225,23 @@ Apply these heuristics to the `BusinessProfile` to pick the best archetype for e
 | `reservations` | `RESERVATIONS_PAGE` | `features` contains "reservations" OR `type` ∈ `{ restaurant, cafe, hotel }` |
 | `locations` | `LOCATIONS_PAGE` | `features` contains "multi-location" OR `locations.length > 1` |
 
-**Gate enforcement:** If a gate condition is not met, omit the page entirely rather than rendering an empty page. Document the omission in `content/scratch/<tenant>/page-selection.md`.
+## Layout Selection
 
----
+| Section | Archetype | Condition |
+|---|---|---|
+| `header` | `STANDARD_HEADER` | `true` |
+| `footer` | `STANDARD_FOOTER` | `true` |
+
+**Page layout selection:**
+
+| Condition | Archetype |
+|---|---|
+| `type` ∈ `{ restaurant, cafe, hotel, salon, spa, clinic }` AND `features` contains "reservations" | `SIDEBAR_RIGHT` |
+| `type` ∈ `{ consultant, agency, trades, contractor }` | `ASYMMETRIC` |
+| `features` contains "portfolio" OR `media.gallery.length >= 5` | `WIDE_MARGIN` |
+| `type` ∈ `{ writer, coach, therapist, lawyer }` OR `features` contains "blog" | `NARROW_PROSE` |
+| `type` ∈ `{ salon, spa, consultant }` AND `services` is non-empty | `COMPACT_MARGIN` |
+| Default fallback | `STANDARD_CONTAINER` |
 
 ## Metadata (Optional)
 

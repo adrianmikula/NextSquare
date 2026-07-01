@@ -10,13 +10,17 @@ export interface BlockData {
 // Each returns just the `data` object; `renderBlock` wraps it with `{ type, data }`.
 
 function renderHero(data: BlockData): BlockData {
-  return {
+  const out: BlockData = {
     headline: String(data.headline ?? ""),
     subheadline: String(data.subheadline ?? ""),
     ctaLabel: String(data.ctaLabel ?? data.ctaLebel ?? ""),
     ctaLink: String(data.ctaLink ?? "/menu"),
     image: data.image as string | undefined,
   }
+  if (typeof data.variant === "object" && data.variant !== null) {
+    out.variant = data.variant
+  }
+  return out
 }
 
 function renderText(data: BlockData): BlockData {
@@ -169,6 +173,74 @@ function renderReservation(data: BlockData): BlockData {
   }
 }
 
+function renderPageLayout(data: BlockData): BlockData {
+  return {
+    maxWidth: (data.maxWidth as string | undefined) || "standard",
+    contentAlign: (data.contentAlign as string | undefined) || "center",
+    sectionSpacing: (data.sectionSpacing as string | undefined) || "standard",
+    sidebarPosition: (data.sidebarPosition as string | undefined) || "none",
+  }
+}
+
+function renderLogo(data: BlockData): BlockData {
+  return {
+    image: data.image as string | undefined,
+    text: data.text as string | undefined,
+    link: data.link as string | undefined,
+  }
+}
+
+function renderBusinessName(data: BlockData): BlockData {
+  return {
+    text: String(data.text ?? ""),
+    link: data.link as string | undefined,
+  }
+}
+
+function renderSlogan(data: BlockData): BlockData {
+  return {
+    text: String(data.text ?? ""),
+  }
+}
+
+function renderNav(data: BlockData): BlockData {
+  return {
+    links: (data.links as Array<{ href: string; label: string }>) ?? [],
+    sticky: data.sticky as boolean | undefined,
+    variant: data.variant as string | undefined,
+  }
+}
+
+function renderSitemap(data: BlockData): BlockData {
+  return {
+    columns: (data.columns as Array<{ title: string; links: Array<{ href: string; label: string }> }>) ?? [],
+  }
+}
+
+function renderAnnouncement(data: BlockData): BlockData {
+  return {
+    text: String(data.text ?? ""),
+    link: data.link as string | undefined,
+    linkLabel: data.linkLabel as string | undefined,
+  }
+}
+
+function renderCopyright(data: BlockData): BlockData {
+  return {
+    text: data.text as string | undefined,
+    name: data.name as string | undefined,
+    year: data.year as number | undefined,
+  }
+}
+
+function renderPhone(data: BlockData): BlockData {
+  return {
+    number: String(data.number ?? ""),
+    display: data.display as string | undefined,
+    label: data.label as string | undefined,
+  }
+}
+
 const RENDERERS: Record<string, (data: BlockData) => BlockData> = {
   hero: renderHero,
   text: renderText,
@@ -191,6 +263,15 @@ const RENDERERS: Record<string, (data: BlockData) => BlockData> = {
   map: renderMap,
   team: renderTeam,
   reservation: renderReservation,
+  logo: renderLogo,
+  "business-name": renderBusinessName,
+  slogan: renderSlogan,
+  nav: renderNav,
+  sitemap: renderSitemap,
+  announcement: renderAnnouncement,
+  copyright: renderCopyright,
+  phone: renderPhone,
+  "page-layout": renderPageLayout,
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -306,10 +387,18 @@ const ARCHETYPE_BLOCKS: Record<string, string[]> = {
   LOCATIONS_PAGE: ["hours", "map", "text", "cta"],
   MINIMAL_HEADER: ["nav", "logo"],
   STANDARD_HEADER: ["announcement", "nav", "logo"],
-  BRANDED_HEADER: ["announcement", "nav", "logo", "cta"],
-  MINIMAL_FOOTER: ["hours", "social-icons"],
-  STANDARD_FOOTER: ["hours", "social-icons", "cta"],
-  SOCIAL_FOOTER: ["social-icons", "cta", "hours"],
+  BRANDED_HEADER: ["announcement", "nav", "logo", "cta", "slogan"],
+  MINIMAL_FOOTER: ["copyright", "social-icons"],
+  STANDARD_FOOTER: ["copyright", "social-icons", "phone", "sitemap"],
+  SOCIAL_FOOTER: ["social-icons", "sitemap", "copyright"],
+  HEADER_DEFAULT: ["logo", "business-name", "nav", "phone"],
+  FOOTER_DEFAULT: ["business-name", "slogan", "social-icons", "copyright", "sitemap"],
+  STANDARD_CONTAINER: ["page-layout"],
+  NARROW_PROSE: ["page-layout"],
+  WIDE_MARGIN: ["page-layout"],
+  COMPACT_MARGIN: ["page-layout"],
+  ASYMMETRIC: ["page-layout"],
+  SIDEBAR_RIGHT: ["page-layout"],
 }
 
 export function getArchetypeBlocks(archetype: string): string[] {

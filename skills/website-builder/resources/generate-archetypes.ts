@@ -45,10 +45,16 @@ const ARCHETYPE_BLOCKS: Record<string, string[]> = {
   LOCATIONS_PAGE: ["hours", "map", "text", "cta"],
   MINIMAL_HEADER: ["nav", "logo"],
   STANDARD_HEADER: ["announcement", "nav", "logo"],
-  BRANDED_HEADER: ["announcement", "nav", "logo", "cta"],
-  MINIMAL_FOOTER: ["hours", "social-icons"],
-  STANDARD_FOOTER: ["hours", "social-icons", "cta"],
-  SOCIAL_FOOTER: ["social-icons", "cta", "hours"],
+  BRANDED_HEADER: ["announcement", "nav", "logo", "phone", "slogan"],
+  MINIMAL_FOOTER: ["copyright", "social-icons"],
+  STANDARD_FOOTER: ["copyright", "social-icons", "phone", "sitemap"],
+  SOCIAL_FOOTER: ["social-icons", "sitemap", "copyright"],
+  STANDARD_CONTAINER: ["page-layout"],
+  NARROW_PROSE: ["page-layout"],
+  WIDE_MARGIN: ["page-layout"],
+  COMPACT_MARGIN: ["page-layout"],
+  ASYMMETRIC: ["page-layout"],
+  SIDEBAR_RIGHT: ["page-layout"],
 }
 
 function generate() {
@@ -146,6 +152,41 @@ function parseSelectionRules(md: string): Array<{ condition: string; archetype: 
       const archetype = cells[1]
       if (slug && archetype) {
         rules.push({ condition: cells[2], archetype, page: slug })
+      }
+    }
+  }
+
+  const layoutSection = md.match(/\*\*Layout selection:\*\*\n\n(\|.+\|\n(?:\|[-| ]+\|\n)?(?:\|.+\|\n)*)/)
+  if (layoutSection) {
+    const rows = layoutSection[1].split("\n").filter((r) => r.trim().startsWith("|"))
+    const pageToSlug: Record<string, string> = {
+      header: "header",
+      footer: "footer",
+    }
+    for (const row of rows) {
+      const cells = row.split("|").map((c) => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
+      if (cells.length < 3 || cells[0] === "Page" || cells[0] === "---") continue
+      const slug = pageToSlug[cells[0].toLowerCase()]
+      const archetype = cells[1]
+      if (slug && archetype) {
+        rules.push({ condition: cells[2], archetype, page: slug })
+      }
+    }
+  }
+
+  const pageLayoutSection = md.match(/\*\*Page layout selection:\*\*\n\n(\|.+\|\n(?:\|[-| ]+\|\n)?(?:\|.+\|\n)*)/)
+  if (pageLayoutSection) {
+    const rows = pageLayoutSection[1].split("\n").filter((r) => r.trim().startsWith("|"))
+    for (const row of rows) {
+      const cells = row.split("|").map((c) => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
+      if (cells.length < 2 || cells[0] === "Condition" || cells[0] === "Default fallback") continue
+      rules.push({ condition: cells[0], archetype: cells[1], page: "page-layout" })
+    }
+    const fallbackRow = rows.find((r) => r.includes("Default fallback"))
+    if (fallbackRow) {
+      const cells = fallbackRow.split("|").map((c) => c.trim()).filter((_, i, arr) => i > 0 && i < arr.length - 1)
+      if (cells.length >= 2) {
+        rules.push({ condition: "true", archetype: cells[1], page: "page-layout" })
       }
     }
   }

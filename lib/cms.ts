@@ -141,6 +141,48 @@ export function readCmsPageVariants(slug: string): CmsPageWithVariants | null {
   return (parsed.pages ?? []).find((p) => p.slug === slug) ?? null
 }
 
+export function resolvePageLayoutCssVars(page: CmsPageWithVariants | null, variantId: string = "A"): string {
+  if (!page || !page.variants || page.variants.length === 0) return ""
+  const variant = page.variants.find((v) => v.id === variantId) ?? page.variants[0]
+  const layoutBlock = variant.blocks.find((b) => b.type === "page-layout")
+  if (!layoutBlock) return ""
+
+  const data = layoutBlock.data as Record<string, unknown>
+  const maxWidth = data.maxWidth as string | undefined
+  const contentAlign = data.contentAlign as string | undefined
+  const sectionSpacing = data.sectionSpacing as string | undefined
+  const sidebarPosition = data.sidebarPosition as string | undefined
+
+  const maxWidthMap: Record<string, string> = {
+    narrow: "680px",
+    standard: "1140px",
+    wide: "1440px",
+    full: "100%",
+  }
+
+  const spacingMap: Record<string, string> = {
+    compact: "2rem",
+    standard: "4rem",
+    spacious: "8rem",
+  }
+
+  const parts: string[] = []
+  if (maxWidth && maxWidthMap[maxWidth]) {
+    parts.push(`--container-max:${maxWidthMap[maxWidth]}`)
+  }
+  if (contentAlign) {
+    parts.push(`--content-align:${contentAlign}`)
+  }
+  if (sectionSpacing && spacingMap[sectionSpacing]) {
+    parts.push(`--section-py:${spacingMap[sectionSpacing]}`)
+  }
+  if (sidebarPosition && sidebarPosition !== "none") {
+    parts.push(`--sidebar-position:${sidebarPosition}`)
+  }
+
+  return parts.join(";")
+}
+
 // ── Themes ────────────────────────────────────────────────────────────────────
 
 export interface ThemeConfig {

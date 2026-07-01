@@ -58,6 +58,24 @@ export function CmsBlockRenderer({ block }: { block: CmsBlock }) {
       return <CmsImageText data={data as CmsBlock["data"] & { items: Array<{ image?: string; heading: string; body: string; align?: "left" | "right" }> } } />
     case "comparison":
       return <CmsComparison data={data as CmsBlock["data"] & { title?: string; columns: Array<{ header: string; features: Array<{ name: string; included: boolean }> }>; ctaLabel?: string; ctaLink?: string } } />
+    case "logo":
+      return <CmsLogo data={data as CmsBlock["data"] & { image?: string; text?: string; link?: string }} />
+    case "business-name":
+      return <CmsBusinessName data={data as CmsBlock["data"] & { text: string; link?: string }} />
+    case "slogan":
+      return <CmsSlogan data={data as CmsBlock["data"] & { text: string }} />
+    case "nav":
+      return <CmsNav data={data as CmsBlock["data"] & { links: Array<{ href: string; label: string }>; sticky?: boolean; variant?: string }} />
+    case "sitemap":
+      return <CmsSitemap data={data as CmsBlock["data"] & { columns: Array<{ title: string; links: Array<{ href: string; label: string }> }> }} />
+    case "announcement":
+      return <CmsAnnouncement data={data as CmsBlock["data"] & { text: string; link?: string; linkLabel?: string }} />
+    case "copyright":
+      return <CmsCopyright data={data as CmsBlock["data"] & { text?: string; name?: string; year?: number }} />
+    case "phone":
+      return <CmsPhone data={data as CmsBlock["data"] & { number: string; display?: string; label?: string }} />
+    case "page-layout":
+      return null
     default:
       return null
   }
@@ -95,26 +113,38 @@ function CmsHero({ data }: { data: Record<string, unknown> }) {
   const ctaLink = String(data.ctaLink || "/menu")
   const image = data.image as string | undefined
   const hasImage = image && !image.includes("placeholder")
+  const variant = (data.variant as Record<string, unknown> | undefined)
+  const overlayOpacity = typeof variant?.overlayOpacity === "number" ? variant.overlayOpacity : 0.4
+  const textAlign = (variant?.textAlign as "left" | "center" | "right") || "center"
+  const headingSize = (variant?.headingSize as string) || "4xl"
+  const backgroundStyle = (variant?.backgroundStyle as string) || "gradient"
+  const paddingY = (variant?.paddingY as string) || "py-24 sm:py-32"
+
+  const alignClass = textAlign === "left" ? "text-left" : textAlign === "right" ? "text-right" : "text-center"
+  const mxClass = textAlign === "center" ? "mx-auto" : textAlign === "right" ? "ml-auto" : "mr-auto"
+  const sizeClass = headingClass(headingSize)
 
   return (
-    <section className={cn(sectionClass("relative overflow-hidden bg-stone-900"), "py-24 sm:py-32")}>
-      {hasImage ? (
+    <section className={cn(sectionClass("relative overflow-hidden bg-stone-900"), paddingY)}>
+      {backgroundStyle === "image" && hasImage ? (
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{ backgroundImage: `url('${image}')` }}
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url('${image}')`, opacity: overlayOpacity }}
         />
-      ) : (
+      ) : backgroundStyle === "gradient" ? (
         <div className="absolute inset-0 bg-gradient-to-b from-stone-900/70 to-stone-900" />
+      ) : (
+        <div className="absolute inset-0 bg-stone-900" />
       )}
-      <div className={cn(containerClass(), "relative text-center")}>
-        <h1 className={headingClass("4xl") + " text-white"}>
+      <div className={cn(containerClass(), "relative", alignClass)}>
+        <h1 className={cn(sizeClass, "text-white")}>
           {headline}
         </h1>
         {subheadline && (
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-stone-300">{subheadline}</p>
+          <p className={cn("mt-6 max-w-2xl text-lg text-stone-300", mxClass)}>{subheadline}</p>
         )}
         {ctaLabel && (
-          <div className="mt-8 flex items-center justify-center gap-4">
+          <div className={cn("mt-8 flex items-center gap-4", textAlign === "center" && "justify-center")}>
             <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline button-themed")}>
               {ctaLabel}
             </Link>
@@ -522,5 +552,121 @@ function CmsComparison({ data }: { data: Record<string, unknown> }) {
         )}
       </div>
     </section>
+  )
+}
+
+function CmsLogo({ data }: { data: Record<string, unknown> }) {
+  const image = data.image as string | undefined
+  const text = data.text as string | undefined
+  const link = data.link as string | undefined
+  const content = (
+    <div className="flex items-center gap-2">
+      {image && <img src={image} alt={text || "logo"} className="h-8 w-8 object-contain" />}
+      {text && <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>{text}</span>}
+    </div>
+  )
+  if (link) {
+    return <Link href={link} className="no-underline text-stone-900">{content}</Link>
+  }
+  return content
+}
+
+function CmsBusinessName({ data }: { data: Record<string, unknown> }) {
+  const text = String(data.text || "")
+  const link = data.link as string | undefined
+  if (link) {
+    return <Link href={link} className="no-underline text-lg font-semibold text-stone-900">{text}</Link>
+  }
+  return <span className="text-lg font-semibold text-stone-900">{text}</span>
+}
+
+function CmsSlogan({ data }: { data: Record<string, unknown> }) {
+  const text = String(data.text || "")
+  if (!text) return null
+  return <p className="text-sm text-stone-500 italic">{text}</p>
+}
+
+function CmsNav({ data }: { data: Record<string, unknown> }) {
+  const links = (data.links as Array<{ href: string; label: string }>) || []
+  const sticky = data.sticky as boolean | undefined
+  const variant = data.variant as string | undefined
+  const isHomeNav = variant === "home"
+  const filteredLinks = isHomeNav ? links.filter(l => l.href !== "/") : links
+  const stickyClass = sticky ? "sticky top-0 z-50" : "relative"
+  return (
+    <nav className={cn("flex items-center gap-6", stickyClass)}>
+      {filteredLinks.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className="text-sm font-medium text-stone-600 transition-colors hover:text-amber-700"
+          style={{ fontFamily: "var(--font-body)" }}
+        >
+          {link.label}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
+function CmsSitemap({ data }: { data: Record<string, unknown> }) {
+  const columns = (data.columns as Array<{ title: string; links: Array<{ href: string; label: string }> }>) || []
+  if (columns.length === 0) return null
+  return (
+    <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      {columns.map((col, i) => (
+        <div key={i}>
+          <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-stone-500">{col.title}</h4>
+          <ul className="space-y-2">
+            {col.links.map((link, j) => (
+              <li key={j}>
+                <Link href={link.href} className="text-sm text-stone-600 hover:text-amber-700">{link.label}</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function CmsAnnouncement({ data }: { data: Record<string, unknown> }) {
+  const text = String(data.text || "")
+  const link = data.link as string | undefined
+  const linkLabel = data.linkLabel as string | undefined
+  if (!text) return null
+  return (
+    <div className="bg-amber-700 text-white text-center py-2 px-4 text-sm">
+      {text}
+      {link && linkLabel && (
+        <Link href={link} className="ml-2 underline font-medium">{linkLabel}</Link>
+      )}
+    </div>
+  )
+}
+
+function CmsCopyright({ data }: { data: Record<string, unknown> }) {
+  const name = data.name as string | undefined
+  const year = data.year as number | undefined
+  const text = data.text as string | undefined
+  const displayYear = year ?? new Date().getFullYear()
+  const displayName = name || "Cafe Template"
+  return (
+    <p className="text-xs text-stone-400 text-center">
+      {text || `© ${displayYear} ${displayName}. Built with Next.js.`}
+    </p>
+  )
+}
+
+function CmsPhone({ data }: { data: Record<string, unknown> }) {
+  const number = String(data.number || "")
+  const display = (data.display as string | undefined) || number
+  const label = data.label as string | undefined
+  if (!number) return null
+  return (
+    <a href={`tel:${number}`} className="flex items-center gap-2 text-sm text-stone-600 hover:text-amber-700">
+      {label && <span className="font-medium">{label}:</span>}
+      <span>{display}</span>
+    </a>
   )
 }

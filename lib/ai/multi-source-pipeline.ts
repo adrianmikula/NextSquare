@@ -3,7 +3,7 @@ import path from "path"
 import { z } from "zod"
 import type { ArchetypeCatalog, LayoutVariant } from "@/lib/schemas"
 import { PageBundleSchema } from "@/lib/schemas"
-import { renderBundle, type RenderPageConfig, type RenderedPage } from "@/lib/renderer"
+import { renderBundle, type BlockData, type RenderPageConfig, type RenderedPage, getArchetypeBlocks } from "@/lib/renderer"
 import type { ArchetypeSelectorInput } from "./archetype-selector"
 import { resolveLayout } from "./archetype-selector"
 
@@ -63,28 +63,17 @@ export type PipelineResult = {
   skippedPages: string[]
 }
 
-function makeVariantField(value: string, _profile: BusinessProfile): string | { a: string; b: string } {
-  const short = value.length > 50 ? value.slice(0, 47) + "..." : value
-  return { a: value, b: short }
+function makeVariantField(valueA: string, valueB: string): { a: string; b: string } {
+  return { a: valueA, b: valueB }
 }
 
 const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<string, unknown>> = {
-  hero: (profile) => ({
-    headline: makeVariantField(profile.name, profile),
-    subheadline: makeVariantField(profile.tagline, profile),
-    image: profile.media.hero,
-    ctaLabel: makeVariantField("View Menu", profile),
-    ctaLink: "/menu",
-  }),
-
-  text: (profile) => ({
-    heading: makeVariantField("Welcome", profile),
-    body: makeVariantField(profile.description, profile),
-  }),
-
   gallery: (profile) => ({
     images: profile.media.gallery,
-    caption: makeVariantField(profile.vibe.adjectives.join(" ") || "Our gallery", profile),
+    caption: makeVariantField(
+      profile.vibe.adjectives.join(" ") || "Our gallery",
+      "See inside ${profile.name}"
+    ).replace("${profile.name}", profile.name),
   }),
 
   products: (profile) => {
@@ -94,11 +83,11 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
       price: item.priceHint,
       image: undefined,
     }))
-    return { title: makeVariantField("Popular Right Now", profile), items }
+    return { title: makeVariantField("Popular Right Now", "What We're Serving"), items }
   },
 
   services: (profile) => ({
-    title: makeVariantField("Our Services", profile),
+    title: makeVariantField("Our Services", "What We Offer"),
     items: (profile.services ?? []).slice(0, 4).map((s) => ({
       name: s.name,
       description: s.description,
@@ -110,15 +99,15 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
   testimonials: (profile) => ({
     items: profile.testimonials.slice(0, 3).map((t) => ({
       author: t.author,
-      text: makeVariantField(t.text, profile),
+      text: makeVariantField(t.text, `"${t.text.slice(0, 60)}${t.text.length > 60 ? '...' : ''}"`),
       source: t.source,
     })),
   }),
 
   cta: (profile) => ({
-    heading: makeVariantField(`Visit ${profile.name}`, profile),
-    subtext: makeVariantField(profile.tagline, profile),
-    buttonLabel: makeVariantField("Get in Touch", profile),
+    heading: makeVariantField(`Visit ${profile.name}`, `Ready to experience ${profile.name}?`),
+    subtext: makeVariantField(profile.tagline, "Walk in, order online, or give us a call."),
+    buttonLabel: makeVariantField("Get in Touch", "Order Now"),
     buttonLink: "/contact",
   }),
 
@@ -131,7 +120,7 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
   }),
 
   form: (profile) => ({
-    title: makeVariantField("Contact Us", profile),
+    title: makeVariantField("Contact Us", "Get in Touch"),
     fields: [
       { name: "name", type: "text", label: "Name", required: true },
       { name: "email", type: "email", label: "Email", required: true },
@@ -140,16 +129,16 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
   }),
 
   promo: (profile) => ({
-    heading: makeVariantField("Special Offer", profile),
-    body: makeVariantField(profile.description, profile),
-    ctaLabel: makeVariantField("Learn More", profile),
+    heading: makeVariantField("Special Offer", "Today's Special"),
+    body: makeVariantField(profile.description, "Don't miss out on our latest offerings."),
+    ctaLabel: makeVariantField("Learn More", "See Details"),
     ctaLink: "/menu",
     image: undefined,
   }),
 
   delivery: (profile) => ({
-    heading: makeVariantField("Order Delivery", profile),
-    body: makeVariantField("Get it delivered to your door", profile),
+    heading: makeVariantField("Order Delivery", "Get It Delivered"),
+    body: makeVariantField("Get it delivered to your door", "Fresh food, straight to your door."),
     platforms: [
       ...(profile.deliveryUrls?.uberEats
         ? [{ name: "Uber Eats", url: profile.deliveryUrls.uberEats, label: "Uber Eats" }]
@@ -162,7 +151,10 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
 
   slideshow: (profile) => ({
     images: profile.media.gallery,
-    caption: makeVariantField(profile.vibe.adjectives.join(" ") || "Our gallery", profile),
+    caption: makeVariantField(
+      profile.vibe.adjectives.join(" ") || "Our gallery",
+      "Moments from ${profile.name}"
+    ).replace("${profile.name}", profile.name),
   }),
 
   "social-icons": (profile) => ({
@@ -182,9 +174,14 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
   callout: (profile) => {
     const featured = profile.testimonials[0]
     return {
-      quote: makeVariantField(featured?.text || profile.description || "Come visit us for a great experience.", profile),
+      quote: makeVariantField(
+        featured?.text || profile.description || "Come visit us for a great experience.",
+        featured?.text
+          ? `"${featured.text.slice(0, 100)}${featured.text.length > 100 ? '...' : ''}"`
+          : "Come visit us for a great experience."
+      ),
       author: featured?.author,
-      role: makeVariantField(featured?.source || "Customer", profile),
+      role: makeVariantField(featured?.source || "Customer", "Verified customer"),
     }
   },
 
@@ -194,16 +191,16 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
     items: [
       {
         image: profile.media.hero,
-        heading: makeVariantField("Our Story", profile),
-        body: makeVariantField(profile.description, profile),
+        heading: makeVariantField("Our Story", "Fresh from the start"),
+        body: makeVariantField(profile.description, "Every dish tells a story of quality and care."),
         align: "left",
       },
       ...(profile.story
         ? [
             {
               image: profile.media.gallery?.[1],
-              heading: makeVariantField("What Makes Us Different", profile),
-              body: makeVariantField(profile.story, profile),
+              heading: makeVariantField("What Makes Us Different", "More Than Just a Cafe"),
+              body: makeVariantField(profile.story, "We source locally, bake fresh, and treat every customer like family."),
               align: "right",
             },
           ]
@@ -212,10 +209,10 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
   }),
 
   comparison: (profile) => ({
-    title: makeVariantField("Why Choose Us", profile),
+    title: makeVariantField("Why Choose Us", "How We Stack Up"),
     columns: [
       {
-        header: makeVariantField("Us", profile),
+        header: makeVariantField("Us", "${profile.name}").replace("${profile.name}", profile.name),
         features: [
           { name: "Fresh ingredients", included: true },
           { name: "Locally roasted coffee", included: true },
@@ -224,7 +221,7 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
         ],
       },
       {
-        header: makeVariantField("Others", profile),
+        header: makeVariantField("Others", "Alternatives"),
         features: [
           { name: "Fresh ingredients", included: false },
           { name: "Locally roasted coffee", included: false },
@@ -233,7 +230,7 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
         ],
       },
     ],
-    ctaLabel: makeVariantField("Visit Us", profile),
+    ctaLabel: makeVariantField("Visit Us", "Come See for Yourself"),
     ctaLink: "/contact",
   }),
 
@@ -245,7 +242,7 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
   }),
 
   team: (profile) => ({
-    title: makeVariantField("Our Team", profile),
+    title: makeVariantField("Our Team", "Meet the Crew"),
     items: (profile.services ?? []).slice(0, 4).map((s) => ({
       name: s.name,
       role: s.name,
@@ -255,7 +252,7 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
   }),
 
   reservation: (profile) => ({
-    title: makeVariantField("Make a Reservation", profile),
+    title: makeVariantField("Make a Reservation", "Book a Table"),
     fields: [
       { name: "name", type: "text", label: "Name", required: true },
       { name: "date", type: "date", label: "Date", required: true },
@@ -266,6 +263,123 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
     ],
     prefillName: undefined,
     prefillPhone: profile.phone ? profile.phone : undefined,
+  }),
+
+  logo: (profile) => ({
+    image: profile.media.logo,
+    text: profile.name,
+    link: "/",
+  }),
+
+  "business-name": (profile) => ({
+    text: profile.name,
+    link: "/",
+  }),
+
+  slogan: (profile) => ({
+    text: makeVariantField(profile.tagline || "", "Fresh coffee, great food, good vibes."),
+  }),
+
+  nav: (_profile) => ({
+    links: [
+      { href: "/", label: "Home" },
+      { href: "/menu", label: "Menu" },
+      { href: "/about", label: "About" },
+      { href: "/contact", label: "Contact" },
+    ],
+    sticky: false,
+    variant: "home",
+  }),
+
+  sitemap: (_profile) => ({
+    columns: [
+      {
+        title: "Explore",
+        links: [
+          { href: "/", label: "Home" },
+          { href: "/menu", label: "Menu" },
+          { href: "/about", label: "About" },
+        ],
+      },
+      {
+        title: "Connect",
+        links: [
+          { href: "/contact", label: "Contact" },
+          { href: "/cart", label: "Cart" },
+        ],
+      },
+    ],
+  }),
+
+  announcement: (_profile) => ({
+    text: "Welcome! Order online for pickup or delivery.",
+    link: "/menu",
+    linkLabel: "Order Now",
+  }),
+
+  copyright: (profile) => ({
+    text: `© ${new Date().getFullYear()} ${profile.name}. All rights reserved.`,
+    name: profile.name,
+    year: new Date().getFullYear(),
+  }),
+
+  phone: (profile) => ({
+    number: profile.phone,
+    display: profile.phone,
+    label: "Call us",
+  }),
+
+  hero: (profile) => {
+    const base = {
+      headline: makeVariantField(profile.name, profile.name),
+      subheadline: makeVariantField(profile.tagline, `Discover ${profile.name} — great food, great coffee, great vibes.`),
+      image: profile.media.hero,
+      ctaLabel: makeVariantField("View Menu", "Order Online"),
+      ctaLink: "/menu",
+    }
+    if (profile.media.hero) {
+      return {
+        ...base,
+        variant: {
+          backgroundStyle: "image",
+          overlayOpacity: 0.4,
+          textAlign: "center",
+          headingSize: "4xl",
+        },
+      }
+    }
+    return base
+  },
+
+  text: (profile) => ({
+    heading: makeVariantField("Welcome", "Our Story"),
+    body: makeVariantField(profile.description, `At ${profile.name}, we believe in fresh, local ingredients and a warm atmosphere. Come for the coffee, stay for the community.`),
+  }),
+
+  "business-name": (profile) => ({
+    text: profile.name,
+    link: "/",
+  }),
+
+  "social-icons": (profile) => ({
+    platforms: [
+      ...(profile.social?.instagram
+        ? [{ name: "Instagram", url: `https://instagram.com/${profile.social.instagram}`, icon: "📷" }]
+        : []),
+      ...(profile.deliveryUrls?.uberEats
+        ? [{ name: "Uber Eats", url: profile.deliveryUrls.uberEats, icon: "🛵" }]
+        : []),
+      ...(profile.deliveryUrls?.doorDash
+        ? [{ name: "DoorDash", url: profile.deliveryUrls.doorDash, icon: "🛵" }]
+        : []),
+    ],
+  }),
+
+  "page-layout": () => ({
+    maxWidth: "standard",
+    contentAlign: "center",
+    sectionSpacing: "standard",
+    sidebarPosition: "none",
   }),
 }
 
@@ -333,7 +447,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     }
 
     const archetypeName = pageLayout.archetype
-    const blocks = archetypeCatalog.archetypes[archetypeName]?.blocks ?? []
+    const blocks = archetypeCatalog.archetypes[archetypeName]?.blocks ?? getArchetypeBlocks(archetypeName)
     const dataMap = buildDataMap(blocks, input.businessProfile)
 
     const variants: LayoutVariant[] = pageLayout.variants ?? [
@@ -405,6 +519,9 @@ function getDefaultPages(): PipelinePageConfig[] {
     { slug: "menu", label: "Menu" },
     { slug: "about", label: "About" },
     { slug: "contact", label: "Contact" },
+    { slug: "header", label: "Header" },
+    { slug: "footer", label: "Footer" },
+    { slug: "page-layout", label: "Page Layout" },
   ]
 }
 
@@ -423,6 +540,9 @@ function buildDefaultCondition(page: string): string {
     team: "features contains team OR features contains staff",
     reservations: "features contains reservations OR type in {restaurant, cafe, hotel}",
     locations: "features contains multi-location OR locations.length > 1",
+    header: "true",
+    footer: "true",
+    "page-layout": "true",
   }
   return defaults[page] ?? "true"
 }
@@ -442,6 +562,9 @@ function guessArchetype(page: string): string {
     team: "TEAM_PAGE",
     reservations: "RESERVATIONS_PAGE",
     locations: "LOCATIONS_PAGE",
+    header: "STANDARD_HEADER",
+    footer: "STANDARD_FOOTER",
+    "page-layout": "STANDARD_CONTAINER",
   }
   return defaults[page] ?? "DEFAULT_HOME"
 }

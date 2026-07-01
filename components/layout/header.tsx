@@ -4,18 +4,25 @@ import { CartButton } from "@/components/cart/CartButton"
 import { MobileMenuClient } from "./mobile-menu"
 import { Suspense } from "react"
 import type { SiteProfile } from "@/lib/cms"
+import type { CmsBlock } from "@/lib/cms"
+import { CmsBlockRenderer } from "@/components/cms/CmsRenderer"
 
 const FALLBACK_NAME = "Cafe Template"
 
-const navLinks = [
+const DEFAULT_LINKS = [
   { href: "/", label: "Home" },
   { href: "/menu", label: "Menu" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ]
 
-export function Header({ siteProfile }: { siteProfile?: SiteProfile | null }) {
+export function Header({ siteProfile, blocks }: { siteProfile?: SiteProfile | null; blocks?: CmsBlock[] }) {
   const name = siteProfile?.siteName || FALLBACK_NAME
+  const hasBlocks = blocks && blocks.length > 0
+
+  const renderBlock = (block: CmsBlock, idx: number) => (
+    <CmsBlockRenderer key={`${block.type}-${idx}`} block={block} />
+  )
 
   return (
     <header
@@ -37,32 +44,38 @@ export function Header({ siteProfile }: { siteProfile?: SiteProfile | null }) {
           height: "100%",
         }}
       >
-        <Link
-          href="/"
-          className="text-xl font-bold tracking-tight text-stone-900"
-          style={{ fontFamily: "var(--font-heading)" }}
-        >
-          <span className="text-amber-600">☕</span> {name}
-        </Link>
-
-        <nav className="hidden items-center gap-6 md:flex">
-          {navLinks.map((link) => (
+        {hasBlocks ? (
+          blocks!.map(renderBlock)
+        ) : (
+          <>
             <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-stone-600 transition-colors hover:text-amber-700"
-              style={{ fontFamily: "var(--font-body)" }}
+              href="/"
+              className="text-xl font-bold tracking-tight text-stone-900"
+              style={{ fontFamily: "var(--font-heading)" }}
             >
-              {link.label}
+              <span className="text-amber-600">☕</span> {name}
             </Link>
-          ))}
-          <CartButton />
-          <OrderButton />
-        </nav>
 
-        <Suspense fallback={<div className="flex items-center md:hidden"><CartButton /></div>}>
-          <MobileMenuClient />
-        </Suspense>
+            <nav className="hidden items-center gap-6 md:flex">
+              {DEFAULT_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-medium text-stone-600 transition-colors hover:text-amber-700"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <CartButton />
+              <OrderButton />
+            </nav>
+
+            <Suspense fallback={<div className="flex items-center md:hidden"><CartButton /></div>}>
+              <MobileMenuClient />
+            </Suspense>
+          </>
+        )}
       </div>
     </header>
   )
