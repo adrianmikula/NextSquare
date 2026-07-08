@@ -16,7 +16,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
-      - uses: actions/setup-node@f4a67bbeca970f103397d3d2b9462cf787cd2980
+      - uses: actions/setup-node@6a61c0375d66246de94630495909f12cf8dac84d
         with:
           node-version: 20
           cache: npm
@@ -29,7 +29,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
-      - uses: actions/setup-node@f4a67bbeca970f103397d3d2b9462cf787cd2980
+      - uses: actions/setup-node@6a61c0375d66246de94630495909f12cf8dac84d
         with:
           node-version: 20
           cache: npm
@@ -42,7 +42,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
-      - uses: actions/setup-node@f4a67bbeca970f103397d3d2b9462cf787cd2980
+      - uses: actions/setup-node@6a61c0375d66246de94630495909f12cf8dac84d
         with:
           node-version: 20
           cache: npm
@@ -55,7 +55,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
-      - uses: actions/setup-node@f4a67bbeca970f103397d3d2b9462cf787cd2980
+      - uses: actions/setup-node@6a61c0375d66246de94630495909f12cf8dac84d
         with:
           node-version: 20
           cache: npm
@@ -69,7 +69,7 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
-      - uses: actions/setup-node@f4a67bbeca970f103397d3d2b9462cf787cd2980
+      - uses: actions/setup-node@6a61c0375d66246de94630495909f12cf8dac84d
         with:
           node-version: 20
           cache: npm
