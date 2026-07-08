@@ -77,7 +77,7 @@ jobs:
       - uses: github/codeql-action/init@f3f1edbedfb4a1d188d344570834df2996d45d39
         with:
           languages: javascript-typescript
-      - uses: github/codeql-action/analyze@f3f1edbedfb4a1d188d344570834df2996d45d39
+      - uses: github/codeql-action/analyze@9cea5827c668a1fe7165dbce6e80c3f9cf3f83ac
 
   secrets-scan:
     runs-on: ubuntu-latest
