@@ -12,7 +12,7 @@ async function callPost(body: any) {
     json: () => Promise.resolve(body),
     headers: { get: () => null },
   }
-  return POST(request)
+  return POST(request as any)
 }
 
 beforeEach(() => {

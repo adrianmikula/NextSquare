@@ -41,7 +41,7 @@ beforeEach(() => {
 
 describe("GET /api/admin/catalog", () => {
   it("returns 401 when not authenticated", async () => {
-    vi.mocked(getSession).mockResolvedValue(null)
+    vi.mocked(getSession).mockResolvedValue(undefined)
     const response = await callGet("http://localhost/api/admin/catalog")
     expect(response.status).toBe(401)
   })

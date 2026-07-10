@@ -1,28 +1,38 @@
 "use client"
 
-import { useEffect } from "react"
-import type { ThemeConfig } from "@/lib/cms"
-
-const MOTION_SPEED: Record<string, string> = {
-  fast: "150ms",
-  normal: "300ms",
-  slow: "500ms",
-}
+import { useEffect, useMemo } from "react"
+import type { DimensionName, DimensionSpec } from "@/lib/dimensions/client"
+import { compileSpecsToCssVars } from "@/lib/dimensions/client"
 
 export function ThemeProvider({
   cssVars,
+  dimensionSpecs,
   children,
 }: {
   cssVars?: Record<string, string>
+  dimensionSpecs?: Record<DimensionName, DimensionSpec | null>
   children: React.ReactNode
 }) {
+  const compiled = useMemo(() => {
+    if (dimensionSpecs) return compileSpecsToCssVars(dimensionSpecs)
+    return cssVars ?? null
+  }, [dimensionSpecs, cssVars])
+
   useEffect(() => {
-    if (!cssVars) return
+    if (!compiled) return
     const root = document.documentElement
-    Object.entries(cssVars).forEach(([key, value]) => {
+    const entries = Object.entries(compiled)
+
+    entries.forEach(([key, value]) => {
       root.style.setProperty(key, value)
     })
-  }, [cssVars])
+
+    return () => {
+      entries.forEach(([key]) => {
+        root.style.removeProperty(key)
+      })
+    }
+  }, [compiled])
 
   return <>{children}</>
 }

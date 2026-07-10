@@ -57,7 +57,7 @@ const ARCHETYPE_BLOCKS: Record<string, string[]> = {
   SIDEBAR_RIGHT: ["page-layout"],
 }
 
-function generate() {
+export function generateArchetypes() {
   const md = fs.readFileSync(ARCHETYPES_MD, "utf-8")
 
   const vocab: Record<string, { description: string; fields: string[] }> = {}
@@ -194,4 +194,4 @@ function parseSelectionRules(md: string): Array<{ condition: string; archetype: 
   return rules
 }
 
-generate()
+generateArchetypes()

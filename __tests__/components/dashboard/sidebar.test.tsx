@@ -62,6 +62,7 @@ describe("Sidebar", () => {
     })
     expect(window.location.href).toBe("/login")
 
+    // @ts-expect-error mock
     window.location = originalLocation
   })
 })

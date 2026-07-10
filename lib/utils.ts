@@ -23,6 +23,19 @@ export function formatPhone(phone: string): string {
   return phone
 }
 
+export function safeSearchParams(
+  sp: Record<string, string | string[] | undefined | null> | null | undefined
+): URLSearchParams {
+  if (!sp) return new URLSearchParams()
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(sp)) {
+    if (value != null) {
+      params.set(key, Array.isArray(value) ? value[0] : value)
+    }
+  }
+  return params
+}
+
 export function toPrice(
   money: { amount: bigint; currency: string } | undefined,
   fallbackCurrency = "AUD"

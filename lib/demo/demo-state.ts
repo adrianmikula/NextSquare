@@ -1,8 +1,9 @@
 import { z } from "zod"
 import type { CmsBlock, CmsPage } from "@/lib/cms"
+import type { DimensionState } from "@/lib/dimensions"
 
 export const DemoStateSchema = z.object({
-  theme: z.enum(["A", "B"]).optional(),
+  theme: z.enum(["A", "B", "C"]).optional(),
   layout: z.enum(["A", "B"]).optional(),
   text: z.enum(["A", "B"]).optional(),
 })
@@ -63,7 +64,10 @@ export function resolveBlockDataForB(block: CmsBlock): CmsBlock {
   return { ...block, data: resolvedData }
 }
 
-export function resolvePageBlocks(page: CmsPage & { variants?: Array<{ id: string; blocks: CmsBlock[] }> }, layoutVariant: Axis): CmsBlock[] {
+export function resolvePageBlocks(
+  page: CmsPage & { variants?: Array<{ id: string; blocks: CmsBlock[] }> },
+  layoutVariant: Axis
+): CmsBlock[] {
   if (!page.variants || page.variants.length === 0) return page.blocks
   const variant = layoutVariant
     ? page.variants.find((v) => v.id === layoutVariant) ?? page.variants[0]
@@ -71,7 +75,22 @@ export function resolvePageBlocks(page: CmsPage & { variants?: Array<{ id: strin
   return variant.blocks
 }
 
-function isVariantField(value: unknown): boolean {
+export function isVariantField(value: unknown): boolean {
   if (typeof value !== "object" || value === null) return false
   return "a" in (value as Record<string, unknown>) && "b" in (value as Record<string, unknown>)
+}
+
+export function dimensionStateToDemoState(dimState: DimensionState): DemoState {
+  return {
+    layout: dimState.spatial === "B" ? ("B" as const) : ("A" as const),
+    text: dimState.wording === "B" ? ("B" as const) : ("A" as const),
+  }
+}
+
+export function applyDimensionOverridesToVariant(
+  block: CmsBlock,
+  dimState: DimensionState
+): CmsBlock {
+  const textVariant = (dimState.wording === "B" ? "B" : "A") as Axis
+  return resolveBlockData(block, textVariant)
 }

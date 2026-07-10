@@ -12,9 +12,10 @@ describe("robots", () => {
   it("allows all user agents with correct disallow", async () => {
     const robots = (await import("@/app/robots")).default
     const result = robots()
-    expect(result.rules.userAgent).toBe("*")
-    expect(result.rules.allow).toBe("/")
-    expect(result.rules.disallow).toBe("/outstatic/")
+    const rules = result.rules as { userAgent: string; allow: string; disallow: string }
+    expect(rules.userAgent).toBe("*")
+    expect(rules.allow).toBe("/")
+    expect(rules.disallow).toBe("/outstatic/")
   })
 
   it("generates correct sitemap URL", async () => {

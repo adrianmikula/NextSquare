@@ -7,8 +7,9 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }))
 
+let mockAddToast = vi.fn()
 vi.mock("@/hooks/useToast", () => ({
-  useToastContext: () => ({ addToast: vi.fn() }),
+  useToastContext: () => ({ addToast: mockAddToast, toasts: [], removeToast: vi.fn() }),
 }))
 
 const mockItems = [
@@ -124,8 +125,7 @@ describe("CheckoutPage", () => {
   })
 
   it("validates customer name and phone before submitting", async () => {
-    const mockAddToast = vi.fn()
-    vi.mocked(await import("@/hooks/useToast")).useToastContext = () => ({ addToast: mockAddToast })
+    mockAddToast = vi.fn()
 
     await renderCheckout()
     await userEvent.click(screen.getByText("Pay"))
@@ -133,8 +133,7 @@ describe("CheckoutPage", () => {
   })
 
   it("processes successful checkout flow", async () => {
-    const mockAddToast = vi.fn()
-    vi.mocked(await import("@/hooks/useToast")).useToastContext = () => ({ addToast: mockAddToast })
+    mockAddToast = vi.fn()
 
     ;(global.fetch as any).mockResolvedValueOnce({
       ok: true,
@@ -165,8 +164,7 @@ describe("CheckoutPage", () => {
   })
 
   it("handles payment failure gracefully", async () => {
-    const mockAddToast = vi.fn()
-    vi.mocked(await import("@/hooks/useToast")).useToastContext = () => ({ addToast: mockAddToast })
+    mockAddToast = vi.fn()
 
     ;(global.fetch as any).mockResolvedValueOnce({
       ok: true,
@@ -191,8 +189,7 @@ describe("CheckoutPage", () => {
   })
 
   it("continues even if loyalty enrollment fails", async () => {
-    const mockAddToast = vi.fn()
-    vi.mocked(await import("@/hooks/useToast")).useToastContext = () => ({ addToast: mockAddToast })
+    mockAddToast = vi.fn()
 
     ;(global.fetch as any).mockResolvedValueOnce({
       ok: true,

@@ -59,7 +59,7 @@ beforeEach(() => {
 
 describe("PATCH /api/admin/catalog/[id]", () => {
   it("returns 401 when not authenticated", async () => {
-    vi.mocked(getSession).mockResolvedValue(null)
+    vi.mocked(getSession).mockResolvedValue(undefined)
     const response = await callPatch("item-1", { name: "New Name" })
     expect(response.status).toBe(401)
   })

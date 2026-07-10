@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
-import { NextResponse } from "next/server"
+import { NextResponse, NextRequest } from "next/server"
 
 const mockDecrypt = vi.fn()
 

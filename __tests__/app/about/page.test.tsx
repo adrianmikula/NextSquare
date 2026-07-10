@@ -1,5 +1,23 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { render, screen } from "@testing-library/react"
+
+vi.mock("@/lib/cms", () => ({
+  readCmsPages: () => [
+    {
+      slug: "about",
+      label: "About Us",
+      blocks: [
+        { type: "hero", data: { headline: "Welcome", subheadline: "Aydin's Cafe in Joondalup", ctaLabel: "Visit Aydin's Cafe", ctaLink: "/contact" } },
+        { type: "text", data: { heading: "Our Story", body: "Serving the community since 2020." } },
+        { type: "hours", data: { schedule: [{ day: "Monday", open: "7:00", close: "15:00" }] } },
+        { type: "testimonials", data: { items: [{ author: "Happy Customer", text: "Very tasty coffee!" }] } },
+        { type: "callout", data: { quote: "Very tasty food and great service!" } },
+        { type: "cta", data: { heading: "Visit Aydin's Cafe", subtext: "Come and try our menu", buttonLabel: "Visit Aydin's Cafe", buttonLink: "/contact" } },
+      ],
+    },
+  ],
+}))
+
 import AboutPage from "@/app/about/page"
 
 describe("AboutPage", () => {
@@ -32,6 +50,7 @@ describe("AboutPage", () => {
 
   it("renders CTA section", () => {
     render(<AboutPage />)
-    expect(screen.getByText("Visit Aydin's Cafe")).toBeInTheDocument()
+    const ctas = screen.getAllByText("Visit Aydin's Cafe")
+    expect(ctas.length).toBeGreaterThanOrEqual(1)
   })
 })

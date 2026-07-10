@@ -8,10 +8,13 @@ import { ToastProvider } from "@/components/ui/ToastProvider"
 import { DemoBadge } from "@/components/demo/DemoBadge"
 import { DemoModePopup } from "@/components/demo/DemoModePopup"
 import { ClientThemeSync } from "@/components/demo/ClientThemeSync"
+import { ThemeProvider } from "@/components/cms/ThemeProvider"
 import { ToastContainer } from "@/components/ui/toast"
 import { requireEnv } from "@/lib/env"
 import { readSiteProfile, readCmsPageVariants } from "@/lib/cms"
-import { parseDemoState, resolvePageBlocks } from "@/lib/demo/demo-state"
+import { parseDemoState, resolvePageBlocks, dimensionStateToDemoState } from "@/lib/demo/demo-state"
+import { parseDimensionState, resolveDimensionSpecs, compileSpecsToCssVars, getAllBundleConfigs, loadAllSpecData } from "@/lib/dimensions"
+import { safeSearchParams } from "@/lib/utils"
 import type { CmsBlock } from "@/lib/cms"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -46,28 +49,46 @@ export default async function RootLayout({
   const siteProfile = readSiteProfile()
   const headerPage = readCmsPageVariants("header")
   const footerPage = readCmsPageVariants("footer")
-  const layoutPage = readCmsPageVariants("page-layout")
 
   const sp = await searchParams
-  const state = parseDemoState(new URLSearchParams(
-    Object.entries(sp).filter(([, v]) => v != null).map(([k, v]) => `${k}=${Array.isArray(v) ? v[0] : v}`).join("&")
-  ))
+  const searchQuery = safeSearchParams(sp)
 
-  const headerBlocks: CmsBlock[] = headerPage ? resolvePageBlocks(headerPage, state.layout) : []
-  const footerBlocks: CmsBlock[] = footerPage ? resolvePageBlocks(footerPage, state.layout) : []
+  const state = parseDemoState(searchQuery)
+  const dimState = parseDimensionState(searchQuery)
+  const legacyState = dimensionStateToDemoState(dimState)
+  const layoutVariant = state.layout ?? legacyState.layout ?? "A"
+
+  const headerBlocks: CmsBlock[] = headerPage ? resolvePageBlocks(headerPage, layoutVariant) : []
+  const footerBlocks: CmsBlock[] = footerPage ? resolvePageBlocks(footerPage, layoutVariant) : []
+
+  const dimSpecs = resolveDimensionSpecs(dimState)
+  const cssVars = compileSpecsToCssVars(dimSpecs)
+  const cssVarsStyle = Object.entries(cssVars)
+    .map(([k, v]) => `${k}:${v}`)
+    .join(";")
+
+  const bundles = getAllBundleConfigs()
+  const allSpecData = loadAllSpecData()
 
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ToastProvider>
-          <Header siteProfile={siteProfile} blocks={headerBlocks} />
-          <main className="flex-1">{children}</main>
-          <Footer siteProfile={siteProfile} blocks={footerBlocks} />
-        </ToastProvider>
+        <ThemeProvider cssVars={cssVars}>
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `:root{${cssVarsStyle}}`,
+            }}
+          />
+          <ToastProvider>
+            <Header siteProfile={siteProfile} blocks={headerBlocks} />
+            <main className="flex-1">{children}</main>
+            <Footer siteProfile={siteProfile} blocks={footerBlocks} />
+          </ToastProvider>
+        </ThemeProvider>
         <ToastContainer />
         <DemoBadge />
-        <ClientThemeSync />
-        <DemoModePopup />
+        <ClientThemeSync bundles={bundles} specData={allSpecData} />
+        <DemoModePopup bundles={bundles} />
         <CartDrawer />
       </body>
     </html>

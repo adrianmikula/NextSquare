@@ -72,8 +72,8 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
     images: profile.media.gallery,
     caption: makeVariantField(
       profile.vibe.adjectives.join(" ") || "Our gallery",
-      "See inside ${profile.name}"
-    ).replace("${profile.name}", profile.name),
+      "See inside ${profile.name}".replace("${profile.name}", profile.name)
+    ),
   }),
 
   products: (profile) => {
@@ -153,8 +153,8 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
     images: profile.media.gallery,
     caption: makeVariantField(
       profile.vibe.adjectives.join(" ") || "Our gallery",
-      "Moments from ${profile.name}"
-    ).replace("${profile.name}", profile.name),
+      "Moments from ${profile.name}".replace("${profile.name}", profile.name)
+    ),
   }),
 
   "social-icons": (profile) => ({
@@ -212,7 +212,7 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
     title: makeVariantField("Why Choose Us", "How We Stack Up"),
     columns: [
       {
-        header: makeVariantField("Us", "${profile.name}").replace("${profile.name}", profile.name),
+        header: makeVariantField("Us", "${profile.name}".replace("${profile.name}", profile.name)),
         features: [
           { name: "Fresh ingredients", included: true },
           { name: "Locally roasted coffee", included: true },
@@ -354,25 +354,6 @@ const BLOCK_DATA_BUILDERS: Record<string, (profile: BusinessProfile) => Record<s
   text: (profile) => ({
     heading: makeVariantField("Welcome", "Our Story"),
     body: makeVariantField(profile.description, `At ${profile.name}, we believe in fresh, local ingredients and a warm atmosphere. Come for the coffee, stay for the community.`),
-  }),
-
-  "business-name": (profile) => ({
-    text: profile.name,
-    link: "/",
-  }),
-
-  "social-icons": (profile) => ({
-    platforms: [
-      ...(profile.social?.instagram
-        ? [{ name: "Instagram", url: `https://instagram.com/${profile.social.instagram}`, icon: "📷" }]
-        : []),
-      ...(profile.deliveryUrls?.uberEats
-        ? [{ name: "Uber Eats", url: profile.deliveryUrls.uberEats, icon: "🛵" }]
-        : []),
-      ...(profile.deliveryUrls?.doorDash
-        ? [{ name: "DoorDash", url: profile.deliveryUrls.doorDash, icon: "🛵" }]
-        : []),
-    ],
   }),
 
   "page-layout": () => ({

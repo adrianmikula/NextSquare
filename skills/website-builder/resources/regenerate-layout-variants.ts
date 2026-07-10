@@ -49,7 +49,6 @@ function main() {
     page.variants = [
       {
         id: "A",
-        reasoning: "STANDARD_HEADER with announcement bar and sticky nav for maximum conversion visibility.",
         order: ["announcement", "nav", "logo"],
         blocks: [
           {
@@ -84,7 +83,6 @@ function main() {
       },
       {
         id: "B",
-        reasoning: "MINIMAL_HEADER without announcement bar for cleaner brand-first presentation and more hero space.",
         order: ["logo", "nav"],
         blocks: [
           {
@@ -119,7 +117,6 @@ function main() {
     page.variants = [
       {
         id: "A",
-        reasoning: "STANDARD_FOOTER with full sitemap and social proof for exploration and SEO.",
         order: ["sitemap", "social-icons", "phone", "copyright"],
         blocks: [
           {
@@ -172,7 +169,6 @@ function main() {
       },
       {
         id: "B",
-        reasoning: "LOCAL_FOOTER emphasizing direct contact and local presence over broad navigation.",
         order: ["phone", "address", "social-icons", "copyright"],
         blocks: [
           {
@@ -218,7 +214,6 @@ function main() {
     page.variants = [
       {
         id: "A",
-        reasoning: "STANDARD_CONTAINER for maximum content width and modern brand presence.",
         order: ["page-layout"],
         blocks: [
           {
@@ -234,7 +229,6 @@ function main() {
       },
       {
         id: "B",
-        reasoning: "NARROW_PROSE for improved readability and focused dining content experience.",
         order: ["page-layout"],
         blocks: [
           {

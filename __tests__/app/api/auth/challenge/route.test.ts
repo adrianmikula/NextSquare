@@ -163,7 +163,7 @@ describe("POST /api/auth/challenge", () => {
   })
 
   it("respects rate limiting", async () => {
-    mockRateLimit.mockReturnValue({ allowed: false, retryAfter: 30 })
+    mockRateLimit.mockReturnValue({ allowed: false, retryAfter: 30 } as any)
     const response = await callPost({ password: "correct-horse" })
     expect(response.status).toBe(429)
     expect(mockGetRateLimitResponse).toHaveBeenCalledWith(30)
