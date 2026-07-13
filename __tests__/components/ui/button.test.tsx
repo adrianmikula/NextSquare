@@ -45,11 +45,11 @@ describe("Button", () => {
 describe("buttonVariants", () => {
   it("returns default variant class", () => {
     const result = buttonVariants()
-    expect(result).toContain("var(--color-primary)")
+    expect(result).toContain("btn-primary")
   })
 
   it("returns outline variant class", () => {
     const result = buttonVariants({ variant: "outline" })
-    expect(result).toContain("var(--color-button-outline-border)")
+    expect(result).toContain("btn-outline")
   })
 })

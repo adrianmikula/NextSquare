@@ -46,11 +46,11 @@ export default async function EditItemPage({
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-stone-900">Edit Menu Item</h1>
-        <p className="mt-1 text-sm text-stone-500">{item.name}</p>
+        <h1 className="text-2xl font-bold text-heading">Edit Menu Item</h1>
+        <p className="mt-1 text-sm text-muted">{item.name}</p>
       </div>
 
-      <div className="max-w-2xl rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+      <div className="container-max card bg-base-100 p-6" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}>
         <MenuItemEditorWrapper item={item} />
       </div>
     </div>

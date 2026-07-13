@@ -81,8 +81,8 @@ export function CmsBlockRenderer({ block }: { block: CmsBlock }) {
   }
 }
 
-function sectionClass(bg: string) {
-  return `${bg} section-py section-px`
+function sectionClass(semanticBg?: string) {
+  return `${semanticBg || "bg-section"} section-py section-px`
 }
 
 function containerClass() {
@@ -91,7 +91,7 @@ function containerClass() {
 
 function cardClass(extra = "") {
   return cn(
-    "card-themed rounded-xl border bg-white p-6",
+    "card bg-base-100 rounded-xl border border-card p-6",
     extra
   )
 }
@@ -103,7 +103,7 @@ function headingClass(size: string = "3xl") {
     "2xl": "text-2xl font-bold",
     xl: "text-xl font-semibold",
   }
-  return cn("text-stone-900", sizes[size] || sizes["3xl"])
+  return cn("text-heading", sizes[size] || sizes["3xl"])
 }
 
 function CmsHero({ data }: { data: Record<string, unknown> }) {
@@ -125,27 +125,27 @@ function CmsHero({ data }: { data: Record<string, unknown> }) {
   const sizeClass = headingClass(headingSize)
 
   return (
-    <section className={cn("hero-section", sectionClass("relative overflow-hidden bg-stone-900"), paddingY)}>
+    <section className={cn("hero-section", sectionClass("bg-section-inverse"), paddingY)}>
       {backgroundStyle === "image" && hasImage ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url('${image}')`, opacity: overlayOpacity }}
         />
       ) : backgroundStyle === "gradient" ? (
-        <div className="absolute inset-0 bg-gradient-to-b from-stone-900/70 to-stone-900" />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, color-mix(in srgb, var(--color-hero-bg) 70%, transparent), var(--color-hero-bg))` }} />
       ) : (
-        <div className="absolute inset-0 bg-stone-900" />
+        <div className="absolute inset-0 bg-section-inverse" />
       )}
       <div className={cn(containerClass(), "relative", alignClass)}>
-        <h1 className={cn(sizeClass, "text-white")}>
+        <h1 className={cn(sizeClass, "text-hero-text")}>
           {headline}
         </h1>
         {subheadline && (
-          <p className={cn("mt-6 max-w-2xl text-lg text-stone-300", mxClass)}>{subheadline}</p>
+          <p className={cn("mt-6 max-w-2xl text-lg text-hero-muted", mxClass)}>{subheadline}</p>
         )}
         {ctaLabel && (
           <div className={cn("mt-8 flex items-center gap-4", textAlign === "center" && "justify-center")}>
-            <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline button-themed")}>
+            <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline")}>
               {ctaLabel}
             </Link>
           </div>
@@ -159,10 +159,10 @@ function CmsText({ data }: { data: Record<string, unknown> }) {
   const heading = String(data.heading || "")
   const body = String(data.body || "")
   return (
-    <section className={sectionClass("bg-white")}>
+    <section className={sectionClass()}>
       <div className={containerClass()}>
         {heading && <h2 className={cn(headingClass("3xl"), "mb-6")}>{heading}</h2>}
-        <p className="text-lg text-stone-600 whitespace-pre-line">{body}</p>
+        <p className="text-lg text-body whitespace-pre-line">{body}</p>
       </div>
     </section>
   )
@@ -172,7 +172,7 @@ function CmsProducts({ data }: { data: Record<string, unknown> }) {
   const title = String(data.title || "")
   const items = (data.items as Array<{ name: string; description: string; price?: number }>) || []
   return (
-    <section className={sectionClass("bg-white")}>
+    <section className={sectionClass()}>
       <div className={containerClass()}>
         <div className="text-center">
           <h2 className={headingClass("3xl")}>{title}</h2>
@@ -180,10 +180,10 @@ function CmsProducts({ data }: { data: Record<string, unknown> }) {
         <div className="mt-12 grid gap-6 sm:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
           {items.map((item) => (
             <div key={item.name} className={cardClass()}>
-              <h3 className="font-semibold text-stone-900 leading-none tracking-tight">{item.name}</h3>
-              <p className="mt-2 text-sm text-stone-500">{item.description}</p>
+              <h3 className="font-semibold text-heading leading-none tracking-tight">{item.name}</h3>
+              <p className="mt-2 text-sm text-muted">{item.description}</p>
               {item.price !== undefined && (
-                <p className="mt-4 text-lg font-bold text-amber-700">${item.price.toFixed(2)}</p>
+                <p className="mt-4 text-lg font-bold text-price">${item.price.toFixed(2)}</p>
               )}
             </div>
           ))}
@@ -196,7 +196,7 @@ function CmsProducts({ data }: { data: Record<string, unknown> }) {
 function CmsTestimonials({ data }: { data: Record<string, unknown> }) {
   const items = (data.items as Array<{ author: string; text: string; source?: string }>) || []
   return (
-    <section className={sectionClass("bg-stone-50")}>
+    <section className={sectionClass()}>
       <div className={containerClass()}>
         <div className="text-center">
           <h2 className={headingClass("3xl")}>What Our Customers Say</h2>
@@ -206,13 +206,13 @@ function CmsTestimonials({ data }: { data: Record<string, unknown> }) {
             <div key={item.author} className={cardClass()}>
               <div className="mb-3 flex gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <Star key={i} className="h-4 w-4 fill-star text-star" />
                 ))}
               </div>
-              <p className="text-sm text-stone-600">&ldquo;{item.text}&rdquo;</p>
+              <p className="text-sm text-body">&ldquo;{item.text}&rdquo;</p>
               <div className="mt-3 flex items-center justify-between">
-                <p className="text-xs font-medium text-stone-500">— {item.author}</p>
-                {item.source && <span className="text-xs text-stone-400">{item.source}</span>}
+                <p className="text-xs font-medium text-muted">— {item.author}</p>
+                {item.source && <span className="text-xs text-muted">{item.source}</span>}
               </div>
             </div>
           ))}
@@ -227,13 +227,13 @@ function CmsDelivery({ data }: { data: Record<string, unknown> }) {
   const body = String(data.body || "")
   const platforms = (data.platforms as Array<{ name: string; url: string; label: string }>) || []
   return (
-    <section className={cn(sectionClass("bg-amber-50"), "py-16")}>
+    <section className={cn(sectionClass("bg-section-alt"), "py-16")}>
       <div className={cn(containerClass(), "text-center")}>
         {heading && <h2 className={cn(headingClass("3xl"), "mb-4")}>{heading}</h2>}
-        {body && <p className="text-lg text-stone-600 mb-8">{body}</p>}
+        {body && <p className="text-lg text-body mb-8">{body}</p>}
         <div className="flex flex-wrap justify-center gap-4">
           {platforms.map((p) => (
-            <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants(), "no-underline button-themed")}>
+            <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants(), "no-underline")}>
               {p.label || p.name}
             </a>
           ))}
@@ -246,17 +246,17 @@ function CmsDelivery({ data }: { data: Record<string, unknown> }) {
 function CmsHours({ data }: { data: Record<string, unknown> }) {
   const schedule = (data.schedule as Array<{ day: string; open: string; close: string }>) || []
   return (
-    <section className={sectionClass("bg-stone-50")}>
+    <section className={sectionClass()}>
       <div className={containerClass()}>
         <div className="flex items-center gap-3 mb-6">
-          <Clock className="h-6 w-6 text-amber-700" />
+          <Clock className="h-6 w-6 text-price" />
           <h2 className={headingClass("2xl")}>Hours</h2>
         </div>
         <dl className="space-y-3 max-w-xl">
           {schedule.map((row) => (
             <div key={row.day} className="flex justify-between">
-              <dt className="text-sm font-medium text-stone-700">{row.day}</dt>
-              <dd className="text-sm text-stone-500">
+              <dt className="text-sm font-medium text-label">{row.day}</dt>
+              <dd className="text-sm text-muted">
                 {(row.open === "Closed" || row.close === "Closed") ? "Closed" : `${row.open} – ${row.close}`}
               </dd>
             </div>
@@ -272,12 +272,12 @@ function CmsGallery({ data }: { data: Record<string, unknown> }) {
   const caption = data.caption as string | undefined
   if (images.length === 0) return null
   return (
-    <section className={sectionClass("bg-white")}>
+    <section className={sectionClass()}>
       <div className={containerClass()}>
         {caption && <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{caption}</h2>}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: "var(--grid-gap)" }}>
           {images.map((src, i) => (
-            <div key={i} className={cn("aspect-square overflow-hidden bg-stone-100 image-themed")}>
+            <div key={i} className={cn("aspect-square overflow-hidden bg-stone-100 rounded-box")}>
               <img src={src} alt={`Gallery ${i + 1}`} className="h-full w-full object-cover" />
             </div>
           ))}
@@ -293,12 +293,12 @@ function CmsCta({ data }: { data: Record<string, unknown> }) {
   const buttonLabel = String(data.buttonLabel || "")
   const buttonLink = String(data.buttonLink || "/menu")
   return (
-    <section className={cn(sectionClass("bg-amber-700"), "py-16")}>
+    <section className={cn(sectionClass("bg-section-cta"), "py-16")}>
       <div className={cn(containerClass(), "text-center")}>
-        <h2 className={cn("text-3xl font-bold text-white mb-4", headingClass("3xl"))}>{heading}</h2>
-        {subtext && <p className="text-lg text-amber-100 mb-8">{subtext}</p>}
+        <h2 className={cn("text-3xl font-bold text-cta-text mb-4", headingClass("3xl"))}>{heading}</h2>
+        {subtext && <p className="text-lg text-cta-muted mb-8">{subtext}</p>}
         {buttonLabel && (
-          <Link href={buttonLink} className={cn(buttonVariants({ size: "lg", variant: "secondary" }), "no-underline button-themed")}>
+          <Link href={buttonLink} className={cn(buttonVariants({ size: "lg", variant: "secondary" }), "no-underline")}>
             {buttonLabel}
           </Link>
         )}
@@ -311,17 +311,17 @@ function CmsServices({ data }: { data: Record<string, unknown> }) {
   const title = String(data.title || "")
   const items = (data.items as Array<{ name: string; description: string; priceHint?: number; duration?: string }>) || []
   return (
-    <section className={sectionClass("bg-white")}>
+    <section className={sectionClass()}>
       <div className={containerClass()}>
         <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{title}</h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
           {items.map((item) => (
             <div key={item.name} className={cardClass()}>
-              <h3 className="font-semibold text-stone-900">{item.name}</h3>
-              <p className="mt-2 text-sm text-stone-500">{item.description}</p>
+              <h3 className="font-semibold text-heading">{item.name}</h3>
+              <p className="mt-2 text-sm text-muted">{item.description}</p>
               <div className="mt-4 flex items-center justify-between text-sm">
-                {item.priceHint !== undefined && <span className="font-bold text-amber-700">${item.priceHint.toFixed(2)}</span>}
-                {item.duration && <span className="text-stone-400">{item.duration}</span>}
+                {item.priceHint !== undefined && <span className="font-bold text-price">${item.priceHint.toFixed(2)}</span>}
+                {item.duration && <span className="text-muted">{item.duration}</span>}
               </div>
             </div>
           ))}
@@ -335,23 +335,23 @@ function CmsForm({ data }: { data: Record<string, unknown> }) {
   const title = String(data.title || "")
   const fields = (data.fields as Array<{ name: string; type: string; label: string; required: boolean }>) || []
   return (
-    <section className={sectionClass("bg-stone-50")}>
+    <section className={sectionClass()}>
       <div className={cn(containerClass(), "max-w-xl")}>
         <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{title}</h2>
         <form className="space-y-6">
           {fields.map((field) => (
             <div key={field.name}>
-              <label htmlFor={field.name} className="block text-sm font-medium text-stone-700 mb-2">
-                {field.label} {field.required && <span className="text-red-500">*</span>}
+              <label htmlFor={field.name} className="block text-sm font-medium text-label mb-2">
+                {field.label} {field.required && <span className="text-error">*</span>}
               </label>
               {field.type === "textarea" ? (
-                <textarea id={field.name} name={field.name} required={field.required} rows={4} className="w-full rounded-lg border border-stone-300 p-3" style={{ borderRadius: "var(--theme-border-radius)" }} />
+                <textarea id={field.name} name={field.name} required={field.required} rows={4} className="w-full rounded-lg border p-3" style={{ borderRadius: "var(--theme-border-radius)", borderColor: "var(--color-input-border)" }} />
               ) : (
-                <input id={field.name} name={field.name} type={field.type} required={field.required} className="w-full rounded-lg border border-stone-300 p-3" style={{ borderRadius: "var(--theme-border-radius)" }} />
+                <input id={field.name} name={field.name} type={field.type} required={field.required} className="w-full rounded-lg border p-3" style={{ borderRadius: "var(--theme-border-radius)", borderColor: "var(--color-input-border)" }} />
               )}
             </div>
           ))}
-          <button type="submit" className={cn(buttonVariants(), "w-full button-themed")}>
+          <button type="submit" className={cn(buttonVariants(), "w-full")}>
             Submit
           </button>
         </form>
@@ -363,14 +363,14 @@ function CmsForm({ data }: { data: Record<string, unknown> }) {
 function CmsFaq({ data }: { data: Record<string, unknown> }) {
   const items = (data.items as Array<{ question: string; answer: string }>) || []
   return (
-    <section className={sectionClass("bg-white")}>
+    <section className={sectionClass()}>
       <div className={cn(containerClass(), "max-w-3xl")}>
         <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>Frequently Asked Questions</h2>
         <div className="space-y-6">
           {items.map((item, i) => (
             <div key={i} className={cardClass()}>
-              <h3 className="font-semibold text-stone-900 mb-2">{item.question}</h3>
-              <p className="text-sm text-stone-600">{item.answer}</p>
+              <h3 className="font-semibold text-heading mb-2">{item.question}</h3>
+              <p className="text-sm text-body">{item.answer}</p>
             </div>
           ))}
         </div>
@@ -387,20 +387,20 @@ function CmsPromo({ data }: { data: Record<string, unknown> }) {
   const image = data.image as string | undefined
   const hasImage = image && !image.includes("placeholder")
   return (
-    <section className={cn(sectionClass("relative overflow-hidden bg-stone-900"), "py-20")}>
+    <section className={cn(sectionClass("bg-section-inverse"), "py-20")}>
       {hasImage ? (
         <div
           className="absolute inset-0 bg-cover bg-center opacity-30"
           style={{ backgroundImage: `url('${image}')` }}
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-r from-amber-900/80 to-stone-900" />
+        <div className="absolute inset-0" style={{ background: `linear-gradient(to right, color-mix(in srgb, var(--color-announcement-bg) 80%, transparent), var(--color-hero-bg))` }} />
       )}
       <div className={cn(containerClass(), "relative text-center")}>
-        <h2 className={cn(headingClass("3xl"), "mb-4 text-white")}>{heading}</h2>
-        <p className="text-lg text-stone-300 mb-8">{body}</p>
+        <h2 className={cn(headingClass("3xl"), "mb-4 text-hero-text")}>{heading}</h2>
+        <p className="text-lg text-hero-muted mb-8">{body}</p>
         {ctaLabel && (
-          <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline button-themed")}>
+          <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline")}>
             {ctaLabel}
           </Link>
         )}
@@ -414,12 +414,12 @@ function CmsSlideshow({ data }: { data: Record<string, unknown> }) {
   const caption = data.caption as string | undefined
   if (images.length === 0) return null
   return (
-    <section className={sectionClass("bg-white")}>
+    <section className={sectionClass()}>
       <div className={containerClass()}>
         {caption && <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{caption}</h2>}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
           {images.map((src, i) => (
-            <div key={i} className={cn("aspect-video overflow-hidden bg-stone-100 image-themed")}>
+            <div key={i} className={cn("aspect-video overflow-hidden bg-stone-100 rounded-box")}>
               <img src={src} alt={`Slide ${i + 1}`} className="h-full w-full object-cover" />
             </div>
           ))}
@@ -433,11 +433,11 @@ function CmsSocialIcons({ data }: { data: Record<string, unknown> }) {
   const platforms = (data.platforms as Array<{ name: string; url: string; icon?: string }>) || []
   if (platforms.length === 0) return null
   return (
-    <section className={sectionClass("bg-stone-50")}>
+    <section className={sectionClass()}>
       <div className={cn(containerClass(), "text-center")}>
         <div className="flex flex-wrap justify-center gap-6">
           {platforms.map((p) => (
-            <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline" }), "no-underline button-themed")}>
+            <a key={p.name} href={p.url} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ variant: "outline" }), "no-underline")}>
               {p.icon || p.name}
             </a>
           ))}
@@ -452,12 +452,12 @@ function CmsCallout({ data }: { data: Record<string, unknown> }) {
   const author = data.author as string | undefined
   const role = data.role as string | undefined
   return (
-    <section className={sectionClass("bg-amber-50")}>
+    <section className={sectionClass("bg-section-alt")}>
       <div className={cn(containerClass(), "max-w-3xl text-center")}>
-        <blockquote className="text-2xl font-medium text-stone-900 italic">&ldquo;{quote}&rdquo;</blockquote>
+        <blockquote className="text-2xl font-medium text-heading italic">&ldquo;{quote}&rdquo;</blockquote>
         {(author || role) && (
-          <div className="mt-4 text-sm text-stone-500">
-            {author && <span className="font-medium text-stone-700">{author}</span>}
+          <div className="mt-4 text-sm text-muted">
+            {author && <span className="font-medium text-label">{author}</span>}
             {author && role && <span> — </span>}
             {role && <span>{role}</span>}
           </div>
@@ -469,7 +469,7 @@ function CmsCallout({ data }: { data: Record<string, unknown> }) {
 
 function CmsHR({ data }: { data: Record<string, unknown> }) {
   const style = (data.style as string) || "solid"
-  const color = (data.color as string) || "var(--color-stone-200, #e5e7eb)"
+  const color = (data.color as string) || "var(--color-card-border, var(--color-stone-200))"
   const borderClass = style === "dashed" ? "border-dashed" : style === "dotted" ? "border-dotted" : "border-solid"
   return <hr className={`border-t ${borderClass}`} style={{ borderColor: color }} />
 }
@@ -477,14 +477,14 @@ function CmsHR({ data }: { data: Record<string, unknown> }) {
 function CmsImageText({ data }: { data: Record<string, unknown> }) {
   const items = (data.items as Array<{ image?: string; heading: string; body: string; align?: "left" | "right" }>) || []
   return (
-    <section className={sectionClass("bg-white")}>
+    <section className={sectionClass()}>
       <div className={containerClass()}>
         <div className="space-y-12">
           {items.map((item, i) => {
             const isReversed = item.align === "right"
             return (
               <div key={i} className={cn("grid items-center gap-8 md:grid-cols-2", isReversed && "md:direction-rtl")}>
-                <div className={cn("overflow-hidden rounded-xl bg-stone-100 image-themed", isReversed && "md:order-2")}>
+                <div className={cn("overflow-hidden rounded-xl bg-stone-100 rounded-box", isReversed && "md:order-2")}>
                   {item.image ? (
                     <img src={item.image} alt={item.heading} className="h-full w-full object-cover" />
                   ) : (
@@ -493,7 +493,7 @@ function CmsImageText({ data }: { data: Record<string, unknown> }) {
                 </div>
                 <div className={cn(isReversed && "md:order-1")}>
                   <h3 className={headingClass("2xl")}>{item.heading}</h3>
-                  <p className="mt-4 text-lg text-stone-600 whitespace-pre-line">{item.body}</p>
+                  <p className="mt-4 text-lg text-body whitespace-pre-line">{item.body}</p>
                 </div>
               </div>
             )
@@ -512,29 +512,29 @@ function CmsComparison({ data }: { data: Record<string, unknown> }) {
 
   if (columns.length === 0) return null
   return (
-    <section className={sectionClass("bg-stone-50")}>
+    <section className={sectionClass()}>
       <div className={containerClass()}>
         {title && <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{title}</h2>}
         <div className="overflow-x-auto">
           <table className="mx-auto min-w-full max-w-3xl border-collapse">
             <thead>
               <tr>
-                <th className="p-4 text-left text-sm font-medium text-stone-500">Feature</th>
+                <th className="p-4 text-left text-sm font-medium text-muted">Feature</th>
                 {columns.map((col) => (
-                  <th key={col.header} className="p-4 text-center text-sm font-semibold text-stone-900">{col.header}</th>
+                  <th key={col.header} className="p-4 text-center text-sm font-semibold text-heading">{col.header}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-200">
+            <tbody className="divide-y" style={{ borderColor: "var(--color-card-border)" }}>
               {columns[0]?.features.map((feature, i) => (
                 <tr key={feature.name}>
-                  <td className="p-4 text-sm text-stone-700">{feature.name}</td>
+                  <td className="p-4 text-sm text-label">{feature.name}</td>
                   {columns.map((col) => (
                     <td key={col.header} className="p-4 text-center">
                       {col.features[i]?.included ? (
-                        <span className="text-amber-700">✓</span>
+                        <span className="text-check">✓</span>
                       ) : (
-                        <span className="text-stone-300">—</span>
+                        <span className="text-muted">—</span>
                       )}
                     </td>
                   ))}
@@ -545,7 +545,7 @@ function CmsComparison({ data }: { data: Record<string, unknown> }) {
         </div>
         {ctaLabel && ctaLink && (
           <div className="mt-8 text-center">
-            <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline button-themed")}>
+            <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline")}>
               {ctaLabel}
             </Link>
           </div>
@@ -566,7 +566,7 @@ function CmsLogo({ data }: { data: Record<string, unknown> }) {
     </div>
   )
   if (link) {
-    return <Link href={link} className="no-underline text-stone-900">{content}</Link>
+    return <Link href={link} className="no-underline text-heading">{content}</Link>
   }
   return content
 }
@@ -575,15 +575,15 @@ function CmsBusinessName({ data }: { data: Record<string, unknown> }) {
   const text = String(data.text || "")
   const link = data.link as string | undefined
   if (link) {
-    return <Link href={link} className="no-underline text-lg font-semibold text-stone-900">{text}</Link>
+    return <Link href={link} className="no-underline text-lg font-semibold text-heading">{text}</Link>
   }
-  return <span className="text-lg font-semibold text-stone-900">{text}</span>
+  return <span className="text-lg font-semibold text-heading">{text}</span>
 }
 
 function CmsSlogan({ data }: { data: Record<string, unknown> }) {
   const text = String(data.text || "")
   if (!text) return null
-  return <p className="text-sm text-stone-500 italic">{text}</p>
+  return <p className="text-sm text-muted italic">{text}</p>
 }
 
 function CmsNav({ data }: { data: Record<string, unknown> }) {
@@ -599,7 +599,7 @@ function CmsNav({ data }: { data: Record<string, unknown> }) {
         <Link
           key={link.href}
           href={link.href}
-          className="text-sm font-medium text-stone-600 transition-colors hover:text-amber-700"
+          className="text-sm font-medium text-link transition-colors hover-text-link-hover"
           style={{ fontFamily: "var(--font-body)" }}
         >
           {link.label}
@@ -616,11 +616,11 @@ function CmsSitemap({ data }: { data: Record<string, unknown> }) {
     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
       {columns.map((col, i) => (
         <div key={i}>
-          <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-stone-500">{col.title}</h4>
+          <h4 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted">{col.title}</h4>
           <ul className="space-y-2">
             {col.links.map((link, j) => (
               <li key={j}>
-                <Link href={link.href} className="text-sm text-stone-600 hover:text-amber-700">{link.label}</Link>
+                <Link href={link.href} className="text-sm text-link hover-text-link-hover">{link.label}</Link>
               </li>
             ))}
           </ul>
@@ -636,7 +636,7 @@ function CmsAnnouncement({ data }: { data: Record<string, unknown> }) {
   const linkLabel = data.linkLabel as string | undefined
   if (!text) return null
   return (
-    <div className="bg-amber-700 text-white text-center py-2 px-4 text-sm">
+    <div className="text-center py-2 px-4 text-sm" style={{ backgroundColor: "var(--color-announcement-bg)", color: "var(--color-announcement-text)" }}>
       {text}
       {link && linkLabel && (
         <Link href={link} className="ml-2 underline font-medium">{linkLabel}</Link>
@@ -652,7 +652,7 @@ function CmsCopyright({ data }: { data: Record<string, unknown> }) {
   const displayYear = year ?? new Date().getFullYear()
   const displayName = name || "Cafe Template"
   return (
-    <p className="text-xs text-stone-400 text-center">
+    <p className="text-xs text-muted text-center">
       {text || `© ${displayYear} ${displayName}. Built with Next.js.`}
     </p>
   )
@@ -664,7 +664,7 @@ function CmsPhone({ data }: { data: Record<string, unknown> }) {
   const label = data.label as string | undefined
   if (!number) return null
   return (
-    <a href={`tel:${number}`} className="flex items-center gap-2 text-sm text-stone-600 hover:text-amber-700">
+    <a href={`tel:${number}`} className="flex items-center gap-2 text-sm text-link hover-text-link-hover">
       {label && <span className="font-medium">{label}:</span>}
       <span>{display}</span>
     </a>

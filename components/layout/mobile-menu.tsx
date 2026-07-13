@@ -5,13 +5,7 @@ import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
 import { OrderButton } from "@/components/order-button"
 import { CartButton } from "@/components/cart/CartButton"
-
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/menu", label: "Menu" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-]
+import { DEFAULT_LINKS } from "@/lib/constants"
 
 export function MobileMenuClient() {
   const [open, setOpen] = useState(false)
@@ -42,21 +36,22 @@ export function MobileMenuClient() {
       {open && (
         <div className="fixed inset-0 top-16 z-40 md:hidden">
           <div
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ backgroundColor: "color-mix(in srgb, var(--color-overlay, rgba(0,0,0,0.5)) 60%, transparent)" }}
             onClick={() => setOpen(false)}
           />
-          <nav className="relative flex animate-slide-down flex-col gap-1 border-b border-stone-200 bg-white px-4 pb-6 pt-4 shadow-xl">
-            {navLinks.map((link) => (
+          <nav className="relative flex animate-slide-down flex-col gap-1 border-b border-card bg-card px-4 pb-6 pt-4" style={{ boxShadow: "var(--theme-shadow-card-hover)" }}>
+            {DEFAULT_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100 hover:text-amber-700"
+                className="rounded-lg px-3 py-2.5 text-sm font-medium text-link transition-colors hover:bg-[var(--color-button-ghost-hover-bg)] hover-text-link-hover"
                 onClick={() => setOpen(false)}
               >
                 {link.label}
               </Link>
             ))}
-            <div className="mt-2 border-t border-stone-100 pt-3">
+            <div className="mt-2 border-t border-[var(--color-card-border)] pt-3">
               <OrderButton />
             </div>
           </nav>

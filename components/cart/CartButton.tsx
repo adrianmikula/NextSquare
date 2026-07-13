@@ -23,12 +23,12 @@ export function CartButton() {
     <button
       data-cart-button
       onClick={openCart}
-      className="relative flex items-center text-stone-600 transition-colors hover:text-amber-700"
+      className="relative flex items-center text-link transition-colors hover-text-link-hover"
       aria-label={`Cart with ${count} items`}
     >
       <ShoppingBag className="h-5 w-5" />
       {count > 0 && (
-        <span className={`absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white ${pulse ? "animate-cart-pulse" : ""}`}>
+        <span className={`absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-[10px] font-bold text-[var(--color-background)] ${pulse ? "animate-cart-pulse" : ""}`}>
           {count > 9 ? "9+" : count}
         </span>
       )}

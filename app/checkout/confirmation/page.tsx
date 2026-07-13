@@ -21,8 +21,8 @@ function ConfirmationContent() {
 
 export default function ConfirmationPage() {
   return (
-    <div className="bg-stone-50 py-20">
-      <div className="mx-auto max-w-lg px-4 sm:px-6">
+    <div className="bg-stone-50 section-py">
+      <div className="mx-auto container-max px-4 sm:px-6">
         <Suspense
           fallback={
             <div className="animate-pulse text-center">

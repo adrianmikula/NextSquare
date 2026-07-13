@@ -34,7 +34,7 @@ export function ModifierDialog({
 
   return (
     <div className="space-y-2">
-      <p className="text-sm font-medium text-stone-700">
+      <p className="text-sm font-medium text-label">
         {modifierList.modifierListData?.name ?? "Options"}
       </p>
       <div className="space-y-1">
@@ -48,13 +48,13 @@ export function ModifierDialog({
               onClick={() => handleToggle(modifier)}
               className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                 isSelected
-                  ? "bg-amber-50 text-amber-900 ring-1 ring-amber-300"
-                  : "text-stone-600 hover:bg-stone-50"
+                  ? "bg-section-alt text-price ring-1 ring-[var(--color-primary)]"
+                  : "text-body hover:bg-section"
               }`}
             >
               <span>{modifier.modifierData?.name}</span>
               {price > 0 && (
-                <span className="text-stone-500">
+                <span className="text-muted">
                   +{formatCurrency(price)}
                 </span>
               )}

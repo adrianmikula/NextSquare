@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import { PointsEarned } from "@/components/loyalty/PointsEarned"
 
 interface OrderConfirmedProps {
@@ -12,9 +13,9 @@ interface OrderConfirmedProps {
 export function OrderConfirmed({ orderId, pointsEarned, totalBalance }: OrderConfirmedProps) {
   return (
     <div className="text-center">
-      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+      <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-success-subtle">
         <svg
-          className="h-8 w-8 text-green-600"
+          className="h-8 w-8 text-success"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -27,12 +28,12 @@ export function OrderConfirmed({ orderId, pointsEarned, totalBalance }: OrderCon
           />
         </svg>
       </div>
-      <h2 className="text-2xl font-bold text-stone-900">Order Confirmed!</h2>
-      <p className="mt-2 text-stone-600">
+      <h2 className="text-2xl font-bold text-heading">Order Confirmed!</h2>
+      <p className="mt-2 text-body">
         Your order <span className="font-semibold">#{orderId}</span> has been
         placed successfully.
       </p>
-      <p className="mt-1 text-sm text-stone-500">
+      <p className="mt-1 text-sm text-muted">
         You will receive an SMS confirmation shortly.
       </p>
 
@@ -43,16 +44,10 @@ export function OrderConfirmed({ orderId, pointsEarned, totalBalance }: OrderCon
       )}
 
       <div className="mt-8 flex justify-center gap-4">
-        <Link
-          href={`/order/${orderId}`}
-          className="rounded-xl bg-amber-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
-        >
+        <Link href={`/order/${orderId}`} className="btn btn-primary">
           Track Order
         </Link>
-        <Link
-          href="/menu"
-          className="rounded-xl border border-stone-300 px-6 py-3 text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-50"
-        >
+        <Link href="/menu" className="btn btn-outline">
           Order Again
         </Link>
       </div>

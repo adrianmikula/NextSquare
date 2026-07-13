@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 
 interface SquarePaymentFormProps {
   amount: number
@@ -113,23 +114,24 @@ export function SquarePaymentForm({
   }
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-6">
-      <h3 className="mb-4 text-lg font-semibold text-stone-900">Payment</h3>
+    <div className="card bg-base-100" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}>
+      <h3 className="mb-4 text-lg font-semibold text-heading">Payment</h3>
       <div
         id="square-card-container"
         ref={containerRef}
         className="min-h-[100px]"
       />
-      <button
+      <Button
         onClick={handleSubmit}
         disabled={loading || !cardLoaded}
-        className="mt-4 w-full rounded-xl bg-amber-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+        variant="default"
+        className="w-full mt-4"
       >
         {loading ? "Processing..." : `Pay ${new Intl.NumberFormat("en-AU", {
           style: "currency",
           currency,
         }).format(amount / 100)}`}
-      </button>
+      </Button>
     </div>
   )
 }

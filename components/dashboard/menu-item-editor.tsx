@@ -78,37 +78,39 @@ export function MenuItemEditor({
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-error bg-error-subtle px-4 py-3 text-sm text-error">
           {error}
         </div>
       )}
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-stone-700">Name</label>
+        <label className="label">
+          <span className="label-text">Name</span>
+        </label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600"
+          className="input input-bordered w-full"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-stone-700">
-          Description
+        <label className="label">
+          <span className="label-text">Description</span>
         </label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600"
+          className="textarea textarea-bordered w-full"
         />
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2">
+      <div className="grid sm:grid-cols-2" style={{ gap: "var(--grid-gap)" }}>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-stone-700">
-            Price (AUD)
+          <label className="label">
+            <span className="label-text">Price (AUD)</span>
           </label>
           <PriceInput value={price} onChange={setPrice} />
         </div>

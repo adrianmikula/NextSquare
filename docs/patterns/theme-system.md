@@ -24,9 +24,8 @@ content/dimensions/
 │   ├── imagery-a.json, imagery-b.json
 │   └── wording-a.json, wording-b.json
 └── bundles/
-    ├── a.json   # Purring Patisserie (all A variants)
-    ├── b.json   # Whisker & Bean (all B variants)
-    └── c.json   # Catnip Modern (mixed variants)
+    ├── a.json   # Bundle A
+    └── b.json   # Bundle B
 ```
 
 ## How Themes Are Applied

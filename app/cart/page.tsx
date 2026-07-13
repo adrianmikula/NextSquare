@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useCartStore, useCartItemCount, useCartSubtotal } from "@/lib/store/cart"
+import { Button } from "@/components/ui/button"
 import { CartItem } from "@/components/cart/CartItem"
 import { CartSummary } from "@/components/cart/CartSummary"
 import { DeliveryPickupToggle } from "@/components/cart/DeliveryPickupToggle"
@@ -17,10 +18,10 @@ export default function CartPage() {
   const subtotal = useCartSubtotal()
 
   return (
-    <div className="bg-stone-50 py-12">
-      <div className="mx-auto max-w-2xl px-4 sm:px-6">
+    <div className="bg-section section-py">
+      <div className="mx-auto container-max px-4 sm:px-6">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight text-stone-900">
+          <h1 className="text-3xl font-bold tracking-tight text-heading">
             Cart
           </h1>
           <DeliveryPickupToggle
@@ -33,7 +34,7 @@ export default function CartPage() {
           <EmptyCart />
         ) : (
           <div className="space-y-6">
-            <div className="rounded-xl border border-stone-200 bg-white p-4">
+            <div className="card bg-base-100 p-4" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}>
               {items.map((item) => (
                 <CartItem
                   key={item.id}
@@ -46,10 +47,7 @@ export default function CartPage() {
 
             <CartSummary subtotal={subtotal} itemCount={itemCount} />
 
-            <Link
-              href="/checkout"
-              className="flex w-full items-center justify-center rounded-xl bg-amber-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
-            >
+            <Link href="/checkout" className="btn btn-primary w-full">
               Proceed to Checkout
             </Link>
           </div>

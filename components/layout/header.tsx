@@ -6,15 +6,7 @@ import { Suspense } from "react"
 import type { SiteProfile } from "@/lib/cms"
 import type { CmsBlock } from "@/lib/cms"
 import { CmsBlockRenderer } from "@/components/cms/CmsRenderer"
-
-const FALLBACK_NAME = "Cafe Template"
-
-const DEFAULT_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/menu", label: "Menu" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-]
+import { FALLBACK_NAME, DEFAULT_LINKS } from "@/lib/constants"
 
 export function Header({ siteProfile, blocks }: { siteProfile?: SiteProfile | null; blocks?: CmsBlock[] }) {
   const name = siteProfile?.siteName || FALLBACK_NAME
@@ -24,15 +16,17 @@ export function Header({ siteProfile, blocks }: { siteProfile?: SiteProfile | nu
     <CmsBlockRenderer key={`${block.type}-${idx}`} block={block} />
   )
 
+  const headerStyle = {
+    position: "var(--header-style, sticky)",
+    height: "var(--nav-height, 5rem)",
+    borderBottom: "var(--theme-border-width, 1px) solid var(--color-card-border)",
+    backgroundColor: "var(--color-nav-bg)",
+  } as unknown as React.CSSProperties & Record<string, string>
+
   return (
     <header
-      className="top-0 z-50 w-full backdrop-blur supports-[backdrop-filter]:bg-white/60"
-      style={{
-        position: "var(--header-style, sticky)" as any,
-        height: "var(--nav-height, 5rem)",
-        borderBottom: "var(--theme-border-width, 1px) solid var(--color-stone-200)",
-        backgroundColor: `rgba(255,255,255, var(--nav-bg-opacity, 0.95))`,
-      }}
+      className="navbar top-0 z-50 w-full backdrop-blur supports-[backdrop-filter]:bg-nav"
+      style={headerStyle}
     >
       <div
         className="flex items-center justify-between"
@@ -51,10 +45,10 @@ export function Header({ siteProfile, blocks }: { siteProfile?: SiteProfile | nu
           <>
             <Link
               href="/"
-              className="text-xl font-bold tracking-tight text-stone-900"
+              className="text-xl font-bold tracking-tight text-heading"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              <span className="text-amber-600">☕</span> {name}
+              <span className="text-[var(--color-primary)]">☕</span> {name}
             </Link>
 
             <nav className="hidden items-center gap-6 md:flex">
@@ -62,7 +56,7 @@ export function Header({ siteProfile, blocks }: { siteProfile?: SiteProfile | nu
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-sm font-medium text-stone-600 transition-colors hover:text-amber-700"
+                  className="text-sm font-medium text-link transition-colors hover-text-link-hover"
                   style={{ fontFamily: "var(--font-body)" }}
                 >
                   {link.label}

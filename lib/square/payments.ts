@@ -5,10 +5,16 @@ import { isDemoMode } from "@/lib/demo/config"
 import { createDemoPayment } from "@/lib/demo/menu-data"
 import { requireEnv } from "@/lib/env"
 
-const client = new Client({
-  accessToken: isDemoMode() ? "" : requireEnv("SQUARE_ACCESS_TOKEN"),
-  environment: getSquareEnvironment() === "production" ? Environment.Production : Environment.Sandbox,
-})
+let _client: Client | null = null
+function getClient(): Client {
+  if (!_client) {
+    _client = new Client({
+      accessToken: isDemoMode() ? "" : requireEnv("SQUARE_ACCESS_TOKEN"),
+      environment: getSquareEnvironment() === "production" ? Environment.Production : Environment.Sandbox,
+    })
+  }
+  return _client
+}
 
 export async function processPayment(params: {
   nonce: string
@@ -24,7 +30,7 @@ export async function processPayment(params: {
     return { paymentId: payment.id, status: "COMPLETED" }
   }
 
-  const { result } = await client.paymentsApi.createPayment({
+  const { result } = await getClient().paymentsApi.createPayment({
     sourceId: params.nonce,
     idempotencyKey: params.idempotencyKey,
     orderId: params.orderId,
@@ -42,7 +48,7 @@ export async function getPayment(paymentId: string) {
   }
 
   try {
-    const { result } = await client.paymentsApi.getPayment(paymentId)
+    const { result } = await getClient().paymentsApi.getPayment(paymentId)
     return result.payment ?? null
   } catch {
     return null

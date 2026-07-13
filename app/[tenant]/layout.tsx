@@ -1,5 +1,4 @@
 import { ThemeProvider } from "@/components/cms/ThemeProvider"
-import { readTheme, toCssVars, ACTIVE_THEME_VARIANT } from "@/lib/cms"
 import { defaultDimensionState, resolveDimensionSpecs, compileSpecsToCssVars, getAllBundleConfigs } from "@/lib/dimensions"
 
 export default async function TenantLayout({
@@ -7,7 +6,11 @@ export default async function TenantLayout({
 }: {
   children: React.ReactNode
 }) {
-  const bundleId = (process.env.NEXT_PUBLIC_THEME_BUNDLE || "A").toUpperCase()
+  const rawBundle = process.env.NEXT_PUBLIC_THEME_BUNDLE
+  if (!rawBundle) {
+    console.warn("[theme] NEXT_PUBLIC_THEME_BUNDLE is not set — defaulting to bundle A")
+  }
+  const bundleId = (rawBundle || "A").toUpperCase()
   const bundles = getAllBundleConfigs()
   const activeBundle = bundles.find((b) => b.id === bundleId)
   const dimState = activeBundle?.dimensions ?? defaultDimensionState()

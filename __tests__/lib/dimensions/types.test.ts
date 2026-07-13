@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest"
 import { DIMENSION_NAMES, VARIANT_NAMES, isDimensionName, isVariant, normalizeVariant } from "@/lib/dimensions/types"
 
 describe("DIMENSION_NAMES", () => {
-  it("contains 8 dimensions", () => {
-    expect(DIMENSION_NAMES.length).toBe(8)
+  it("contains 9 dimensions", () => {
+    expect(DIMENSION_NAMES.length).toBe(9)
   })
 
   it("contains all expected dimensions", () => {
@@ -16,12 +16,13 @@ describe("DIMENSION_NAMES", () => {
     expect(DIMENSION_NAMES).toContain("components")
     expect(DIMENSION_NAMES).toContain("rhythm")
     expect(DIMENSION_NAMES).toContain("motion")
+    expect(DIMENSION_NAMES).toContain("page-layout")
   })
 })
 
 describe("VARIANT_NAMES", () => {
-  it("contains A and B", () => {
-    expect(VARIANT_NAMES).toEqual(["A", "B"])
+  it("contains A, B, and C", () => {
+    expect(VARIANT_NAMES).toEqual(["A", "B", "C"])
   })
 })
 
@@ -51,7 +52,7 @@ describe("isVariant", () => {
   })
 
   it("returns false for other values", () => {
-    expect(isVariant("C")).toBe(false)
+    expect(isVariant("D")).toBe(false)
     expect(isVariant("")).toBe(false)
   })
 })

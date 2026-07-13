@@ -2,8 +2,7 @@ import Link from "next/link"
 import type { SiteProfile } from "@/lib/cms"
 import type { CmsBlock } from "@/lib/cms"
 import { CmsBlockRenderer } from "@/components/cms/CmsRenderer"
-
-const FALLBACK_NAME = "Cafe Template"
+import { FALLBACK_NAME, DEFAULT_LINKS } from "@/lib/constants"
 
 export function Footer({ siteProfile, blocks }: { siteProfile?: SiteProfile | null; blocks?: CmsBlock[] }) {
   const year = new Date().getFullYear()
@@ -16,59 +15,50 @@ export function Footer({ siteProfile, blocks }: { siteProfile?: SiteProfile | nu
   )
 
   return (
-    <footer className="border-t border-stone-200 bg-stone-50">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+    <footer className="footer border-t border-card bg-footer">
+      <div className="mx-auto container-max px-4 section-py sm:px-6">
         {hasBlocks ? (
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4" style={{ gap: "var(--grid-gap)" }}>
             {blocks!.map(renderBlock)}
           </div>
         ) : (
-          <div className="grid gap-8 sm:grid-cols-3">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(var(--footer-grid, 3), 1fr)", gap: "var(--grid-gap)" }}>
             <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-stone-500">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-footer-heading">
                 {name}
               </h3>
-              <p className="text-sm text-stone-600">{tagline}</p>
+              <p className="text-sm text-footer-link">{tagline}</p>
             </div>
 
             <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-stone-500">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-footer-heading">
                 Links
               </h3>
               <nav className="flex flex-col gap-2">
-                <Link
-                  href="/menu"
-                  className="text-sm text-stone-600 hover:text-amber-700"
-                >
-                  Menu
-                </Link>
-                <Link
-                  href="/about"
-                  className="text-sm text-stone-600 hover:text-amber-700"
-                >
-                  About
-                </Link>
-                <Link
-                  href="/contact"
-                  className="text-sm text-stone-600 hover:text-amber-700"
-                >
-                  Contact
-                </Link>
+                {DEFAULT_LINKS.filter((l) => l.href !== "/").map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="text-sm text-footer-link hover-text-footer-link-hover"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </nav>
             </div>
 
             <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-stone-500">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-footer-heading">
                 Follow Us
               </h3>
-              <p className="text-sm text-stone-600">Instagram: {siteProfile?.social?.instagram || "@cafetemplate"}</p>
-              <p className="text-sm text-stone-600">{siteProfile?.contact?.email || "hello@cafetemplate.com"}</p>
+              <p className="text-sm text-footer-link">Instagram: {siteProfile?.social?.instagram || "@cafetemplate"}</p>
+              <p className="text-sm text-footer-link">{siteProfile?.contact?.email || "hello@cafetemplate.com"}</p>
             </div>
           </div>
         )}
 
         {!hasBlocks && (
-          <div className="mt-8 border-t border-stone-200 pt-6 text-center text-xs text-stone-400">
+          <div className="mt-8 border-card pt-6 text-xs text-footer-muted" style={{ borderTopWidth: "var(--theme-border-width)", textAlign: "var(--footer-text-align, center)" as unknown as React.CSSProperties["textAlign"] }}>
             &copy; {year} {name}. Built with Next.js &amp; Square.
           </div>
         )}

@@ -25,6 +25,7 @@ const DIMENSION_LABELS: Record<DimensionName, string> = {
   components: "Components",
   rhythm: "Rhythm",
   motion: "Animation",
+  "page-layout": "Page Architecture",
 }
 
 const DIMENSION_DESCRIPTIONS: Record<DimensionName, string> = {
@@ -36,6 +37,7 @@ const DIMENSION_DESCRIPTIONS: Record<DimensionName, string> = {
   components: "Card, button, nav styles",
   rhythm: "Section spacing and density",
   motion: "Transitions and scroll effects",
+  "page-layout": "Hero, nav, section, card, footer component selection",
 }
 
 function getBundleByName(bundles: BundleInfo[], bundleId: string): BundleInfo | undefined {
@@ -122,7 +124,8 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-[100] rounded-full bg-amber-600 px-4 py-2 text-sm font-medium text-white shadow-lg hover:bg-amber-700"
+        className="fixed bottom-4 right-4 z-[100] rounded-full bg-[var(--color-primary)] text-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-primary-hover)]"
+        style={{ boxShadow: "var(--theme-shadow-card)" }}
       >
         Demo Mode
       </button>
@@ -130,22 +133,22 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] w-96 rounded-lg border border-gray-200 bg-white shadow-xl">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <h3 className="text-sm font-semibold text-gray-900">
+    <div className="fixed bottom-4 right-4 z-[100] w-96 card bg-base-100 border-card" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}>
+      <div className="flex items-center justify-between border-b border-card px-4 py-3">
+        <h3 className="text-sm font-semibold text-heading">
           {tab === "bundles" ? "Choose a Bundle" : DIMENSION_LABELS[tab]}
         </h3>
-        <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">
+        <button onClick={() => setOpen(false)} className="text-muted hover:text-label">
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="border-b px-4 overflow-x-auto">
+      <div className="border-b border-card px-4 overflow-x-auto">
         <div className="flex gap-3 py-2 min-w-max">
           <button
             onClick={() => setTab("bundles")}
             className={`whitespace-nowrap border-b-2 px-1 py-1 text-xs font-medium capitalize ${
-              tab === "bundles" ? "border-amber-600 text-amber-700" : "border-transparent text-gray-500 hover:text-gray-700"
+              tab === "bundles" ? "border-[var(--color-primary)] text-[var(--color-price)]" : "border-transparent text-muted hover:text-label"
             }`}
           >
             Bundles
@@ -155,7 +158,7 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
               key={dim}
               onClick={() => setTab(dim)}
               className={`whitespace-nowrap border-b-2 px-1 py-1 text-xs font-medium capitalize ${
-                tab === dim ? "border-amber-600 text-amber-700" : "border-transparent text-gray-500 hover:text-gray-700"
+                tab === dim ? "border-[var(--color-primary)] text-[var(--color-price)]" : "border-transparent text-muted hover:text-label"
               }`}
             >
               {DIMENSION_LABELS[dim]}
@@ -173,18 +176,18 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
                 onClick={() => selectBundle(bundle.id)}
                 className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
                   localBundle === bundle.id
-                    ? "border-amber-600 bg-amber-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-[var(--color-primary)] bg-section-alt"
+                    : "border-card hover:border-[var(--color-input-border)]"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-900">{bundle.name}</span>
-                  <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                  <span className="text-sm font-semibold text-heading">{bundle.name}</span>
+                  <span className="rounded bg-section-alt px-2 py-0.5 text-xs font-medium text-body">
                     Bundle {bundle.id}
                   </span>
                 </div>
                 {bundle.description && (
-                  <p className="mt-1 text-xs text-gray-500">{bundle.description}</p>
+                  <p className="mt-1 text-xs text-muted">{bundle.description}</p>
                 )}
                 {localBundle === bundle.id && (
                   <div className="mt-2 flex gap-1.5">
@@ -192,7 +195,7 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
                       <span
                         key={d}
                         className={`inline-block h-2 w-2 rounded-full ${
-                          localDims[d] === "B" ? "bg-amber-500" : "bg-gray-300"
+                          localDims[d] === "B" ? "bg-[var(--color-check)]" : "bg-muted"
                         }`}
                         title={`${DIMENSION_LABELS[d]}: ${localDims[d]}`}
                       />
@@ -201,13 +204,13 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
                 )}
               </button>
             ))}
-            <p className="pt-2 text-xs text-gray-400 text-center">
+            <p className="pt-2 text-xs text-muted text-center">
               Pick a bundle, then tweak individual dimensions
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="rounded-lg bg-gray-50 p-3">
+            <div className="rounded-lg bg-section p-3">
               <DimensionToggle
                 label={DIMENSION_LABELS[tab]}
                 description={DIMENSION_DESCRIPTIONS[tab]}
@@ -216,8 +219,8 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
               />
             </div>
 
-            <div className="border-t pt-3">
-              <p className="mb-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="border-t border-card pt-3">
+              <p className="mb-2 text-xs font-medium text-muted uppercase tracking-wider">
                 All Dimensions
               </p>
               <div className="space-y-2">
@@ -237,13 +240,13 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
         )}
       </div>
 
-      <div className="flex justify-between border-t px-4 py-3">
-        <button onClick={reset} className="text-xs text-gray-500 hover:text-gray-700">
+      <div className="flex justify-between border-t border-card px-4 py-3">
+        <button onClick={reset} className="text-xs text-muted hover:text-label">
           Reset
         </button>
         <button
           onClick={() => setOpen(false)}
-          className="rounded bg-amber-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
+          className="rounded bg-[var(--color-primary)] px-4 py-1.5 text-xs font-medium text-[var(--color-background)] hover:bg-[var(--color-primary-hover)]"
         >
           Apply
         </button>
@@ -265,31 +268,31 @@ function DimensionToggle({ label, description, variant, onToggle, compact }: Dim
     <div className={`flex items-center justify-between ${compact ? "py-1" : "py-2"}`}>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">{label}</span>
+          <span className="text-sm font-medium text-label">{label}</span>
           <span
             className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              variant === "B" ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-600"
+              variant === "B" ? "bg-section-alt text-heading" : "bg-card text-body border border-card"
             }`}
           >
             v{variant}
           </span>
         </div>
         {!compact && (
-          <p className="mt-0.5 text-xs text-gray-400">{description}</p>
+          <p className="mt-0.5 text-xs text-muted">{description}</p>
         )}
       </div>
       <button
         onClick={onToggle}
-        className={`ml-3 relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-          variant === "B" ? "bg-amber-600" : "bg-gray-200"
-        }`}
+        className="ml-3 relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-transparent transition-colors focus:outline-none"
+        style={{ backgroundColor: variant === "B" ? "var(--color-primary)" : "var(--color-card-border, #d6d3d1)", borderWidth: "var(--theme-border-width)", transitionDuration: "var(--transition-speed)", transitionTimingFunction: "var(--motion-easing)" }}
         role="switch"
         aria-checked={variant === "B"}
       >
         <span
-          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-card shadow ring-0 transition ${
             variant === "B" ? "translate-x-4" : "translate-x-0"
           }`}
+          style={{ transitionDuration: "var(--transition-speed)", transitionTimingFunction: "var(--motion-easing)" }}
         />
       </button>
     </div>

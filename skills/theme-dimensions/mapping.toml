@@ -1,7 +1,7 @@
 # Skill-to-code mapping for theme-dimensions
 # Generated: 2026-07-11
 
-skill_version = "0.1.0"
+skill_version = "0.2.0"
 codebase_version = "{git-hash}"
 
 [[capabilities]]
@@ -174,6 +174,15 @@ description = "Compile resolved dimension specs into flat CSS custom properties 
   test_files = []
 
   [[capabilities.sections]]
+  skill_section = "Logic — page-layout dimension compilation"
+  config_path = "compilation.page-layout.*"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compilePageLayout" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
   skill_section = "Error states — null spec for a dimension"
   # config_path: none (error handling)
   impl_files = [
@@ -260,7 +269,7 @@ description = "Optional verification that A/B variant specs differ by a minimum 
   [[data_models.fields]]
   model = "DimensionState"
   field = "dimension value"
-  type = "Variant (A | B)"
+  type = "Variant (A | B | C)"
   maps_to_skill_param = "variant"
   config_path = "variant_names"
   file = "lib/dimensions/types.ts"
@@ -316,12 +325,12 @@ description = "Optional verification that A/B variant specs differ by a minimum 
 [[config_mapping]]
 skill_var = "dimension_names"
 code_var = "DIMENSION_NAMES constant array in types.ts"
-file = "lib/dimensions/types.ts:1-10"
+file = "lib/dimensions/types.ts:1-11"
 
 [[config_mapping]]
 skill_var = "variant_names"
-code_var = "VARIANT_NAMES constant array ['A', 'B']"
-file = "lib/dimensions/types.ts:14"
+code_var = "VARIANT_NAMES constant array ['A', 'B', 'C']"
+file = "lib/dimensions/types.ts:15"
 
 [[config_mapping]]
 skill_var = "default_variant"
@@ -452,6 +461,31 @@ file = "lib/dimensions/compile.ts:223"
 skill_var = "compilation.imagery.default_treatment"
 code_var = "String(spec.treatment ?? 'cover')"
 file = "lib/dimensions/compile.ts:226"
+
+[[config_mapping]]
+skill_var = "compilation.page-layout.default_hero_variant"
+code_var = "lookupString(default: 'fullscreen')"
+file = "lib/dimensions/compile.ts:346"
+
+[[config_mapping]]
+skill_var = "compilation.page-layout.default_nav_variant"
+code_var = "lookupString(default: 'top-bar')"
+file = "lib/dimensions/compile.ts:347"
+
+[[config_mapping]]
+skill_var = "compilation.page-layout.default_section_container"
+code_var = "lookupString(default: 'alternating')"
+file = "lib/dimensions/compile.ts:348"
+
+[[config_mapping]]
+skill_var = "compilation.page-layout.default_card_variant"
+code_var = "lookupString(default: 'elevated')"
+file = "lib/dimensions/compile.ts:349"
+
+[[config_mapping]]
+skill_var = "compilation.page-layout.default_footer_variant"
+code_var = "lookupString(default: 'columns')"
+file = "lib/dimensions/compile.ts:350"
 
 [[config_mapping]]
 skill_var = "verification.delta.enabled"

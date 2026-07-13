@@ -15,21 +15,21 @@ export function HoursLocation() {
   const suburbState = `${address?.suburb || "Melbourne"} ${address?.state || "VIC"} ${address?.postcode || "3000"}`
 
   return (
-    <section className="bg-stone-50 py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid gap-12 md:grid-cols-2">
+    <section className="bg-section section-py">
+      <div className="mx-auto container-max px-4 sm:px-6">
+        <div className="grid md:grid-cols-2" style={{ gap: "var(--grid-gap)" }}>
           <div>
             <div className="flex items-center gap-3">
-              <Clock className="h-6 w-6 text-amber-700" />
-              <h2 className="text-2xl font-bold text-stone-900">Hours</h2>
+              <Clock className="h-6 w-6 text-price" />
+              <h2 className="text-2xl font-bold text-heading">Hours</h2>
             </div>
             <dl className="mt-6 space-y-3">
               {hours.map((row) => (
                 <div key={row.day} className="flex justify-between">
-                  <dt className="text-sm font-medium text-stone-700">
+                  <dt className="text-sm font-medium text-label">
                     {row.day}
                   </dt>
-                  <dd className="text-sm text-stone-500">{row.time}</dd>
+                  <dd className="text-sm text-muted">{row.time}</dd>
                 </div>
               ))}
             </dl>
@@ -37,12 +37,12 @@ export function HoursLocation() {
 
           <div>
             <div className="flex items-center gap-3">
-              <MapPin className="h-6 w-6 text-amber-700" />
-              <h2 className="text-2xl font-bold text-stone-900">
+              <MapPin className="h-6 w-6 text-price" />
+              <h2 className="text-2xl font-bold text-heading">
                 Location
               </h2>
             </div>
-            <div className="mt-6 space-y-2 text-sm text-stone-600">
+            <div className="mt-6 space-y-2 text-sm text-body">
               <p>{street}</p>
               <p>{suburbState}</p>
               <p>{address?.country || "Australia"}</p>

@@ -253,6 +253,25 @@ If tests fail:
 
 For ESLint suppression rules by location (e.g. test files), see `docs/patterns/lint-policy.md`.
 
+### Step 8b: Audit Theme Uniqueness
+
+Before starting the dev server, run the standalone `theme-uniqueness` skill to audit and fix
+hardcoded theme values across the entire codebase:
+
+```bash
+# Load and execute the theme-uniqueness skill
+# This audits 5 layers (status colors, flat Tailwind, white/black, dimensions, fallbacks),
+# fixes violations, verifies all themes are truly distinct, and validates no dead CSS vars remain.
+```
+Execute `skills/theme-uniqueness/SKILL.md` as a first-class skill. It covers all audit categories
+that were previously inlined here (container widths, padding, cards, gaps, shadows, transitions,
+colors, fallbacks) plus additional layers for status color hardening, white/black overlay
+migration, silent fallback detection, and CSS var consumption validation.
+
+**Reason for extraction:** The uniqueness audit grew beyond a dev-mode check into a comprehensive,
+recursive codebase hygiene operation. It now lives as its own skill so it can be run independently
+at any time — after spec regeneration, before deployment, or as part of CI validation.
+
 ### Step 9: Start Dev Server
 
 ```bash

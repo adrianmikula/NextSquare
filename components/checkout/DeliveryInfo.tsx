@@ -28,15 +28,12 @@ export function DeliveryInfo({
   onNotesChange,
 }: DeliveryInfoProps) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-6">
-      <h3 className="mb-4 text-lg font-semibold text-stone-900">Delivery Details</h3>
+    <div className="card bg-base-100" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}>
+      <h3 className="mb-4 text-lg font-semibold text-heading">Delivery Details</h3>
       <div className="space-y-4">
-        <div>
-          <label
-            htmlFor="delivery-name"
-            className="block text-sm font-medium text-stone-700"
-          >
-            Name
+        <fieldset className="fieldset">
+          <label htmlFor="delivery-name" className="label">
+            <span className="label-text">Name</span>
           </label>
           <input
             id="delivery-name"
@@ -44,16 +41,13 @@ export function DeliveryInfo({
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="Your name"
-            className="mt-1 block w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="input input-bordered w-full"
             required
           />
-        </div>
-        <div>
-          <label
-            htmlFor="delivery-phone"
-            className="block text-sm font-medium text-stone-700"
-          >
-            Phone
+        </fieldset>
+        <fieldset className="fieldset">
+          <label htmlFor="delivery-phone" className="label">
+            <span className="label-text">Phone</span>
           </label>
           <input
             id="delivery-phone"
@@ -61,16 +55,13 @@ export function DeliveryInfo({
             value={phone}
             onChange={(e) => onPhoneChange(e.target.value)}
             placeholder="0412 345 678"
-            className="mt-1 block w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="input input-bordered w-full"
             required
           />
-        </div>
-        <div>
-          <label
-            htmlFor="delivery-address"
-            className="block text-sm font-medium text-stone-700"
-          >
-            Street Address
+        </fieldset>
+        <fieldset className="fieldset">
+          <label htmlFor="delivery-address" className="label">
+            <span className="label-text">Street Address</span>
           </label>
           <input
             id="delivery-address"
@@ -78,26 +69,23 @@ export function DeliveryInfo({
             value={address.addressLine1}
             onChange={(e) => onAddressChange("addressLine1", e.target.value)}
             placeholder="123 Example St"
-            className="mt-1 block w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="input input-bordered w-full"
             required
           />
-        </div>
-        <div>
+        </fieldset>
+        <fieldset className="fieldset">
           <input
             type="text"
             value={address.addressLine2 ?? ""}
             onChange={(e) => onAddressChange("addressLine2", e.target.value)}
             placeholder="Unit / Apartment (optional)"
-            className="mt-1 block w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            className="input input-bordered w-full"
           />
-        </div>
+        </fieldset>
         <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label
-              htmlFor="delivery-suburb"
-              className="block text-sm font-medium text-stone-700"
-            >
-              Suburb
+          <fieldset className="fieldset">
+            <label htmlFor="delivery-suburb" className="label">
+              <span className="label-text">Suburb</span>
             </label>
             <input
               id="delivery-suburb"
@@ -105,16 +93,13 @@ export function DeliveryInfo({
               value={address.locality}
               onChange={(e) => onAddressChange("locality", e.target.value)}
               placeholder="Suburb"
-              className="mt-1 block w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="input input-bordered w-full"
               required
             />
-          </div>
-          <div>
-            <label
-              htmlFor="delivery-state"
-              className="block text-sm font-medium text-stone-700"
-            >
-              State
+          </fieldset>
+          <fieldset className="fieldset">
+            <label htmlFor="delivery-state" className="label">
+              <span className="label-text">State</span>
             </label>
             <select
               id="delivery-state"
@@ -122,7 +107,7 @@ export function DeliveryInfo({
               onChange={(e) =>
                 onAddressChange("administrativeDistrictLevel1", e.target.value)
               }
-              className="mt-1 block w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm text-stone-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              className="select select-bordered w-full"
               required
             >
               <option value="">Select</option>
@@ -132,41 +117,35 @@ export function DeliveryInfo({
                 </option>
               ))}
             </select>
-          </div>
+          </fieldset>
         </div>
-        <div>
-          <label
-            htmlFor="delivery-postcode"
-            className="block text-sm font-medium text-stone-700"
-          >
-            Postcode
+        <fieldset className="fieldset">
+          <label htmlFor="delivery-postcode" className="label">
+            <span className="label-text">Postcode</span>
           </label>
           <input
-            id="delivery-postcode"
-            type="text"
-            value={address.postalCode}
-            onChange={(e) => onAddressChange("postalCode", e.target.value)}
-            placeholder="2000"
-            className="mt-1 block w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-            required
+              id="delivery-postcode"
+              type="text"
+              value={address.postalCode}
+              onChange={(e) => onAddressChange("postalCode", e.target.value)}
+              placeholder="2000"
+              className="input input-bordered w-full"
+              required
           />
-        </div>
-        <div>
-          <label
-            htmlFor="delivery-notes"
-            className="block text-sm font-medium text-stone-700"
-          >
-            Delivery Notes
+        </fieldset>
+        <fieldset className="fieldset">
+          <label htmlFor="delivery-notes" className="label">
+            <span className="label-text">Delivery Notes</span>
           </label>
           <textarea
-            id="delivery-notes"
-            value={deliveryNotes}
-            onChange={(e) => onNotesChange(e.target.value)}
-            placeholder="Gate code, instructions, etc."
-            rows={2}
-            className="mt-1 block w-full rounded-xl border border-stone-300 px-4 py-2.5 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+              id="delivery-notes"
+              value={deliveryNotes}
+              onChange={(e) => onNotesChange(e.target.value)}
+              placeholder="Gate code, instructions, etc."
+              rows={2}
+              className="textarea textarea-bordered w-full"
           />
-        </div>
+        </fieldset>
       </div>
     </div>
   )

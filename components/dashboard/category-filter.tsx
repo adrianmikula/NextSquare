@@ -18,10 +18,8 @@ export function CategoryFilter({
       <button
         onClick={() => onSelect(null)}
         className={cn(
-          "rounded-full px-3 py-1 text-xs font-medium transition-colors",
-          selected === null
-            ? "bg-amber-600 text-white"
-            : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+          "badge px-3 py-2 text-xs font-medium",
+          selected === null ? "badge-primary" : "badge-outline"
         )}
       >
         All
@@ -31,10 +29,8 @@ export function CategoryFilter({
           key={category}
           onClick={() => onSelect(category)}
           className={cn(
-            "rounded-full px-3 py-1 text-xs font-medium transition-colors",
-            selected === category
-              ? "bg-amber-600 text-white"
-              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            "badge px-3 py-2 text-xs font-medium",
+            selected === category ? "badge-primary" : "badge-outline"
           )}
         >
           {category}

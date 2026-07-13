@@ -20,30 +20,30 @@ const reviews = [
 
 export function SocialProof() {
   return (
-    <section className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className="bg-section section-py">
+      <div className="mx-auto container-max px-4 sm:px-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-heading sm:text-4xl">
             What Our Customers Say
           </h2>
         </div>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
+        <div className="mt-12 grid sm:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
           {reviews.map((review) => (
             <div
               key={review.author}
-              className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm"
+              className="card bg-base-100 p-6" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}
             >
               <div className="mb-3 flex gap-1">
                 {Array.from({ length: review.rating }).map((_, i) => (
                   <Star
                     key={i}
-                    className="h-4 w-4 fill-amber-400 text-amber-400"
+                    className="h-4 w-4 fill-star text-star"
                   />
                 ))}
               </div>
-              <p className="text-sm text-stone-600">&ldquo;{review.text}&rdquo;</p>
-              <p className="mt-3 text-xs font-medium text-stone-500">
+              <p className="text-sm text-body">&ldquo;{review.text}&rdquo;</p>
+              <p className="mt-3 text-xs font-medium text-muted">
                 — {review.author}
               </p>
             </div>

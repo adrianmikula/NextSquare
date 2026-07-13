@@ -21,7 +21,7 @@ describe("LoyaltyBadge", () => {
   it("shows loading skeleton while fetching", () => {
     mockSwrResponse({ isLoading: true })
     const { container } = render(<LoyaltyBadge phoneNumber="+61412345678" orderId="order-1" />)
-    const skeleton = container.querySelector(".animate-pulse")
+    const skeleton = container.querySelector(".skeleton")
     expect(skeleton).toBeInTheDocument()
   })
 
@@ -82,7 +82,7 @@ describe("LoyaltyBadge", () => {
     render(<LoyaltyBadge phoneNumber="+61412345678" orderId="order-1" />)
     const progressBar = screen.getByText("You have 100 points")
       .closest("div")
-      ?.querySelector(".bg-amber-500")
+      ?.querySelector("[style]")
     expect(progressBar?.getAttribute("style")).toContain("width: 50%")
   })
 })

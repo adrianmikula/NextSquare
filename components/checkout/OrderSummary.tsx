@@ -9,8 +9,8 @@ export function OrderSummary() {
   const fee = useCartFee()
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-6">
-      <h3 className="mb-4 text-lg font-semibold text-stone-900">Order Summary</h3>
+    <div className="card bg-base-100">
+      <h3 className="mb-4 text-lg font-semibold text-heading">Order Summary</h3>
       <div className="space-y-3">
         {items.map((item) => {
           const itemTotal =
@@ -24,32 +24,32 @@ export function OrderSummary() {
           return (
             <div key={item.id} className="flex justify-between text-sm">
               <div className="flex-1">
-                <span className="text-stone-900">
+                <span className="text-heading">
                   {item.quantity}x {item.name}
                 </span>
                 {item.modifiers.length > 0 && (
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-muted">
                     {item.modifiers.map((m) => m.name).join(", ")}
                   </p>
                 )}
               </div>
-              <span className="ml-4 font-medium text-stone-900">
+              <span className="ml-4 font-medium text-heading">
                 {formatCurrency(itemTotal)}
               </span>
             </div>
           )
         })}
       </div>
-      <div className="mt-4 space-y-2 border-t border-stone-100 pt-4 text-sm">
-        <div className="flex justify-between text-stone-600">
+      <div className="mt-4 space-y-2 pt-4 text-sm" style={{ borderTopWidth: "var(--theme-border-width)" }}>
+        <div className="flex justify-between text-body">
           <span>Subtotal</span>
           <span>{formatCurrency(subtotal)}</span>
         </div>
-        <div className="flex justify-between text-stone-600">
+        <div className="flex justify-between text-body">
           <span>Service fee (5%)</span>
           <span>{formatCurrency(fee)}</span>
         </div>
-        <div className="flex justify-between text-base font-semibold text-stone-900">
+        <div className="flex justify-between text-base font-semibold text-heading">
           <span>Total</span>
           <span>{formatCurrency(subtotal + fee)}</span>
         </div>

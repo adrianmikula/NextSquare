@@ -1,0 +1,162 @@
+# Config for skill theme-uniqueness
+# SKILL VERSION: 0.1.0
+
+audit:
+  source_dirs:
+    - components/
+    - app/
+    - lib/
+
+  exclude_patterns:
+    - "node_modules"
+    - ".next"
+    - "content"
+    - "docs"
+    - "skills"
+
+layer_a_status_colors:
+  patterns:
+    - "bg-green-\\d+"
+    - "text-green-\\d+"
+    - "bg-red-\\d+"
+    - "text-red-\\d+"
+    - "bg-blue-\\d+"
+    - "text-blue-\\d+"
+  semantic_map:
+    "bg-green-": "bg-success-subtle"
+    "text-green-": "text-success"
+    "bg-red-": "bg-error-subtle"
+    "text-red-": "text-error"
+    "bg-blue-": "bg-info-subtle"
+    "text-blue-": "text-info"
+
+layer_b_flat_tailwind:
+  patterns:
+    - "text-stone-\\d+"
+    - "bg-amber-\\d+"
+    - "fill-amber-\\d+"
+    - "border-stone-\\d+"
+  semantic_map:
+    "text-stone-900": "text-heading"
+    "text-stone-700": "text-body"
+    "text-stone-600": "text-body"
+    "text-stone-500": "text-muted"
+    "text-stone-400": "text-muted"
+    "text-stone-300": "text-label"
+    "text-stone-200": "text-muted"
+    "text-stone-100": "text-muted"
+    "text-stone-50": "text-muted"
+    "bg-amber-600": "bg-section-cta"
+    "bg-amber-700": "bg-section-cta"
+    "bg-amber-500": "bg-[var(--color-primary)]"
+    "bg-amber-100": "bg-section-alt"
+    "bg-amber-50": "bg-section-alt"
+    "fill-amber-400": "fill-star"
+    "fill-amber-500": "fill-star"
+    "border-stone-300": "border-card"
+    "border-stone-200": "border-card"
+
+layer_c_white_black:
+  patterns:
+    - "bg-white"
+    - "text-white"
+    - "bg-black/\\d+"
+
+layer_d_dimensions:
+  patterns:
+    - max-w-6xl
+    - max-w-7xl
+    - py-20
+    - py-24
+    - py-16
+    - "rounded-xl border.*bg"
+    - gap-[6,8,12]
+    - shadow-lg
+    - shadow-xl
+    - duration-200
+    - duration-300
+    - duration-500
+    - duration-700
+
+layer_e_fallbacks:
+  patterns:
+    - "NEXT_PUBLIC_THEME_BUNDLE.*\\|\\|.*\"A\""
+    - "resolveColor.*#b45309"
+    - "resolveColor.*#fef3c7"
+    - "resolveColor.*#fffbeb"
+    - "FALLBACK_NAME"
+    - "\"7:00 AM"
+    - "\"123 Coffee"
+    - "\"@cafetemplate"
+    - "\"hello@cafetemplate"
+
+verification:
+  dimensions:
+    - color
+    - typography
+    - spatial
+    - components
+    - rhythm
+    - motion
+    - imagery
+    - wording
+  component_properties:
+    - borderRadius
+    - cardRadius
+    - buttonRadius
+    - navHeight
+    - cardShadow
+  min_hue_separation: 30
+  min_variant_difference: 8
+  min_component_property_difference: 5
+
+spectrum:
+  enabled: true
+  reference_builders:
+    deterministic:
+      - name: "Durable"
+        range_max: 30
+        description: "Template-based AI, 30-second brochure sites"
+      - name: "Hostinger AI"
+        range_max: 35
+        description: "Budget AI builder, template-driven"
+    visual_ai:
+      - name: "Wix AI"
+        range_max: 50
+        description: "Full AI site gen from prompts, Wix ecosystem lock-in"
+      - name: "10Web"
+        range_max: 50
+        description: "AI WordPress site gen, Elementor-based"
+    design_system:
+      - name: "Framer AI"
+        range_max: 70
+        description: "Designer-grade AI, strong animation system"
+      - name: "Webflow AI"
+        range_max: 70
+        description: "Professional CMS with AI assist"
+      - name: "TemplateCafe"
+        range_max: 70
+        description: "Dimension architecture — intended operating range"
+    hybrid_codegen:
+      - name: "v0 by Vercel"
+        range_max: 85
+        description: "Component-level React/Tailwind generation"
+    unconstrained_codegen:
+      - name: "Lovable"
+        range_max: 100
+        description: "Full-stack React apps from prompts"
+      - name: "Bolt.new"
+        range_max: 100
+        description: "In-browser full-stack prototyping"
+      - name: "Base44"
+        range_max: 100
+        description: "Prompt-to-app with auth + DB"
+
+fix:
+  priority_order:
+    - layer_a_status_colors
+    - layer_e_fallbacks
+    - layer_b_flat_tailwind
+    - layer_c_white_black
+    - layer_d_dimensions
+    - unconsumed_css_vars

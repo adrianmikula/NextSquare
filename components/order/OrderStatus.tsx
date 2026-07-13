@@ -12,31 +12,31 @@ export function OrderStatus({ order }: OrderStatusProps) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-bold text-stone-900">
+        <h2 className="text-xl font-bold text-heading">
           Order #{order.ticketName ?? order.orderId}
         </h2>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-muted">
           {order.createdAt
             ? new Date(order.createdAt).toLocaleString("en-AU")
             : ""}
         </p>
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-white p-6">
+      <div className="card bg-base-100 p-6">
         <OrderTimeline currentState={order.state} />
       </div>
 
       {order.lineItems && order.lineItems.length > 0 && (
-        <div className="rounded-xl border border-stone-200 bg-white p-6">
-          <h3 className="mb-4 font-semibold text-stone-900">Items</h3>
+        <div className="card bg-base-100 p-6">
+          <h3 className="mb-4 font-semibold text-heading">Items</h3>
           <div className="space-y-3">
             {order.lineItems.map((item, idx) => (
               <div key={idx} className="flex justify-between text-sm">
-                <span className="text-stone-900">
+                <span className="text-heading">
                   {item.quantity}x {item.name}
                 </span>
                 {item.priceMoney && (
-                  <span className="text-stone-600">
+                  <span className="text-body">
                     {formatCurrency(item.priceMoney.amount * item.quantity)}
                   </span>
                 )}
@@ -44,7 +44,7 @@ export function OrderStatus({ order }: OrderStatusProps) {
             ))}
           </div>
           {order.totalMoney && (
-            <div className="mt-4 flex justify-between border-t border-stone-200 pt-4 font-semibold text-stone-900">
+            <div className="mt-4 flex justify-between pt-4 font-semibold text-heading" style={{ borderTopWidth: "var(--theme-border-width)", borderColor: "var(--color-card-border)" }}>
               <span>Total</span>
               <span>{formatCurrency(order.totalMoney.amount)}</span>
             </div>
@@ -52,7 +52,7 @@ export function OrderStatus({ order }: OrderStatusProps) {
         </div>
       )}
 
-      <div className="rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
+      <div className="rounded-xl bg-section-alt p-4 text-sm text-price">
         {order.state === "COMPLETED"
           ? "Your order is ready! Please come to the cafe to pick it up."
           : order.state === "IN_PROGRESS"

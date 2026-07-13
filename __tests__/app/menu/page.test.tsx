@@ -68,7 +68,7 @@ describe("MenuPage", () => {
   it("shows loading skeleton when isLoading is true", async () => {
     vi.mocked(useMenu).mockReturnValue({ items: [], categories: [], isLoading: true, isError: false })
     const { container } = renderMenu()
-    const skeletons = container.querySelectorAll(".animate-pulse")
+    const skeletons = container.querySelectorAll(".skeleton")
     expect(skeletons.length).toBeGreaterThan(0)
   })
 

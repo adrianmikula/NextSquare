@@ -11,15 +11,16 @@ export function StatCard({ title, value, icon, className }: StatCardProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-stone-200 bg-white p-6 shadow-sm",
+        "card bg-base-100 p-6",
         className
       )}
+      style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}
     >
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-stone-500">{title}</p>
-        {icon && <div className="text-stone-400">{icon}</div>}
+        <p className="text-sm font-medium text-muted">{title}</p>
+        {icon && <div className="text-muted">{icon}</div>}
       </div>
-      <p className="mt-2 text-3xl font-bold text-stone-900">{value}</p>
+      <p className="mt-2 text-3xl font-bold text-heading">{value}</p>
     </div>
   )
 }

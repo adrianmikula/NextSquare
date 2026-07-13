@@ -50,7 +50,7 @@ describe("ToastContainer", () => {
     })
     render(<ToastContainer />)
     const toast = screen.getByText("Done").closest("div")
-    expect(toast?.className).toContain("bg-green-50")
+    expect(toast?.className).toContain("alert-success")
   })
 
   it("applies error variant styles", () => {
@@ -60,7 +60,7 @@ describe("ToastContainer", () => {
     })
     render(<ToastContainer />)
     const toast = screen.getByText("Error").closest("div")
-    expect(toast?.className).toContain("bg-red-50")
+    expect(toast?.className).toContain("alert-error")
   })
 
   it("calls removeToast when dismiss button is clicked", async () => {

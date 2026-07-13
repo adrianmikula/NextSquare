@@ -27,33 +27,33 @@ const previewItems = [
 
 export function MenuPreview() {
   return (
-    <section className="bg-white py-20">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className="bg-section section-py">
+      <div className="mx-auto container-max px-4 sm:px-6">
         <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-heading sm:text-4xl">
             Our Menu
           </h2>
-          <p className="mt-4 text-lg text-stone-600">
+          <p className="mt-4 text-lg text-body">
             Freshly prepared every day. View our full menu below.
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
+        <div className="mt-12 grid sm:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
           {previewItems.map((item) => {
             const Icon = item.icon
             return (
               <Card key={item.name}>
                 <CardHeader>
-                  <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                    <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-section-alt text-price">
                     <Icon className="h-6 w-6" />
                   </div>
                   <CardTitle>{item.name}</CardTitle>
-                  <p className="text-sm text-stone-500">
+                  <p className="text-sm text-muted">
                     {item.description}
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <span className="text-lg font-bold text-amber-700">
+                  <span className="text-lg font-bold text-price">
                     {item.price}
                   </span>
                 </CardContent>

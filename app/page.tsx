@@ -31,7 +31,7 @@ export default async function RootHomePage({ searchParams }: PageProps) {
   const layoutCssVars = resolvePageLayoutCssVars(layoutPage, layoutVariant)
   const contentBlocks = blocks.filter((b) => b.type !== "page-layout")
   const resolvedBlocks = contentBlocks.map((block, idx) => {
-    const resolved = resolveBlockData(block, textVariant || "A")
+    const resolved = resolveBlockData(block, textVariant)
     return <CmsBlockRenderer key={`${resolved.type}-${idx}`} block={resolved} />
   })
 

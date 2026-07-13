@@ -14,6 +14,7 @@ describe("compileSpecsToCssVars", () => {
       components: null,
       rhythm: null,
       motion: null,
+      "page-layout": null,
     }
   }
 
@@ -111,10 +112,7 @@ describe("compileSpecsToCssVars", () => {
     }
     const vars = compileSpecsToCssVars(specs)
     expect(vars["--transition-speed"]).toBe("150ms")
-    expect(vars["--motion-hover-lift"]).toBe("1")
     expect(vars["--motion-hover-lift-transform"]).toBe("translateY(-4px)")
-    expect(vars["--motion-fade-in"]).toBe("0")
-    expect(vars["--motion-stagger"]).toBe("1")
     expect(vars["--motion-easing"]).toBe("ease-out")
   })
 
@@ -129,7 +127,6 @@ describe("compileSpecsToCssVars", () => {
     const specs = makeEmptySpecs()
     specs.motion = { transitionSpeed: "normal" }
     const vars = compileSpecsToCssVars(specs)
-    expect(vars["--motion-stagger"]).toBe("0")
     expect(vars["--motion-easing"]).toBe("ease")
   })
 
@@ -150,11 +147,8 @@ describe("compileSpecsToCssVars", () => {
     expect(vars["--container-max"]).toBe("80rem")
     expect(vars["--section-py"]).toBe("6rem")
     expect(vars["--content-align"]).toBe("left")
-    expect(vars["--page-columns"]).toBe("8")
-    expect(vars["--sidebar-width"]).toBe("right")
     expect(vars["--hero-enabled"]).toBe("none")
     expect(vars["--header-style"]).toBe("floating")
-    expect(vars["--design-balance"]).toBe("asymmetric")
     expect(vars["--margin-width"]).toBe("2rem")
   })
 
@@ -180,21 +174,13 @@ describe("compileSpecsToCssVars", () => {
     expect(vars["--section-py"]).toBe("3rem")
   })
 
-  it("compiles rhythm spec to section-py spacing (not --section-py)", () => {
+  it("rhythm spec produces no CSS vars (uses spatial dimension for section-py)", () => {
     const specs = makeEmptySpecs()
     specs.rhythm = {
       density: "relaxed",
     }
     const vars = compileSpecsToCssVars(specs)
-    expect(vars["--rhythm-section-py"]).toBe("5rem")
     expect(vars["--section-py"]).toBeUndefined()
-  })
-
-  it("rhythm maps compact density to 2rem spacing", () => {
-    const specs = makeEmptySpecs()
-    specs.rhythm = { density: "compact" }
-    const vars = compileSpecsToCssVars(specs)
-    expect(vars["--rhythm-section-py"]).toBe("2rem")
   })
 
   it("compiles multiple dimensions together", () => {

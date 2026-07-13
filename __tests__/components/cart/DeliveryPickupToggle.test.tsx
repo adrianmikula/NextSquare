@@ -17,12 +17,12 @@ describe("DeliveryPickupToggle", () => {
     const pickupBtn = screen.getByText("Pickup")
     const deliveryBtn = screen.getByText("Delivery")
 
-    expect(pickupBtn.className).toContain("bg-white")
-    expect(deliveryBtn.className).not.toContain("bg-white")
+    expect(pickupBtn.className).toContain("bg-card")
+    expect(deliveryBtn.className).not.toContain("bg-card")
 
     rerender(<DeliveryPickupToggle value="DELIVERY" onChange={vi.fn()} />)
-    expect(deliveryBtn.className).toContain("bg-white")
-    expect(pickupBtn.className).not.toContain("bg-white")
+    expect(deliveryBtn.className).toContain("bg-card")
+    expect(pickupBtn.className).not.toContain("bg-card")
   })
 
   it("calls onChange with DELIVERY when delivery button clicked", async () => {

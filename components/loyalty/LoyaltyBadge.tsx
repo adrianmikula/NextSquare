@@ -35,9 +35,9 @@ export function LoyaltyBadge({ phoneNumber, orderId }: LoyaltyBadgeProps) {
 
   if (isLoading) {
     return (
-      <div className="animate-pulse rounded-lg border border-stone-200 bg-white p-4">
-        <div className="h-5 w-40 rounded bg-stone-200" />
-        <div className="mt-3 h-2 w-full rounded-full bg-stone-100" />
+      <div className="card border border-card bg-base-100 p-4">
+        <div className="skeleton h-5 w-40" />
+        <div className="mt-3 skeleton h-2 w-full" />
       </div>
     )
   }
@@ -49,20 +49,20 @@ export function LoyaltyBadge({ phoneNumber, orderId }: LoyaltyBadgeProps) {
   const progress = Math.min(data.progress, 1)
 
   return (
-    <div className="rounded-lg border border-stone-200 bg-white p-4">
-      <p className="text-lg font-semibold text-stone-900">
+      <div className="card border border-card bg-base-100 p-4">
+      <p className="text-lg font-semibold text-heading">
         You have {balance} points
       </p>
       {data.rewardTier && (
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-muted">
           {pointsNeeded - balance} points away from a free{" "}
           {data.rewardTier.name.toLowerCase()}
         </p>
       )}
-      <div className="mt-3 h-2 w-full rounded-full bg-stone-100">
+      <div className="mt-3 h-2 w-full rounded-full bg-section-alt">
         <div
-          className="h-full rounded-full bg-amber-500 transition-all"
-          style={{ width: `${progress * 100}%` }}
+          className="h-full rounded-full bg-[var(--color-primary)]"
+          style={{ width: `${progress * 100}%`, transitionDuration: "var(--transition-speed)" }}
         />
       </div>
     </div>

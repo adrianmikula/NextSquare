@@ -7,9 +7,14 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-xl border border-stone-200 bg-white shadow-sm",
+        "card bg-base-100",
         className
       )}
+      style={{
+        boxShadow: "var(--card-shadow, var(--theme-shadow-card))",
+        border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)",
+        transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)",
+      }}
       {...props}
     />
   )
@@ -33,7 +38,7 @@ export function CardTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("font-semibold text-stone-900 leading-none tracking-tight", className)}
+      className={cn("font-semibold leading-none tracking-tight", className)}
       {...props}
     />
   )
@@ -45,7 +50,7 @@ export function CardDescription({
 }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
     <p
-      className={cn("text-sm text-stone-500", className)}
+      className={cn("text-sm", className)}
       {...props}
     />
   )

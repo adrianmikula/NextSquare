@@ -45,8 +45,8 @@ export function MenuItemsGrid({ items, categories }: MenuItemsGridProps) {
     <div className="p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-900">Menu Items</h1>
-          <p className="mt-1 text-sm text-stone-500">
+          <h1 className="text-2xl font-bold text-heading">Menu Items</h1>
+          <p className="mt-1 text-sm text-muted">
             {items.length} items total
           </p>
         </div>
@@ -58,13 +58,13 @@ export function MenuItemsGrid({ items, categories }: MenuItemsGridProps) {
 
       <div className="mb-6 space-y-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <input
             type="text"
             placeholder="Search menu items..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="block w-full rounded-lg border border-stone-300 py-2 pl-10 pr-3 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600"
+            className="block w-full rounded-lg border border-[var(--color-input-border)] py-2 pl-10 pr-3 text-sm text-heading placeholder:text-muted focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)]"
           />
         </div>
         <CategoryFilter
@@ -74,24 +74,24 @@ export function MenuItemsGrid({ items, categories }: MenuItemsGridProps) {
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
         {filtered.map((item) => (
           <Link key={item.id} href={`/dashboard/menu/${item.id}`}>
-            <Card className="cursor-pointer transition-shadow hover:shadow-md">
+            <Card className="cursor-pointer">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-base">{item.name}</CardTitle>
-                  <Edit3 className="h-4 w-4 text-stone-400" />
+                  <Edit3 className="h-4 w-4 text-muted" />
                 </div>
               </CardHeader>
               <CardContent>
                 {item.description && (
-                  <p className="mb-2 text-xs text-stone-500 line-clamp-2">
+                  <p className="mb-2 text-xs text-muted line-clamp-2">
                     {item.description}
                   </p>
                 )}
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-amber-700">
+                  <span className="text-sm font-semibold text-price">
                     {item.priceMoney
                       ? `$${(item.priceMoney.amount / 100).toFixed(2)}`
                       : "—"}
@@ -99,8 +99,8 @@ export function MenuItemsGrid({ items, categories }: MenuItemsGridProps) {
                   <span
                     className={`text-xs font-medium ${
                       item.availableForOnline
-                        ? "text-green-600"
-                        : "text-red-500"
+                        ? "text-success"
+                        : "text-error"
                     }`}
                   >
                     {item.availableForOnline ? "Available" : "Unavailable"}
@@ -114,7 +114,7 @@ export function MenuItemsGrid({ items, categories }: MenuItemsGridProps) {
 
       {filtered.length === 0 && (
         <div className="mt-12 text-center">
-          <p className="text-sm text-stone-500">No items match your search</p>
+          <p className="text-sm text-muted">No items match your search</p>
         </div>
       )}
     </div>

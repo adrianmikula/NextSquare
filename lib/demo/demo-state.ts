@@ -4,8 +4,8 @@ import type { DimensionState } from "@/lib/dimensions"
 
 export const DemoStateSchema = z.object({
   theme: z.enum(["A", "B", "C"]).optional(),
-  layout: z.enum(["A", "B"]).optional(),
-  text: z.enum(["A", "B"]).optional(),
+  layout: z.enum(["A", "B", "C"]).optional(),
+  text: z.enum(["A", "B", "C"]).optional(),
 })
 
 export type DemoState = z.infer<typeof DemoStateSchema>
@@ -32,7 +32,8 @@ export function resolveBlockData(block: CmsBlock, textVariant: Axis): CmsBlock {
   const resolvedData: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(block.data)) {
     if (isVariantField(value)) {
-      resolvedData[key] = (value as { a: string; b: string })[textVariant.toLowerCase() as "a" | "b"] ?? value
+      const variantMap = value as Record<string, string>
+      resolvedData[key] = variantMap[textVariant.toLowerCase()] ?? variantMap["a"] ?? value
     } else {
       resolvedData[key] = value
     }
@@ -64,6 +65,19 @@ export function resolveBlockDataForB(block: CmsBlock): CmsBlock {
   return { ...block, data: resolvedData }
 }
 
+export function resolveBlockDataForC(block: CmsBlock): CmsBlock {
+  const resolvedData: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(block.data)) {
+    if (isVariantField(value)) {
+      const variantMap = value as Record<string, string>
+      resolvedData[key] = variantMap["c"] ?? variantMap["a"]
+    } else {
+      resolvedData[key] = value
+    }
+  }
+  return { ...block, data: resolvedData }
+}
+
 export function resolvePageBlocks(
   page: CmsPage & { variants?: Array<{ id: string; blocks: CmsBlock[] }> },
   layoutVariant: Axis
@@ -80,10 +94,16 @@ export function isVariantField(value: unknown): boolean {
   return "a" in (value as Record<string, unknown>) && "b" in (value as Record<string, unknown>)
 }
 
+function dimToAxis(dim: string): Axis {
+  if (dim === "C") return "C"
+  if (dim === "B") return "B"
+  return "A"
+}
+
 export function dimensionStateToDemoState(dimState: DimensionState): DemoState {
   return {
-    layout: dimState.spatial === "B" ? ("B" as const) : ("A" as const),
-    text: dimState.wording === "B" ? ("B" as const) : ("A" as const),
+    layout: dimToAxis(dimState.spatial),
+    text: dimToAxis(dimState.wording),
   }
 }
 
@@ -91,6 +111,6 @@ export function applyDimensionOverridesToVariant(
   block: CmsBlock,
   dimState: DimensionState
 ): CmsBlock {
-  const textVariant = (dimState.wording === "B" ? "B" : "A") as Axis
+  const textVariant = dimToAxis(dimState.wording)
   return resolveBlockData(block, textVariant)
 }

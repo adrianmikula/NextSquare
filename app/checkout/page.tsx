@@ -130,10 +130,10 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="bg-stone-50 py-12">
-      <div className="mx-auto max-w-2xl px-4 sm:px-6">
+    <div className="bg-section section-py">
+      <div className="mx-auto container-max px-4 sm:px-6">
         <div className="mb-8 flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight text-stone-900">Checkout</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-heading">Checkout</h1>
           <DeliveryPickupToggle value={fulfillmentType} onChange={setFulfillmentType} />
         </div>
 

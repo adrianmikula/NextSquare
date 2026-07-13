@@ -65,6 +65,8 @@ function compileDimension(dim: DimensionName, spec: DimensionSpec): Record<strin
       return {}
     case "imagery":
       return compileImagery(spec)
+    case "page-layout":
+      return compilePageLayout(spec)
   }
 }
 
@@ -78,30 +80,24 @@ function resolveColor(val: unknown, fallback: string): string {
 }
 
 function compileColor(spec: DimensionSpec): Record<string, string> {
-  const harmony = String(spec.harmony ?? "monochromatic")
-  const chroma = String(spec.chroma ?? "muted")
-
   const c = (spec.palette ?? spec.colors ?? {}) as Record<string, unknown>
 
-  const primary = resolveColor(c.primary, "#b45309")
-  const secondary = resolveColor(c.secondary, "#fef3c7")
+  const primary = resolveColor(c.primary, "#6b7280")
+  const secondary = resolveColor(c.secondary, "#f3f4f6")
   const background = resolveColor(c.background, "#ffffff")
-  const surface = resolveColor(c.surface, "#fffbeb")
-  const text = resolveColor(c.text, "#1c1917")
-  const accent = resolveColor(c.accent, "#d4a373")
+  const surface = resolveColor(c.surface, "#f9fafb")
+  const text = resolveColor(c.text, "#111827")
+  const accent = resolveColor(c.accent, "#6b7280")
   const border = resolveColor(c.border, text)
+  const success = resolveColor(c.success, "#10b981")
+  const error = resolveColor(c.error, "#ef4444")
+  const info = resolveColor(c.info, "#3b82f6")
+  const overlay = resolveColor(c.overlay, "rgba(0, 0, 0, 0.5)")
 
-  const backgroundType = String(spec.backgroundType ?? "color")
   const backgroundValue = String(spec.backgroundValue ?? background)
 
-  return {
-    "--color-primary": primary,
-    "--color-secondary": secondary,
-    "--color-background": background,
-    "--color-surface": surface,
-    "--color-text": text,
-    "--color-accent": accent,
-    "--color-border": border,
+  // Flat Tailwind color slot mapping (backward compat)
+  const flatVars = {
     "--color-amber-600": primary,
     "--color-amber-700": primary,
     "--color-amber-900": primary,
@@ -117,10 +113,85 @@ function compileColor(spec: DimensionSpec): Record<string, string> {
     "--color-stone-400": text,
     "--color-stone-300": border,
     "--color-stone-200": border,
-    "--color-harmony": harmony,
-    "--color-chroma": chroma,
-    "--color-background-type": backgroundType,
+  }
+
+  // Semantic role color variables — independently controllable
+  const semanticVars = {
+    "--color-section-bg": background,
+    "--color-section-bg-alt": secondary,
+    "--color-section-bg-inverse": text,
+    "--color-section-bg-cta": primary,
+    "--color-heading": text,
+    "--color-body": text,
+    "--color-muted": text,
+    "--color-label": text,
+    "--color-link": text,
+    "--color-link-hover": primary,
+    "--color-price": primary,
+    "--color-star": accent,
+    "--color-check": primary,
+    "--color-cta-text": background,
+    "--color-cta-muted": secondary,
+    "--color-hero-bg": text,
+    "--color-hero-text": background,
+    "--color-hero-muted": text,
+    "--color-announcement-bg": primary,
+    "--color-announcement-text": background,
+    "--color-card-bg": surface,
+    "--color-card-border": border,
+    "--color-input-border": border,
+    "--color-nav-bg": background,
+    "--color-overlay": overlay,
+    "--color-nav-link": text,
+    "--color-nav-link-hover": primary,
+    "--color-footer-bg": background,
+    "--color-footer-heading": text,
+    "--color-footer-link": text,
+    "--color-footer-link-hover": primary,
+    "--color-footer-muted": text,
+    "--color-primary-hover": primary,
+    "--color-button-outline-border": border,
+    "--color-button-outline-hover-bg": secondary,
+    "--color-button-secondary-bg": surface,
+    "--color-button-secondary-hover-bg": background,
+    "--color-button-ghost-hover-bg": surface,
+  }
+
+  // DaisyUI theme color vars — map our palette to daisyUI's CSS vars
+  // so all daisyUI components automatically receive our theme.
+  const daisyVars: Record<string, string> = {
+    "--color-base-100": surface,
+    "--color-base-200": background,
+    "--color-base-300": border,
+    "--color-base-content": text,
+    "--color-primary": primary,
+    "--color-primary-content": background,
+    "--color-secondary": secondary,
+    "--color-secondary-content": text,
+    "--color-accent": accent,
+    "--color-accent-content": text,
+    "--color-neutral": text,
+    "--color-neutral-content": background,
+    "--color-info": info,
+    "--color-info-content": background,
+    "--color-success": success,
+    "--color-success-content": background,
+    "--color-error": error,
+    "--color-error-content": background,
+    "--color-warning": accent,
+    "--color-warning-content": background,
+  }
+
+  return {
+    ...flatVars,
+    ...semanticVars,
+    ...daisyVars,
+    "--color-primary": primary,
+    "--color-background": background,
     "--color-background-value": backgroundValue,
+    "--color-success": success,
+    "--color-error": error,
+    "--color-info": info,
   }
 }
 
@@ -146,7 +217,6 @@ function compileTypography(spec: DimensionSpec): Record<string, string> {
   const headingCase = String(spec.headingCase ?? heading?.case ?? "normal")
   const letterSpacing = String(spec.letterSpacing ?? heading?.tracking ?? "normal")
   const lineHeight = String(spec.lineHeight ?? body?.leading ?? "1.5")
-  const scale = String(spec.scale ?? "1.25")
 
   return {
     "--font-heading": FONT_VAR_MAP[headingFont] ?? `'${headingFont}', sans-serif`,
@@ -161,7 +231,6 @@ function compileTypography(spec: DimensionSpec): Record<string, string> {
           : "none",
     "--letter-spacing": letterSpacing,
     "--line-height": lineHeight,
-    "--typography-scale": scale,
   }
 }
 
@@ -171,11 +240,8 @@ function compileSpatial(spec: DimensionSpec): Record<string, string> {
   const sectionPx = lookupString(spec, ["sectionPaddingX", "sectionPx", "spacing.sectionPaddingX"], "1rem")
   const gridGap = lookupString(spec, ["gridGap", "spacing.gridGap"], "1.5rem")
   const contentAlign = lookupString(spec, ["contentAlign", "spacing.contentAlign"], "center")
-  const pageColumns = lookupNumber(spec, ["pageColumns", "layout.pageColumns"], 12)
-  const sidebar = lookupString(spec, ["sidebar", "layout.sidebar"], "none")
   const heroEnabled = lookupBoolean(spec, ["heroEnabled", "layout.heroEnabled"], true)
   const headerStyle = lookupString(spec, ["headerStyle", "layout.headerStyle"], "solid")
-  const designBalance = lookupString(spec, ["designBalance", "layout.designBalance"], "balanced")
   const marginWidth = lookupString(spec, ["marginWidth", "layout.marginWidth"], "auto")
 
   return {
@@ -184,11 +250,8 @@ function compileSpatial(spec: DimensionSpec): Record<string, string> {
     "--section-px": sectionPx,
     "--grid-gap": gridGap,
     "--content-align": contentAlign,
-    "--page-columns": String(pageColumns),
-    "--sidebar-width": sidebar,
     "--hero-enabled": heroEnabled ? "block" : "none",
     "--header-style": headerStyle,
-    "--design-balance": designBalance,
     "--margin-width": marginWidth,
   }
 }
@@ -207,7 +270,6 @@ function compileComponents(spec: DimensionSpec): Record<string, string> {
   const cardHoverShadow = lookupString(spec, ["cardHoverShadow", "shadows.cardHover"], "lg")
 
   const navHeight = lookupString(spec, ["navHeight", "nav.height"], "4rem")
-  const navBgOpacity = lookupNumber(spec, ["navBgOpacity", "nav.backgroundOpacity"], 0.95)
 
   vars["--theme-border-radius"] = borderRadius
   vars["--theme-card-radius"] = cardRadius
@@ -218,7 +280,24 @@ function compileComponents(spec: DimensionSpec): Record<string, string> {
   vars["--theme-shadow-card"] = SHADOW_MAP[cardShadow] ?? SHADOW_MAP["md"]
   vars["--theme-shadow-card-hover"] = SHADOW_MAP[cardHoverShadow] ?? SHADOW_MAP["lg"]
   vars["--nav-height"] = navHeight
-  vars["--nav-bg-opacity"] = String(navBgOpacity)
+
+  // DaisyUI layout/theme vars — maps our shape tokens to daisyUI's CSS vars
+  const DEPTH_MAP: Record<string, string> = {
+    none: "0",
+    sm: "0.2",
+    md: "0.4",
+    lg: "0.6",
+    xl: "0.8",
+    "2xl": "1",
+  }
+  vars["--radius-selector"] = borderRadius
+  vars["--radius-field"] = buttonRadius
+  vars["--radius-box"] = cardRadius
+  vars["--size-selector"] = "0.25rem"
+  vars["--size-field"] = "0.25rem"
+  vars["--border"] = borderWidth
+  vars["--depth"] = DEPTH_MAP[cardShadow] ?? "0.4"
+  vars["--noise"] = "0"
 
   return vars
 }
@@ -229,12 +308,8 @@ function compileMotion(spec: DimensionSpec): Record<string, string> {
   const speed = speedMap[rawSpeed] ?? speedMap["normal"]
 
   const hover = spec.hover as Record<string, unknown> | undefined
-  const scroll = spec.scroll as Record<string, unknown> | undefined
   const hoverLift = spec.hoverLift ?? hover?.lift ?? true
   const hoverLiftTransform = hoverLift ? "translateY(-4px)" : "none"
-  const fadeIn = spec.fadeIn ?? scroll?.fadeIn ?? false
-  const smoothScroll = spec.smoothScroll ?? scroll?.smooth ?? false
-  const staggerEnabled = spec.staggerEnabled ?? false
   const rawEasing = String(spec.transitionEasing ?? "ease")
   const easingMap: Record<string, string> = {
     "ease-out": "ease-out",
@@ -246,27 +321,13 @@ function compileMotion(spec: DimensionSpec): Record<string, string> {
 
   return {
     "--transition-speed": speed,
-    "--motion-hover-lift": hoverLift ? "1" : "0",
     "--motion-hover-lift-transform": hoverLiftTransform,
-    "--motion-fade-in": fadeIn ? "1" : "0",
-    "--motion-smooth-scroll": smoothScroll ? "1" : "0",
-    "--motion-stagger": staggerEnabled ? "1" : "0",
     "--motion-easing": easing,
   }
 }
 
-function compileRhythm(spec: DimensionSpec): Record<string, string> {
-  const density = String(spec.density ?? "balanced")
-  const densitySpacingMap: Record<string, string> = {
-    compact: "2rem",
-    balanced: "4rem",
-    relaxed: "5rem",
-    spacious: "6rem",
-  }
-  return {
-    "--rhythm-density": density,
-    "--rhythm-section-py": densitySpacingMap[density] ?? "4rem",
-  }
+function compileRhythm(_spec: DimensionSpec): Record<string, string> {
+  return {}
 }
 
 function compileImagery(spec: DimensionSpec): Record<string, string> {
@@ -279,4 +340,45 @@ function compileImagery(spec: DimensionSpec): Record<string, string> {
   vars["--image-treatment"] = treatment
 
   return vars
+}
+
+function compilePageLayout(spec: DimensionSpec): Record<string, string> {
+  const heroVariant = lookupString(spec, ["heroVariant", "layout.heroVariant"], "fullscreen")
+  const navVariant = lookupString(spec, ["navVariant", "layout.navVariant"], "top-bar")
+  const sectionContainer = lookupString(spec, ["sectionContainer", "layout.sectionContainer"], "alternating")
+  const cardVariant = lookupString(spec, ["cardVariant", "layout.cardVariant"], "elevated")
+  const footerVariant = lookupString(spec, ["footerVariant", "layout.footerVariant"], "columns")
+
+  return {
+    "--layout-hero-variant": heroVariant,
+    "--layout-nav-variant": navVariant,
+    "--layout-section-container": sectionContainer,
+    "--layout-card-variant": cardVariant,
+    "--layout-footer-variant": footerVariant,
+
+    // Structural CSS overrides — same component, architecturally different layout
+    "--hero-min-height": heroVariant === "fullscreen" ? "100vh" : heroVariant === "split" ? "60vh" : heroVariant === "overlay" ? "70vh" : "50vh",
+    "--hero-overlay-display": heroVariant === "overlay" ? "block" : "none",
+    "--hero-content-align": heroVariant === "split" ? "flex-start" : "center",
+    "--hero-content-flow": heroVariant === "split" ? "row wrap" : "column",
+
+    "--nav-position": navVariant === "floating" || navVariant === "top-bar" ? "fixed" : "relative",
+    "--nav-layout": navVariant === "sidebar" ? "column" : "row",
+    "--nav-width": navVariant === "sidebar" ? "16rem" : "100%",
+    "--nav-inset-block-start": navVariant === "bottom-bar" ? "auto" : "0",
+    "--nav-inset-block-end": navVariant === "bottom-bar" ? "0" : "auto",
+    "--nav-inline-size": navVariant === "sidebar" ? "16rem" : "100%",
+    "--nav-min-height-block": navVariant === "sidebar" ? "100vh" : "auto",
+    "--nav-align": navVariant === "sidebar" ? "flex-start" : "center",
+
+    "--section-columns": sectionContainer === "cards" ? "2" : "1",
+    "--section-list-style": sectionContainer === "bordered" ? "solid" : "none",
+
+    "--card-shadow": cardVariant === "elevated" ? "0 10px 15px -3px rgb(0 0 0 / 0.1)" : cardVariant === "flat" ? "none" : cardVariant === "outlined" ? "none" : "none",
+    "--card-border-toggle": cardVariant === "outlined" ? "1px solid" : "0px solid",
+    "--card-bg-fill": cardVariant === "flat" ? "transparent" : "var(--color-card-bg)",
+
+    "--footer-grid": footerVariant === "simple" || footerVariant === "minimal" ? "1" : footerVariant === "columns" ? "3" : footerVariant === "social" ? "2" : "3",
+    "--footer-text-align": footerVariant === "centered" || footerVariant === "simple" ? "center" : "left",
+  }
 }

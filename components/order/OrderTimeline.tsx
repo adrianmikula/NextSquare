@@ -45,9 +45,9 @@ export function OrderTimeline({ currentState }: OrderTimelineProps) {
               <div
                 className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
                   isComplete
-                    ? "bg-amber-600 text-white"
-                    : "bg-stone-100 text-stone-400"
-                } ${isCurrent ? "ring-2 ring-amber-300 ring-offset-2" : ""}`}
+                    ? "bg-[var(--color-primary)] text-[var(--color-background)]"
+                    : "bg-section-alt text-muted"
+                } ${isCurrent ? "ring-2 ring-[var(--color-primary)] ring-offset-2" : ""}`}
               >
                 {isComplete ? (
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -60,14 +60,14 @@ export function OrderTimeline({ currentState }: OrderTimelineProps) {
               {index < steps.length - 1 && (
                 <div
                   className={`mt-1 h-full w-0.5 ${
-                    index < currentIndex ? "bg-amber-600" : "bg-stone-200"
+                    index < currentIndex ? "bg-[var(--color-primary)]" : "bg-stone-200"
                   }`}
                 />
               )}
             </div>
             <div className={`pb-6 ${isCurrent ? "opacity-100" : isComplete ? "opacity-60" : "opacity-40"}`}>
-              <p className="font-medium text-stone-900">{step.label}</p>
-              <p className="text-sm text-stone-500">{step.description}</p>
+              <p className="font-medium text-heading">{step.label}</p>
+              <p className="text-sm text-muted">{step.description}</p>
             </div>
           </div>
         )

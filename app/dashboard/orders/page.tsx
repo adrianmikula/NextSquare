@@ -62,8 +62,8 @@ export default async function OrdersPage() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-stone-900">Recent Orders</h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <h1 className="text-2xl font-bold text-heading">Recent Orders</h1>
+        <p className="mt-1 text-sm text-muted">
           Last 30 days of orders from Square
         </p>
       </div>

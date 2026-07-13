@@ -7,11 +7,12 @@ export const DIMENSION_NAMES = [
   "components",
   "rhythm",
   "motion",
+  "page-layout",
 ] as const
 
 export type DimensionName = (typeof DIMENSION_NAMES)[number]
 
-export const VARIANT_NAMES = ["A", "B"] as const
+export const VARIANT_NAMES = ["A", "B", "C"] as const
 export type Variant = (typeof VARIANT_NAMES)[number]
 
 export type BundleName = string

@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, ShoppingBag, ClipboardList, Settings, LogOut } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -21,42 +20,37 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex w-64 flex-col border-r border-stone-200 bg-white">
-      <div className="flex h-16 items-center gap-2 border-b border-stone-200 px-6">
-        <span className="text-lg font-bold text-stone-900">☕ Cafe Admin</span>
+    <aside className="flex w-64 flex-col border-card bg-card" style={{ borderRightWidth: "var(--theme-border-width)" }}>
+      <div className="flex h-16 items-center gap-2 border-card px-6" style={{ borderBottomWidth: "var(--theme-border-width)" }}>
+        <span className="text-lg font-bold text-heading">☕ Cafe Admin</span>
       </div>
 
-      <nav className="flex-1 space-y-1 p-4">
+      <ul className="menu flex-nowrap p-4">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-amber-50 text-amber-700"
-                  : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                className={isActive ? "active" : ""}
+              >
+                <Icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            </li>
           )
         })}
-      </nav>
+      </ul>
 
-      <div className="border-t border-stone-200 p-4">
-        <button
-          onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-50 hover:text-stone-900"
-        >
-          <LogOut className="h-4 w-4" />
-          Log out
-        </button>
-      </div>
+      <ul className="menu flex-nowrap border-card p-4" style={{ borderTopWidth: "var(--theme-border-width)" }}>
+        <li>
+          <button onClick={handleLogout}>
+            <LogOut className="h-4 w-4" />
+            Log out
+          </button>
+        </li>
+      </ul>
     </aside>
   )
 }

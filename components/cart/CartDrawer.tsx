@@ -23,17 +23,17 @@ export function CartDrawer() {
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/50 transition-opacity"
+        className="drawer-overlay fixed inset-0 z-40 transition-opacity"
         onClick={closeCart}
       />
-      <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-stone-200 px-4 py-4">
-          <h2 className="text-lg font-semibold text-stone-900">
+      <div className="drawer-side fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-card" style={{ boxShadow: "var(--theme-shadow-card-hover)" }}>
+        <div className="flex items-center justify-between border-b border-card px-4 py-4">
+          <h2 className="text-lg font-semibold text-heading">
             Cart ({itemCount})
           </h2>
           <button
             onClick={closeCart}
-            className="text-stone-400 hover:text-stone-600"
+            className="text-muted hover:text-label"
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -66,12 +66,12 @@ export function CartDrawer() {
         </div>
 
         {items.length > 0 && (
-          <div className="border-t border-stone-200 px-4 py-4">
+          <div className="border-t border-card px-4 py-4">
             <CartSummary subtotal={subtotal} itemCount={itemCount} />
             <Link
               href="/checkout"
               onClick={closeCart}
-              className="mt-4 flex w-full items-center justify-center rounded-xl bg-amber-600 py-3 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
+              className="btn btn-primary flex w-full items-center justify-center mt-4 py-3 text-sm font-semibold"
             >
               Proceed to Checkout
             </Link>

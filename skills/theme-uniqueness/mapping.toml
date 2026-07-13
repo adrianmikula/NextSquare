@@ -1,0 +1,112 @@
+# Skill-to-code mapping for theme-uniqueness
+# Generated: 2026-07-13
+
+skill_version = "0.1.0"
+codebase_version = "{git-hash}"
+
+[[capabilities]]
+name = "Audit Layer A — Status Colors"
+description = "Find and fix hardcoded green/red/blue Tailwind classes"
+
+  [[capabilities.sections]]
+  skill_section = "Layer A — Hardware Status Colors"
+  config_path = "layer_a_status_colors"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "service", function = "compileColor" },
+    { file = "app/globals.css", type = "style", function = ":root and @layer components" },
+  ]
+  test_files = [
+    { file = "__tests__/components/ui/toast.test.tsx", function = "variant style assertions" },
+  ]
+
+[[capabilities]]
+name = "Audit Layer B — Flat Tailwind Scale"
+description = "Find and fix hardcoded text-stone-*/bg-amber-*/fill-amber-*/border-stone-* classes"
+
+  [[capabilities.sections]]
+  skill_section = "Layer B — Flat Tailwind Scale"
+  config_path = "layer_b_flat_tailwind"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "service", function = "compileColor" },
+    { file = "app/globals.css", type = "style", function = "semantic utility classes" },
+  ]
+  test_files = []
+
+[[capabilities]]
+name = "Audit Layer C — bg-white / text-white / black overlays"
+description = "Find and fix hardcoded white/black values"
+
+  [[capabilities.sections]]
+  skill_section = "Layer C — White/Black"
+  config_path = "layer_c_white_black"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "app/globals.css", type = "style", function = "bg-card, bg-section, --color-overlay" },
+  ]
+  test_files = []
+
+[[capabilities]]
+name = "Audit Layer D — Non-Color Dimensions"
+description = "Find and fix hardcoded container widths, padding, gaps, shadows, transitions"
+
+  [[capabilities.sections]]
+  skill_section = "Layer D — Non-Color Dimensions"
+  config_path = "layer_d_dimensions"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "app/globals.css", type = "style", function = "container-max, section-py, card-themed, button-themed, image-themed" },
+    { file = "lib/dimensions/compile.ts", type = "service", function = "compileSpatial, compileComponents, compileMotion" },
+  ]
+  test_files = []
+
+[[capabilities]]
+name = "Audit Layer E — Silent Fallbacks"
+description = "Find and fix silent defaults, duplicated constants, hardcoded business info"
+
+  [[capabilities.sections]]
+  skill_section = "Layer E — Silent Fallbacks"
+  config_path = "layer_e_fallbacks"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "app/layout.tsx", type = "layout", function = "bundle selection" },
+    { file = "app/[tenant]/layout.tsx", type = "layout", function = "bundle selection" },
+    { file = "app/page.tsx", type = "page", function = "text variant fallback" },
+    { file = "app/[tenant]/page.tsx", type = "page", function = "text variant fallback" },
+    { file = "lib/dimensions/compile.ts", type = "service", function = "compileColor fallbacks" },
+    { file = "components/layout/header.tsx", type = "component", function = "FALLBACK_NAME" },
+    { file = "components/layout/footer.tsx", type = "component", function = "FALLBACK_NAME, social handles" },
+    { file = "components/hours-location.tsx", type = "component", function = "hardcoded address/hours" },
+    { file = "lib/renderer.ts", type = "service", function = "CTA link fallbacks" },
+  ]
+  test_files = []
+
+[[capabilities]]
+name = "Verify Dimension Distinctness"
+description = "Verify all variant pairs differ in all 8 dimensions and 5 component properties"
+
+  [[capabilities.sections]]
+  skill_section = "Step 3 — Verify Dimension Distinctness"
+  config_path = "verification"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "content/dimensions/specs/", type = "data", function = "spec files" },
+    { file = "content/dimensions/bundles/", type = "data", function = "bundle configs" },
+  ]
+  test_files = []
+
+[[capabilities]]
+name = "Validate No Dead CSS Vars"
+description = "Verify every CSS var emitted by compile.ts is consumed somewhere"
+
+  [[capabilities.sections]]
+  skill_section = "Step 4 — Validate No Silent Fallbacks or Dead CSS Vars"
+  config_path = "verification"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "service", function = "emits all CSS vars" },
+    { file = "app/globals.css", type = "style", function = "consumes CSS vars" },
+    { file = "components/**/*.tsx", type = "component", function = "consumes CSS vars via classes or inline" },
+  ]
+  test_files = []

@@ -73,13 +73,13 @@ export default function MenuPage() {
   )
 
   return (
-    <div className="bg-stone-50">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="py-12 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-stone-900">
+    <div className="bg-section">
+      <div className="mx-auto container-max px-4 sm:px-6">
+        <div className="section-py text-center">
+          <h1 className="text-4xl font-bold tracking-tight text-heading">
             Our Menu
           </h1>
-          <p className="mt-4 text-lg text-stone-600">
+          <p className="mt-4 text-lg text-body">
             Freshly prepared every day with locally sourced ingredients.
           </p>
         </div>
@@ -91,19 +91,19 @@ export default function MenuPage() {
         onSelect={setActiveCategory}
       />
 
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+      <div className="mx-auto container-max px-4 section-py sm:px-6">
         {isLoading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="animate-pulse rounded-xl border border-stone-200 bg-white"
+                className="card bg-base-100 border border-card"
               >
-                <div className="aspect-[4/3] rounded-t-xl bg-stone-100" />
+                <div className="skeleton h-48 w-full rounded-none rounded-t-xl" />
                 <div className="space-y-3 p-4">
-                  <div className="h-4 w-2/3 rounded bg-stone-100" />
-                  <div className="h-3 w-full rounded bg-stone-100" />
-                  <div className="h-3 w-1/2 rounded bg-stone-100" />
+                  <div className="skeleton h-4 w-2/3" />
+                  <div className="skeleton h-3 w-full" />
+                  <div className="skeleton h-3 w-1/2" />
                 </div>
               </div>
             ))}

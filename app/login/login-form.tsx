@@ -94,11 +94,8 @@ export function LoginForm() {
     <form onSubmit={step === "password" ? handlePasswordSubmit : handleOtpSubmit} className="space-y-4">
       {step === "password" && (
         <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-stone-700"
-          >
-            Password
+          <label htmlFor="password" className="label">
+            <span className="label-text">Password</span>
           </label>
           <input
             id="password"
@@ -108,18 +105,15 @@ export function LoginForm() {
             placeholder="Enter dashboard password"
             required
             autoFocus
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600"
+            className="input input-bordered w-full"
           />
         </div>
       )}
 
       {step === "otp" && (
         <div>
-          <label
-            htmlFor="code"
-            className="block text-sm font-medium text-stone-700"
-          >
-            Verification Code
+          <label htmlFor="code" className="label">
+            <span className="label-text">Verification Code</span>
           </label>
           <input
             id="code"
@@ -132,21 +126,21 @@ export function LoginForm() {
             placeholder="Enter 6-digit code"
             required
             autoFocus
-            className="mt-1 block w-full rounded-lg border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600"
+            className="input input-bordered w-full"
           />
           {countdown > 0 && (
-            <p className="mt-1 text-xs text-stone-500">
+            <p className="mt-1 text-xs text-muted">
               Code expires in {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, "0")}
             </p>
           )}
           {countdown === 0 && (
-            <p className="mt-1 text-xs text-red-600">Code expired. Re-enter password.</p>
+            <p className="mt-1 text-xs text-error">Code expired. Re-enter password.</p>
           )}
         </div>
       )}
 
       {error && (
-        <p className="text-sm font-medium text-red-600">{error}</p>
+        <p className="text-sm font-medium text-error">{error}</p>
       )}
 
       <div className="flex gap-2">

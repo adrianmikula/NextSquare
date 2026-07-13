@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: profile?.description || "Fresh coffee, great food, and a warm atmosphere.",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#d97706",
+    background_color: "var(--color-background, #ffffff)",
+    theme_color: "var(--color-primary, #d97706)",
   }
 }

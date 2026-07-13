@@ -31,42 +31,42 @@ export default async function SettingsPage() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-stone-900">Settings</h1>
-        <p className="mt-1 text-sm text-stone-500">
+        <h1 className="text-2xl font-bold text-heading">Settings</h1>
+        <p className="mt-1 text-sm text-muted">
           Dashboard and Square integration settings
         </p>
       </div>
 
       <div className="max-w-2xl space-y-6">
-        <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-stone-900">
+        <div className="card bg-base-100 p-6" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}>
+          <h2 className="text-lg font-semibold text-heading">
             Square Connection
           </h2>
           <div className="mt-4 flex items-center gap-3">
             {square.connected ? (
               <>
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-stone-700">
+                <CheckCircle2 className="h-5 w-5 text-success" />
+                <span className="text-sm text-label">
                   Connected to <strong>{square.name}</strong>
                 </span>
               </>
             ) : (
               <>
-                <XCircle className="h-5 w-5 text-red-500" />
-                <span className="text-sm text-stone-700">
-                  Not connected. Check your <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-xs">SQUARE_ACCESS_TOKEN</code> and{" "}
-                  <code className="rounded bg-stone-100 px-1 py-0.5 font-mono text-xs">SQUARE_LOCATION_ID</code>.
+                <XCircle className="h-5 w-5 text-error" />
+                <span className="text-sm text-label">
+                  Not connected. Check your <code className="rounded bg-section-alt px-1 py-0.5 font-mono text-xs">SQUARE_ACCESS_TOKEN</code> and{" "}
+                  <code className="rounded bg-section-alt px-1 py-0.5 font-mono text-xs">SQUARE_LOCATION_ID</code>.
                 </span>
               </>
             )}
           </div>
         </div>
 
-        <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-stone-900">
+        <div className="card bg-base-100 p-6" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}>
+          <h2 className="text-lg font-semibold text-heading">
             Dashboard Access
           </h2>
-          <p className="mt-2 text-sm text-stone-500">
+          <p className="mt-2 text-sm text-muted">
             Single-user password-based authentication.
           </p>
         </div>

@@ -2,6 +2,7 @@
 
 import type { SquareCatalogItem } from "@/types/square"
 import { formatCurrency, toPrice } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 interface MenuItemCardProps {
   item: SquareCatalogItem
@@ -18,20 +19,21 @@ export function MenuItemCard({ item, onAdd }: MenuItemCardProps) {
   return (
     <div
       data-menu-item={item.id}
-      className="card-themed group relative overflow-hidden bg-white p-4 transition-all"
+      className="card bg-base-100 group relative overflow-hidden p-4"
+      style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}
     >
       <div
-        className="aspect-[4/3] overflow-hidden bg-stone-100"
+        className="overflow-hidden bg-section-alt rounded-box"
         style={{ borderRadius: `var(--theme-image-radius) var(--theme-image-radius) 0 0` }}
       >
         {item.imageUrl ? (
           <img
             src={item.imageUrl}
             alt={name}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            className="h-full w-full transition-transform group-hover:scale-105 rounded-box" style={{ objectFit: "var(--image-treatment, cover)" as React.CSSProperties["objectFit"], aspectRatio: "var(--image-default-aspect, auto)" }}
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-stone-300">
+          <div className="flex h-full items-center justify-center text-muted">
             <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2v12a2 2 0 002 2z" />
             </svg>
@@ -39,20 +41,21 @@ export function MenuItemCard({ item, onAdd }: MenuItemCardProps) {
         )}
       </div>
       <div className="p-4">
-        <h3 className="font-semibold text-stone-900">{name}</h3>
+        <h3 className="font-semibold text-heading">{name}</h3>
         {description && (
-          <p className="mt-1 text-sm text-stone-500 line-clamp-2">{description}</p>
+          <p className="mt-1 text-sm text-muted line-clamp-2">{description}</p>
         )}
         <div className="mt-3 flex items-center justify-between">
-          <span className="text-lg font-bold text-amber-700">
+          <span className="text-lg font-bold text-price">
             {formatCurrency(price, currency)}
           </span>
-          <button
+          <Button
             onClick={onAdd}
-            className="button-themed rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-amber-700"
+            variant="default"
+            size="sm"
           >
             Add
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -65,7 +65,7 @@ Replace the monolithic theme file + archetype system with a **dimension-based de
 
 ### Bundle System
 
-Three default bundles (A, B, C) provide coherent starting points. Each bundle assigns a variant (A or B) to every dimension:
+Two default bundles (A, B) provide coherent starting points. Each bundle assigns a variant (A or B) to every dimension. Additional bundles (C, D...) can be created on request:
 
 ```json
 {

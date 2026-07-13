@@ -112,6 +112,6 @@ describe("ModifierDialog", () => {
       />
     )
     const oatMilkBtn = screen.getByText("Oat Milk").closest("button")
-    expect(oatMilkBtn?.className).toContain("bg-amber-50")
+    expect(oatMilkBtn?.className).toContain("bg-section-alt")
   })
 })

@@ -7,6 +7,7 @@ This repo uses the [skillify-codebase](https://github.com/anomalyco/AgentSkills/
 | Skill | Path | Status | Maps To |
 |-------|------|--------|---------|
 | theme-dimensions | `skills/theme-dimensions/` | Active — mapped | `lib/dimensions/`, `content/dimensions/`, `components/cms/ThemeProvider.tsx` |
+| theme-uniqueness | `skills/theme-uniqueness/` | Active — mapped | `lib/dimensions/compile.ts`, `app/globals.css`, `app/layout.tsx`, `app/[tenant]/layout.tsx`, `app/page.tsx`, `app/[tenant]/page.tsx`, all `components/` |
 
 ## Unskilled Modules (TODOs)
 

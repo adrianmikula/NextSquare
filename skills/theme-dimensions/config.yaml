@@ -1,5 +1,5 @@
 # Config for skill theme-dimensions
-# SKILL VERSION: 0.1.0
+# SKILL VERSION: 0.2.0
 
 dimension_names:
   - spatial
@@ -10,10 +10,12 @@ dimension_names:
   - components
   - rhythm
   - motion
+  - page-layout
 
 variant_names:
   - A
   - B
+  - C
 
 default_variant: "A"
 
@@ -112,6 +114,12 @@ compilation:
   imagery:
     default_aspect: "4:3"
     default_treatment: "cover"
+  page-layout:
+    default_hero_variant: "fullscreen"
+    default_nav_variant: "top-bar"
+    default_section_container: "alternating"
+    default_card_variant: "elevated"
+    default_footer_variant: "columns"
 
 verification:
   delta:

@@ -8,10 +8,16 @@ import { isDemoMode } from "@/lib/demo/config"
 import { getDemoOrder, createDemoOrder } from "@/lib/demo/menu-data"
 import { requireEnv } from "@/lib/env"
 
-const client = new Client({
-  accessToken: isDemoMode() ? "" : requireEnv("SQUARE_ACCESS_TOKEN"),
-  environment: getSquareEnvironment() === "production" ? Environment.Production : Environment.Sandbox,
-})
+let _client: Client | null = null
+function getClient(): Client {
+  if (!_client) {
+    _client = new Client({
+      accessToken: isDemoMode() ? "" : requireEnv("SQUARE_ACCESS_TOKEN"),
+      environment: getSquareEnvironment() === "production" ? Environment.Production : Environment.Sandbox,
+    })
+  }
+  return _client
+}
 
 export async function createOrder(params: {
   lineItems: CartItem[]
@@ -40,7 +46,7 @@ export async function createOrder(params: {
     ? { type: "PICKUP" as const, state: "PROPOSED" as const, pickupDetails: { recipient: { displayName: params.customerInfo.name, phoneNumber: params.customerInfo.phone }, pickupAt: params.fulfillmentDetails.pickupAt } }
     : { type: "SHIPMENT" as const, state: "PROPOSED" as const, shipmentDetails: { recipient: { displayName: params.customerInfo.name, phoneNumber: params.customerInfo.phone, address: params.fulfillmentDetails.address } } }
 
-  const { result } = await client.ordersApi.createOrder({
+  const { result } = await getClient().ordersApi.createOrder({
     idempotencyKey: params.idempotencyKey,
     order: { locationId, lineItems: lineItemsPayload, fulfillments: [fulfillment] },
   })
@@ -54,7 +60,7 @@ export async function getOrder(orderId: string): Promise<SquareOrder | null> {
   }
 
   try {
-    const { result } = await client.ordersApi.retrieveOrder(orderId)
+    const { result } = await getClient().ordersApi.retrieveOrder(orderId)
     return (result.order as SquareOrder) ?? null
   } catch {
     return null
@@ -72,7 +78,7 @@ export async function searchOrders(params: {
   }
 
   try {
-    const { result } = await client.ordersApi.searchOrders({
+    const { result } = await getClient().ordersApi.searchOrders({
       locationIds: [params.locationId],
       query: { filter: { dateTimeFilter: { createdAt: { startAt: params.startAt, endAt: params.endAt } } } },
       limit: params.limit ?? 50,

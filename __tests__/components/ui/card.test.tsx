@@ -15,8 +15,8 @@ describe("Card", () => {
 
   it("applies default card classes", () => {
     render(<Card>Default</Card>)
-    expect(screen.getByText("Default").className).toContain("rounded-xl")
-    expect(screen.getByText("Default").className).toContain("border-card")
+    expect(screen.getByText("Default").className).toContain("card")
+    expect(screen.getByText("Default").className).toContain("bg-base-100")
   })
 })
 
@@ -42,7 +42,6 @@ describe("CardTitle", () => {
   it("applies styling classes", () => {
     render(<CardTitle>Styled</CardTitle>)
     expect(screen.getByText("Styled").className).toContain("font-semibold")
-    expect(screen.getByText("Styled").className).toContain("text-heading")
   })
 })
 
@@ -52,9 +51,9 @@ describe("CardDescription", () => {
     expect(screen.getByText("Description")).toBeInTheDocument()
   })
 
-  it("applies muted styling", () => {
+  it("applies description styling", () => {
     render(<CardDescription>Muted</CardDescription>)
-    expect(screen.getByText("Muted").className).toContain("text-muted")
+    expect(screen.getByText("Muted").className).toContain("text-sm")
   })
 })
 

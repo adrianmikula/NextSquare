@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@plugin "daisyui" {
+  themes: false;
+}
 
 @source "./app";
 @source "./components";
@@ -65,6 +68,108 @@
     --container-max: 72rem;
     --grid-gap: 1.5rem;
     --nav-height: 5rem;
+    --image-treatment: cover;
+    --image-default-aspect: auto;
+    --motion-easing: ease;
+    --motion-hover-lift-transform: translateY(-4px);
+    --theme-border-style: solid;
+
+    /* Semantic color role defaults (fallbacks when dimension system not active) */
+    --color-section-bg: #ffffff;
+    --color-section-bg-alt: #fef3c7;
+    --color-section-bg-inverse: #1c1917;
+    --color-section-bg-cta: #b45309;
+    --color-heading: #1c1917;
+    --color-body: #57534e;
+    --color-muted: #a8a29e;
+    --color-label: #44403c;
+    --color-link: #57534e;
+    --color-link-hover: #b45309;
+    --color-price: #b45309;
+    --color-star: #fbbf24;
+    --color-check: #b45309;
+    --color-cta-text: #ffffff;
+    --color-cta-muted: #fef3c7;
+    --color-hero-bg: #1c1917;
+    --color-hero-text: #ffffff;
+    --color-hero-muted: #d6d3d1;
+    --color-announcement-bg: #b45309;
+    --color-announcement-text: #ffffff;
+    --color-overlay: rgba(0, 0, 0, 0.5);
+    --color-card-bg: #ffffff;
+    --color-card-border: #e7e5e4;
+    --color-input-border: #d6d3d1;
+    --color-nav-bg: rgba(255, 255, 255, 0.95);
+    --color-nav-link: #57534e;
+    --color-nav-link-hover: #b45309;
+    --color-footer-bg: #fafaf9;
+    --color-footer-heading: #78716c;
+    --color-footer-link: #57534e;
+    --color-footer-link-hover: #b45309;
+    --color-footer-muted: #a8a29e;
+
+    /* Page layout defaults — structural overrides per variant */
+    --layout-hero-variant: fullscreen;
+    --layout-nav-variant: top-bar;
+    --layout-section-container: alternating;
+    --layout-card-variant: elevated;
+    --layout-footer-variant: columns;
+    --hero-min-height: 100vh;
+    --hero-overlay-display: none;
+    --hero-content-align: center;
+    --hero-content-flow: column;
+    --nav-position: fixed;
+    --nav-layout: row;
+    --nav-width: 100%;
+    --nav-inset-block-start: 0;
+    --nav-inset-block-end: auto;
+    --nav-min-height-block: auto;
+    --nav-align: center;
+    --section-columns: 1;
+    --section-list-style: none;
+    --card-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --card-border-toggle: 0px solid;
+    --card-bg-fill: var(--color-card-bg);
+    --footer-grid: 3;
+    --footer-text-align: left;
+
+    /* Status semantic color defaults */
+    --color-success: #10b981;
+    --color-error: #ef4444;
+    --color-info: #3b82f6;
+
+    /* Button-specific semantic defaults */
+    --color-primary: #b45309;
+    --color-primary-hover: #92400e;
+    --color-button-outline-border: #e7e5e4;
+    --color-button-outline-hover-bg: #fef3c7;
+    --color-button-secondary-bg: #f5f5f4;
+    --color-button-secondary-hover-bg: #fafaf9;
+    --color-button-ghost-hover-bg: #f5f5f4;
+
+    /* DaisyUI theme variables — defaults so daisyUI components always have values */
+    --color-base-100: #ffffff;
+    --color-base-200: #ffffff;
+    --color-base-300: #e7e5e4;
+    --color-base-content: #1c1917;
+    --color-primary-content: #ffffff;
+    --color-secondary-content: #1c1917;
+    --color-accent-content: #1c1917;
+    --color-neutral: #1c1917;
+    --color-neutral-content: #ffffff;
+    --color-info-content: #ffffff;
+    --color-success-content: #ffffff;
+    --color-error-content: #ffffff;
+    --color-warning: #fbbf24;
+    --color-warning-content: #ffffff;
+    --radius-selector: 0.5rem;
+    --radius-field: 0.5rem;
+    --radius-box: 0.5rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 0.4;
+    --noise: 0;
   }
 
   body {
@@ -84,7 +189,27 @@
   }
 
   .hero-section {
-    display: var(--hero-enabled, block);
+    display: var(--hero-enabled, flex);
+    min-height: var(--hero-min-height, 100vh);
+    flex-direction: var(--hero-content-flow, column);
+    align-items: var(--hero-content-align, center);
+    justify-content: center;
+  }
+  .hero-overlay {
+    display: var(--hero-overlay-display, none);
+  }
+  nav.navbar {
+    position: var(--nav-position, fixed);
+    flex-direction: var(--nav-layout, row);
+    width: var(--nav-width, 100%);
+    inset-block-start: var(--nav-inset-block-start, 0);
+    inset-block-end: var(--nav-inset-block-end, auto);
+    min-height: var(--nav-min-height-block, auto);
+    align-items: var(--nav-align, center);
+  }
+  footer {
+    --footer-grid-cols: var(--footer-grid, 3);
+    text-align: var(--footer-text-align, left);
   }
 
   .section-py { padding-top: var(--section-py); padding-bottom: var(--section-py); }
@@ -94,30 +219,58 @@
 }
 
 @layer components {
-  .card-themed {
-    border-radius: var(--theme-card-radius) !important;
-    box-shadow: var(--theme-shadow-card);
-    transition: box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease);
-    border: var(--theme-border-width, 1px) var(--theme-border-style, solid) var(--color-stone-200) !important;
-  }
-  .card-themed:hover {
+  .card:hover {
     box-shadow: var(--theme-shadow-card-hover);
     transform: var(--motion-hover-lift-transform, none);
   }
-  .button-themed {
-    border-radius: var(--theme-button-radius);
-    font-family: var(--font-heading);
-    transition: all var(--transition-speed, 300ms) var(--motion-easing, ease);
-  }
-  .image-themed {
-    border-radius: var(--theme-image-radius);
-    object-fit: var(--image-treatment, cover);
-    aspect-ratio: var(--image-default-aspect, auto);
-  }
-  .divider-themed {
-    height: var(--divider-height, 2rem);
-    background: linear-gradient(to bottom, transparent, var(--color-stone-200), transparent);
-  }
+
+  /* Semantic color role utilities */
+  .bg-section { background-color: var(--color-section-bg); }
+  .bg-section-alt { background-color: var(--color-section-bg-alt); }
+  .bg-section-inverse { background-color: var(--color-section-bg-inverse); }
+  .bg-section-cta { background-color: var(--color-section-bg-cta); }
+  .bg-card { background-color: var(--color-card-bg); }
+  .bg-nav { background-color: var(--color-nav-bg); }
+  .bg-footer { background-color: var(--color-footer-bg); }
+
+  .text-heading { color: var(--color-heading); }
+  .text-body { color: var(--color-body); }
+  .text-muted { color: var(--color-muted); }
+  .text-label { color: var(--color-label); }
+  .text-link { color: var(--color-link); }
+  .text-price { color: var(--color-price); }
+  .text-star { color: var(--color-star); }
+  .fill-star { fill: var(--color-star); }
+  .text-check { color: var(--color-check); }
+  .text-cta-text { color: var(--color-cta-text); }
+  .text-cta-muted { color: var(--color-cta-muted); }
+  .text-hero-text { color: var(--color-hero-text); }
+  .text-hero-muted { color: var(--color-hero-muted); }
+  .text-announcement-text { color: var(--color-announcement-text); }
+  .text-footer-muted { color: var(--color-footer-muted); }
+  .text-footer-heading { color: var(--color-footer-heading); }
+
+  .border-card { border-color: var(--color-card-border); }
+
+  .text-nav-link { color: var(--color-nav-link); }
+  .hover-text-nav-link-hover:hover { color: var(--color-nav-link-hover); }
+  .text-footer-link { color: var(--color-footer-link); }
+  .hover-text-link-hover:hover { color: var(--color-link-hover); }
+  .hover-text-footer-link-hover:hover { color: var(--color-footer-link-hover); }
+
+  /* Status semantic color utilities */
+  .bg-success { background-color: var(--color-success); }
+  .text-success { color: var(--color-success); }
+  .border-success { border-color: var(--color-success); }
+  .bg-error { background-color: var(--color-error); }
+  .text-error { color: var(--color-error); }
+  .border-error { border-color: var(--color-error); }
+  .bg-info { background-color: var(--color-info); }
+  .text-info { color: var(--color-info); }
+  .border-info { border-color: var(--color-info); }
+  .bg-success-subtle { background-color: color-mix(in srgb, var(--color-success) 15%, transparent); }
+  .bg-error-subtle { background-color: color-mix(in srgb, var(--color-error) 15%, transparent); }
+  .bg-info-subtle { background-color: color-mix(in srgb, var(--color-info) 15%, transparent); }
 }
 
 @keyframes slide-down {
