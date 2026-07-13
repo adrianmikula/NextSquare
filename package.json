@@ -58,7 +58,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "happy-dom": "^20.10.6",
-    "lint-staged": "^15.5.2",
+    "lint-staged": "^17.0.8",
     "simple-git-hooks": "^2.13.1",
     "tailwindcss": "4.1.10",
     "tsx": "^4.19.0",
