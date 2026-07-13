@@ -292,126 +292,103 @@ Concrete `data` shapes for each `BlockType`.
 
 ---
 
-## ThemeConfig
+## Dimension Specs (replaces legacy ThemeConfig)
 
-Stored per-tenant under `content/themes/<tenant>/theme-{a,b,c,...}.json`.
+Each design dimension has its own spec file under `content/dimensions/specs/` with A/B variants.
 
-For the full catalogue of available styling dimensions and variance rules, see `resources/theme-dimensions.md`.
+For the full catalogue of available dimensions and variance rules, see `skills/theme-dimensions/SKILL.md`.
 
-```typescript
-interface ThemeConfig {
-  name: string;
-  description?: string;
-  colors: {
-    primary: string;       // hex
-    secondary: string;     // hex
-    background: string;    // hex
-    surface: string;       // hex
-    text: string;          // hex
-    accent: string;        // hex
-    border?: string;       // hex
-  };
-  typography: {
-    headingFont: string;       // font family name or CSS font stack
-    bodyFont: string;          // font family name or CSS font stack
-    weights: { heading: number; body: number };
-    headingCase?: 'normal' | 'uppercase' | 'small-caps';
-    letterSpacing?: string;    // CSS value e.g. '-0.02em'
-    lineHeight?: string;       // CSS value e.g. '1.5'
-  };
-  spacing: {
-    sectionPaddingY: string;  // CSS value e.g. '4rem'
-    sectionPaddingX?: string; // CSS value e.g. '1rem'
-    containerMax: string;     // CSS value e.g. '72rem'
-    gridGap?: string;         // CSS value e.g. '1.5rem'
-    contentAlign?: 'left' | 'center' | 'right';
-  };
-  shape: {
-    borderRadius?: string;    // CSS value e.g. '0.5rem', '0', '9999px'
-    cardRadius?: string;
-    buttonRadius?: string;
-    imageRadius?: string;
-  };
-  borders: {
-    width?: string;           // '0', '1px', '2px'
-    style?: 'solid' | 'dashed' | 'none';
-    cardBorder?: boolean;
-    divider?: boolean;
-  };
-  shadows: {
-    card?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-    cardHover?: 'none' | 'sm' | 'md' | 'lg';
-    tint?: boolean;           // true = tinted with primary, false = neutral
-  };
-  components: {
-    heroStyle: 'image' | 'split' | 'minimal' | 'gradient';
-    cardStyle: 'elevated' | 'flat' | 'bordered' | 'glass';
-    buttonStyle: 'filled' | 'outlined' | 'ghost' | 'underline';
-    navStyle: 'solid' | 'transparent' | 'sticky' | 'floating';
-  };
-  hero?: {
-    overlayOpacity?: number;    // 0–1
-    overlayColor?: string;      // hex
-    textAlign?: 'left' | 'center' | 'right';
-    paddingY?: string;
-    gradientDirection?: string; // 'to bottom', '135deg'
-    imageTreatment?: 'cover' | 'contain' | 'blur' | 'parallax';
-  };
-  cards?: {
-    hover?: 'lift' | 'glow' | 'border-accent' | 'none';
-    imageAspect?: 'square' | 'landscape' | 'portrait' | 'auto';
-    imageRadius?: string;
-    innerPadding?: string;
-  };
-  buttons?: {
-    radius?: string;
-    paddingX?: string;
-    fontWeight?: number;       // 500, 600, 700
-    hover?: 'darken' | 'lift' | 'glow' | 'none';
-    fullWidthMobile?: boolean;
-  };
-  nav?: {
-    backgroundOpacity?: number; // 0–1
-    logoSize?: 'sm' | 'md' | 'lg';
-    linkStyle?: 'underline' | 'pill' | 'minimal' | 'bold';
-    height?: string;
-    shadow?: boolean;
-  };
-  menu?: {
-    layout?: 'list' | 'grid' | 'cards';
-    priceAlign?: 'left' | 'right' | 'center';
-    priceStyle?: 'inline' | 'badge' | 'large';
-    divider?: boolean;
-    hover?: 'highlight' | 'slide' | 'none';
-  };
-  testimonials?: {
-    layout?: 'grid' | 'carousel' | 'stacked';
-    quoteStyle?: 'border-left' | 'italics' | 'large';
-    avatar?: boolean;
-  };
-  forms?: {
-    inputRadius?: string;
-    inputBorder?: 'full' | 'bottom-only' | 'none';
-    focusRing?: 'primary' | 'ring' | 'none';
-    labelWeight?: number;
-  };
-  footer?: {
-    background?: 'light' | 'dark' | 'primary' | 'transparent';
-    layout?: 'centered' | 'multi-column' | 'minimal';
-    borderTop?: boolean;
-    socialStyle?: 'icons' | 'text' | 'none';
-  };
-  dividers?: {
-    style?: 'none' | 'line' | 'wave' | 'angled' | 'dots';
-    color?: string;
-    height?: string;
-  };
-  motion?: {
-    transitionSpeed?: 'fast' | 'normal' | 'slow';
-    hoverLift?: boolean;
-    fadeIn?: boolean;
-    smoothScroll?: boolean;
-  };
+### Color Spec (`content/dimensions/specs/color-a.json`, `color-b.json`)
+
+```json
+{
+  "harmony": "analogous",
+  "chroma": "warm",
+  "backgroundType": "gradient",
+  "backgroundValue": "linear-gradient(180deg, #FFFAF5 0%, #F5E6D3 100%)",
+  "palette": {
+    "primary": "#D4845A",
+    "secondary": "#FFF0E0",
+    "background": "#FFFAF5",
+    "surface": "#FFFFFF",
+    "text": "#2C1810",
+    "accent": "#E8A87C",
+    "border": "#E8D5C4"
+  }
+}
+```
+
+### Typography Spec (`content/dimensions/specs/typography-a.json`, `typography-b.json`)
+
+```json
+{
+  "headingFont": "Playfair Display",
+  "bodyFont": "Nunito",
+  "headingWeight": 600,
+  "bodyWeight": 400,
+  "headingCase": "normal",
+  "letterSpacing": "normal",
+  "lineHeight": "1.5"
+}
+```
+
+### Components Spec (`content/dimensions/specs/components-a.json`, `components-b.json`)
+
+```json
+{
+  "borderRadius": "1rem",
+  "cardRadius": "1rem",
+  "buttonRadius": "9999px",
+  "imageRadius": "1rem",
+  "borderWidth": "1px",
+  "borderStyle": "solid",
+  "cardBorder": false,
+  "cardShadow": "lg",
+  "cardHoverShadow": "xl",
+  "heroStyle": "gradient",
+  "cardStyle": "flat",
+  "buttonStyle": "filled",
+  "navHeight": "4rem",
+  "navBgOpacity": 0.9
+}
+```
+
+### Spatial Spec (`content/dimensions/specs/spatial-a.json`, `spatial-b.json`)
+
+```json
+{
+  "containerMax": "72rem",
+  "sectionPaddingY": "4rem",
+  "sectionPaddingX": "1rem",
+  "gridGap": "1.5rem",
+  "contentAlign": "center"
+}
+```
+
+### Other Dimensions
+
+- **Rhythm** — `density` ("compact" | "balanced" | "relaxed" | "spacious")
+- **Motion** — `transitionSpeed` ("fast" | "normal" | "slow"), `hoverLift`, `fadeIn`, `smoothScroll`, `transitionEasing`
+- **Imagery** — `defaultAspect` (e.g. "4:3"), `treatment` ("cover" | "contain" | "fill")
+- **Wording** — tone-of-voice settings (content only, no CSS vars)
+
+### Bundle Config (`content/dimensions/bundles/{id}.json`)
+
+```json
+{
+  "id": "a",
+  "name": "Purring Patisserie",
+  "description": "Warm orange tones, Nunito body, cozy layout",
+  "dimensions": {
+    "color": "A",
+    "typography": "A",
+    "spatial": "A",
+    "components": "A",
+    "rhythm": "A",
+    "motion": "A",
+    "imagery": "A",
+    "wording": "A"
+  }
 }
 ```
 

@@ -17,6 +17,7 @@ vi.mock("@/lib/store/cart", () => ({
 }))
 
 import { useMenu } from "@/hooks/useMenu"
+import MenuPage from "@/app/menu/page"
 
 const baseItems = [
   {
@@ -59,22 +60,21 @@ beforeEach(() => {
   mockAddItem.mockReset()
 })
 
-async function renderMenu() {
-  const MenuPage = (await import("@/app/menu/page")).default
+function renderMenu() {
   return render(<MenuPage />)
 }
 
 describe("MenuPage", () => {
   it("shows loading skeleton when isLoading is true", async () => {
     vi.mocked(useMenu).mockReturnValue({ items: [], categories: [], isLoading: true, isError: false })
-    const { container } = await renderMenu()
+    const { container } = renderMenu()
     const skeletons = container.querySelectorAll(".animate-pulse")
     expect(skeletons.length).toBeGreaterThan(0)
   })
 
   it("renders menu items and categories when loaded", async () => {
     vi.mocked(useMenu).mockReturnValue({ items: baseItems, categories, isLoading: false, isError: false })
-    await renderMenu()
+    renderMenu()
     expect(screen.getByText("Flat White")).toBeInTheDocument()
     expect(screen.getByText("Latte")).toBeInTheDocument()
     expect(screen.getByText("Coffee")).toBeInTheDocument()
@@ -94,7 +94,7 @@ describe("MenuPage", () => {
       isLoading: false,
       isError: false,
     })
-    await renderMenu()
+    renderMenu()
     await userEvent.click(screen.getByText("Food"))
     expect(screen.queryByText("Flat White")).not.toBeInTheDocument()
     expect(screen.getByText("Avocado Toast")).toBeInTheDocument()
@@ -102,7 +102,7 @@ describe("MenuPage", () => {
 
   it("adds item directly to cart when no modifiers", async () => {
     vi.mocked(useMenu).mockReturnValue({ items: baseItems, categories, isLoading: false, isError: false })
-    await renderMenu()
+    renderMenu()
     const addButtons = screen.getAllByText("Add")
     await userEvent.click(addButtons[0])
     expect(mockAddItem).toHaveBeenCalledWith({
@@ -117,7 +117,7 @@ describe("MenuPage", () => {
 
   it("opens detail dialog for items with modifiers", async () => {
     vi.mocked(useMenu).mockReturnValue({ items: baseItems, categories, isLoading: false, isError: false })
-    await renderMenu()
+    renderMenu()
     const addButtons = screen.getAllByText("Add")
     await userEvent.click(addButtons[1])
     expect(screen.getByRole("heading", { name: "Latte", level: 2 })).toBeInTheDocument()

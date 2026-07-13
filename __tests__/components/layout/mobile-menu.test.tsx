@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { MobileMenuClient } from "@/components/layout/mobile-menu"
 
 vi.mock("@/components/order-button", () => ({
   OrderButton: () => <div data-testid="order-button" />,
@@ -20,20 +21,19 @@ describe("MobileMenuClient", () => {
     document.body.style.overflow = ""
   })
 
-  async function renderMenu() {
-    const { MobileMenuClient } = await import("@/components/layout/mobile-menu")
+  function renderMenu() {
     return render(<MobileMenuClient />)
   }
 
   it("renders menu toggle button initially", async () => {
-    await renderMenu()
+    renderMenu()
     const toggle = screen.getByLabelText("Open menu")
     expect(toggle).toBeInTheDocument()
     expect(toggle).toHaveAttribute("aria-expanded", "false")
   })
 
   it("renders navigation links when opened", async () => {
-    await renderMenu()
+    renderMenu()
     await userEvent.click(screen.getByLabelText("Open menu"))
     expect(screen.getByLabelText("Close menu")).toBeInTheDocument()
     expect(screen.getByLabelText("Close menu")).toHaveAttribute("aria-expanded", "true")
@@ -44,7 +44,7 @@ describe("MobileMenuClient", () => {
   })
 
   it("toggles menu closed when clicking a nav link", async () => {
-    await renderMenu()
+    renderMenu()
     await userEvent.click(screen.getByLabelText("Open menu"))
     expect(screen.getByText("Home")).toBeInTheDocument()
     await userEvent.click(screen.getByText("Home"))
@@ -52,7 +52,7 @@ describe("MobileMenuClient", () => {
   })
 
   it("closes menu when clicking backdrop overlay", async () => {
-    await renderMenu()
+    renderMenu()
     await userEvent.click(screen.getByLabelText("Open menu"))
     const backdrop = document.querySelector(".fixed.inset-0 > .absolute")
     expect(backdrop).toBeInTheDocument()
@@ -63,19 +63,19 @@ describe("MobileMenuClient", () => {
   })
 
   it("renders the OrderButton inside the menu", async () => {
-    await renderMenu()
+    renderMenu()
     await userEvent.click(screen.getByLabelText("Open menu"))
     expect(screen.getByTestId("order-button")).toBeInTheDocument()
   })
 
   it("locks body scroll when open", async () => {
-    await renderMenu()
+    renderMenu()
     await userEvent.click(screen.getByLabelText("Open menu"))
     expect(document.body.style.overflow).toBe("hidden")
   })
 
   it("restores body scroll when closed", async () => {
-    await renderMenu()
+    renderMenu()
     await userEvent.click(screen.getByLabelText("Open menu"))
     expect(document.body.style.overflow).toBe("hidden")
     await userEvent.click(screen.getByLabelText("Close menu"))

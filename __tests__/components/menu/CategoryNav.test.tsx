@@ -32,7 +32,7 @@ describe("CategoryNav", () => {
         onSelect={vi.fn()}
       />
     )
-    expect(screen.getByText("All").className).toContain("bg-amber-600")
+    expect(screen.getByText("All").className).toContain("var(--color-primary)")
   })
 
   it("highlights the active category", () => {
@@ -43,8 +43,8 @@ describe("CategoryNav", () => {
         onSelect={vi.fn()}
       />
     )
-    expect(screen.getByText("Food").className).toContain("bg-amber-600")
-    expect(screen.getByText("All").className).not.toContain("bg-amber-600")
+    expect(screen.getByText("Food").className).toContain("var(--color-primary)")
+    expect(screen.getByText("All").className).not.toContain("var(--color-primary)")
   })
 
   it("calls onSelect with category id when category clicked", async () => {

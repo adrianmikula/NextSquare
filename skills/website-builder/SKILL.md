@@ -193,31 +193,36 @@ writeJson(`content/cms/site/pages.json`, { pages: result.bundle.pages })
 - Each text-bearing field must contain both `a` and `b` wording variants.
 - If `media` is empty, use image blocks with `placeholder: true` and a descriptive label (e.g. "Hero image – awaiting upload") rather than omitting image fields entirely.
 
-### Step 6: Generate Theme Variants
+### Step 6: Generate Dimension Spec Variants
 
-Write any single file under `content/themes/`:
-- `content/themes/theme-a.json`
-- `content/themes/theme-b.json`
+Write or update dimension spec files under `content/dimensions/specs/`:
+- `content/dimensions/specs/color-a.json`, `content/dimensions/specs/color-b.json`
+- `content/dimensions/specs/typography-a.json`, `content/dimensions/specs/typography-b.json`
+- `content/dimensions/specs/components-a.json`, `content/dimensions/specs/components-b.json`
+- `content/dimensions/specs/spatial-a.json`, `content/dimensions/specs/spatial-b.json`
+- `content/dimensions/specs/rhythm-a.json`, `content/dimensions/specs/rhythm-b.json`
+- `content/dimensions/specs/motion-a.json`, `content/dimensions/specs/motion-b.json`
+- `content/dimensions/specs/imagery-a.json`, `content/dimensions/specs/imagery-b.json`
+- `content/dimensions/specs/wording-a.json`, `content/dimensions/specs/wording-b.json`
 
-**Consult `resources/theme-dimensions.md`** for the full catalogue of 16 styling dimensions
-(colour, typography, spacing, shape, borders, shadows, hero, cards, buttons, nav, menu,
-testimonials, forms, footer, dividers, motion) and the required variance checklist.
+**Consult `skills/theme-dimensions/SKILL.md`** for the full catalogue of 8 orthogonal design dimensions
+(color, typography, spatial, components, rhythm, motion, imagery, wording) and the dimension spec schema.
 
 **Rules:**
-- Every theme MUST derive colours from the `vibe.palette` and `vibe.adjectives` captured in analysis.
-- **Mandatory distinctness check (non-negotiable).** Before writing any theme file, perform this check against every previously written theme. Two themes are considered too similar if ALL of the following are true:
+- Every dimension variant MUST derive colours from the `vibe.palette` and `vibe.adjectives` captured in analysis.
+- **Mandatory distinctness check (non-negotiable).** Before writing any spec file, perform this check against every previously written variant. Two variants are considered too similar if ALL of the following are true:
   1. Their primary colours fall within **30° of hue** on the HSL colour wheel, **OR** within **20% relative luminance** difference.
   2. Their background colours are within **10%** luminance of each other.
-  3. They differ in fewer than **three** of the following component properties: `heroStyle`, `cardStyle`, `buttonStyle`, `navStyle`, `sectionPadding`.
-- **Full variance requirement.** Each new theme variant must differ from every previously written variant in at least **8 of the 16 dimension categories** defined in `resources/theme-dimensions.md`. At minimum, themes must differ in: colour palette, typography, card style, hero style, plus four additional dimensions (e.g. nav, spacing, shape, buttons, menu, motion, shadows, borders, dividers, heroes, cards, testimonials, forms, footer).
-- If two themes fail the check, the weaker one must be regenerated with a **contrasting adjective** from the adjective list. Do not emit both themes with the same dominant hue family (e.g., two different warm browns).
-- If `vibe.adjectives` contains fewer than 2 items, **invent no more than one additional direction keyword** that contrasts the existing one. Build the second theme from that keyword + the contrasting half of the palette extraction (darkest colour becomes primary, lightest becomes secondary, mid-tone becomes accent — do not use the same extraction order for both themes).
-- For additional variants beyond A/B (C, D...), each new variant must differ from **every previously written variant** by at least **two** of: dominant hue, lightness band, saturation band, heroStyle, cardStyle, buttonStyle, navStyle, sectionPadding, shape, motion, typography.
-- Image URLs (hero, gallery) live in the CMS pages and `site-profile.json`, not in theme files. Theme JSON should contain only colours, typography, and component style flags.
+  3. They differ in fewer than **three** of the following component properties: `borderRadius`, `cardRadius`, `buttonRadius`, `navHeight`, `cardShadow`.
+- **Full variance requirement.** Each new variant must differ from every previously written variant in at least **4 of the 8 dimensions**. At minimum, variants must differ in: color palette, typography, plus two additional dimensions (e.g. spatial, components, rhythm, motion, imagery).
+- If two variants fail the check, the weaker one must be regenerated with a **contrasting adjective** from the adjective list. Do not emit both with the same dominant hue family (e.g., two different warm browns).
+- If `vibe.adjectives` contains fewer than 2 items, **invent no more than one additional direction keyword** that contrasts the existing one. Build the second variant from that keyword + the contrasting half of the palette extraction (darkest colour becomes primary, lightest becomes secondary, mid-tone becomes accent — do not use the same extraction order for both).
+- For additional variants beyond A/B (C, D...), each new variant must differ from **every previously written variant** by at least **two** of: dominant hue, lightness band, saturation band, `borderRadius`, `cardRadius`, `buttonRadius`, `navHeight`, `cardShadow`, `density`, `transitionSpeed`.
+- Image URLs (hero, gallery) live in the CMS pages and `site-profile.json`, not in dimension spec files. Spec files should contain only colours, typography settings, and component style flags.
 - Consult `resources/theme-examples.md` for industry-specific palettes, typography, and direction keywords. Match the business `type` to the corresponding subcategory section and use that as a starting point.
-- Themes must never reuse names from other sites. Names should reflect the chosen direction keyword (e.g. `"Rustic Warmth"`, `"Cool Minimal"`).
+- Dimension spec bundle names should reflect the chosen direction keyword (e.g. `"Rustic Warmth"`, `"Cool Minimal"`).
 
-`ThemeConfig` shape is defined in `resources/schemas.md`. Do not use preset theme definitions. Generate each theme pair afresh from the current `BusinessProfile`.
+Dimension spec schema is defined in the existing spec JSON files under `content/dimensions/specs/`. Do not use preset definitions. Generate each variant pair afresh from the current `BusinessProfile`.
 
 ### Step 7: Scaffold Square Catalogue (Stub)
 
@@ -272,19 +277,18 @@ Report:
 ```
 Generated assets are in:
   content/cms/site/pages.json
-  content/themes/theme-a.json  →  Theme: "<name from file>"
-  content/themes/theme-b.json  →  Theme: "<name from file>"
+  content/dimensions/specs/  (8 dimensions × A/B variants)
   content/catalogue/catalogue.json
 
 Dev server running at http://localhost:3000
 
-Preview both themes at:
-  http://localhost:3000/?theme=a
-  http://localhost:3000/?theme=b
+Preview both dimension bundles at:
+  http://localhost:3000/?bundle=a
+  http://localhost:3000/?bundle=b
 
 Each page has two layout variants (A: feature-forward, B: conservative) and two wording variants (A, B).
 
-Which theme would you like to try first? (A / B)
+Which bundle would you like to try first? (A / B)
 ```
 
 Wait for the user's answer. Do not proceed without it.

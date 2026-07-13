@@ -1,11 +1,21 @@
 // @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
+import { POST } from "@/app/api/auth/challenge/route"
 
-const mockStoreMfaCode = vi.fn()
-const mockGetMfaKey = vi.fn(() => "mfa:test-ip")
-const mockSendSms = vi.fn()
-const mockRateLimit = vi.fn(() => ({ allowed: true }))
-const mockGetRateLimitResponse = vi.fn(() => new Response("Too Many Requests", { status: 429 }))
+const { mockStoreMfaCode, mockGetMfaKey, mockSendSms, mockRateLimit, mockGetRateLimitResponse, mockSearchTeamMembers, MockClient } = vi.hoisted(() => {
+  const mockStoreMfaCode = vi.fn()
+  const mockGetMfaKey = vi.fn(() => "mfa:test-ip")
+  const mockSendSms = vi.fn()
+  const mockRateLimit = vi.fn(() => ({ allowed: true }))
+  const mockGetRateLimitResponse = vi.fn(() => new Response("Too Many Requests", { status: 429 }))
+  const mockSearchTeamMembers = vi.fn()
+  class MockClient {
+    teamApi = {
+      searchTeamMembers: mockSearchTeamMembers,
+    }
+  }
+  return { mockStoreMfaCode, mockGetMfaKey, mockSendSms, mockRateLimit, mockGetRateLimitResponse, mockSearchTeamMembers, MockClient }
+})
 
 vi.mock("@/lib/auth/mfa", () => ({
   storeMfaCode: mockStoreMfaCode,
@@ -20,14 +30,6 @@ vi.mock("@/lib/security/rate-limit", () => ({
   rateLimit: mockRateLimit,
   getRateLimitResponse: mockGetRateLimitResponse,
 }))
-
-const mockSearchTeamMembers = vi.fn()
-
-class MockClient {
-  teamApi = {
-    searchTeamMembers: mockSearchTeamMembers,
-  }
-}
 
 vi.mock("square/legacy", () => ({
   Client: MockClient,
@@ -44,8 +46,7 @@ function expectMfaCall(calls: unknown[][], expectedRole: string, expectedSquareR
   expect(call[5]).toBe(expectedSquareRequired)
 }
 
-async function callPost(body: object) {
-  const { POST } = await import("@/app/api/auth/challenge/route")
+function callPost(body: object) {
   const request = {
     json: () => Promise.resolve(body),
     headers: { get: () => "test-ip" },

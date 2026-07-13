@@ -1,26 +1,28 @@
 // @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
+import { POST } from "@/app/api/auth/login/route"
 
-const mockCreateSession = vi.fn()
-const mockSearchTeamMembers = vi.fn()
+const { mockCreateSession, mockSearchTeamMembers, MockClient } = vi.hoisted(() => {
+  const mockCreateSession = vi.fn()
+  const mockSearchTeamMembers = vi.fn()
+  class MockClient {
+    teamApi = {
+      searchTeamMembers: mockSearchTeamMembers,
+    }
+  }
+  return { mockCreateSession, mockSearchTeamMembers, MockClient }
+})
 
 vi.mock("@/lib/auth/session", () => ({
   createSession: mockCreateSession,
 }))
-
-class MockClient {
-  teamApi = {
-    searchTeamMembers: mockSearchTeamMembers,
-  }
-}
 
 vi.mock("square/legacy", () => ({
   Client: MockClient,
   Environment: { Production: "production", Sandbox: "sandbox" },
 }))
 
-async function callPost(body: object) {
-  const { POST } = await import("@/app/api/auth/login/route")
+function callPost(body: object) {
   const request = {
     json: () => Promise.resolve(body),
     headers: { get: () => null },

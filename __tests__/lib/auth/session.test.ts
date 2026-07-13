@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
+import { encrypt, decrypt } from "@/lib/auth/session"
 
 beforeEach(() => {
   vi.stubEnv("DASHBOARD_PASSWORD", "test-password-123")
@@ -23,19 +24,16 @@ describe("session", () => {
   })
 
   it("returns undefined for invalid token", async () => {
-    const { decrypt } = await import("@/lib/auth/session")
     const payload = await decrypt("invalid-token")
     expect(payload).toBeUndefined()
   })
 
   it("returns undefined for empty token", async () => {
-    const { decrypt } = await import("@/lib/auth/session")
     const payload = await decrypt("")
     expect(payload).toBeUndefined()
   })
 
   it("returns undefined for undefined token", async () => {
-    const { decrypt } = await import("@/lib/auth/session")
     const payload = await decrypt(undefined)
     expect(payload).toBeUndefined()
   })

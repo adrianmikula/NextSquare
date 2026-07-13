@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 import { renderHook, act } from "@testing-library/react"
+import { useToastState, ToastContext } from "@/hooks/useToast"
 
 describe("useToastState", () => {
   beforeEach(() => {
@@ -10,14 +11,12 @@ describe("useToastState", () => {
     vi.useRealTimers()
   })
 
-  it("starts with empty toasts", async () => {
-    const { useToastState } = await import("@/hooks/useToast")
+  it("starts with empty toasts", () => {
     const { result } = renderHook(() => useToastState())
     expect(result.current.toasts).toHaveLength(0)
   })
 
-  it("adds a toast with default variant", async () => {
-    const { useToastState } = await import("@/hooks/useToast")
+  it("adds a toast with default variant", () => {
     const { result } = renderHook(() => useToastState())
 
     act(() => {
@@ -29,8 +28,7 @@ describe("useToastState", () => {
     expect(result.current.toasts[0].variant).toBe("info")
   })
 
-  it("adds a toast with a custom variant", async () => {
-    const { useToastState } = await import("@/hooks/useToast")
+  it("adds a toast with a custom variant", () => {
     const { result } = renderHook(() => useToastState())
 
     act(() => {
@@ -40,8 +38,7 @@ describe("useToastState", () => {
     expect(result.current.toasts[0].variant).toBe("error")
   })
 
-  it("adds a toast with success variant", async () => {
-    const { useToastState } = await import("@/hooks/useToast")
+  it("adds a toast with success variant", () => {
     const { result } = renderHook(() => useToastState())
 
     act(() => {
@@ -51,8 +48,7 @@ describe("useToastState", () => {
     expect(result.current.toasts[0].variant).toBe("success")
   })
 
-  it("removes a toast by id", async () => {
-    const { useToastState } = await import("@/hooks/useToast")
+  it("removes a toast by id", () => {
     const { result } = renderHook(() => useToastState())
 
     act(() => {
@@ -68,8 +64,7 @@ describe("useToastState", () => {
     expect(result.current.toasts).toHaveLength(0)
   })
 
-  it("auto-removes toast after 5 seconds", async () => {
-    const { useToastState } = await import("@/hooks/useToast")
+  it("auto-removes toast after 5 seconds", () => {
     const { result } = renderHook(() => useToastState())
 
     act(() => {
@@ -85,8 +80,7 @@ describe("useToastState", () => {
     expect(result.current.toasts).toHaveLength(0)
   })
 
-  it("handles multiple toasts", async () => {
-    const { useToastState } = await import("@/hooks/useToast")
+  it("handles multiple toasts", () => {
     const { result } = renderHook(() => useToastState())
 
     act(() => {
@@ -101,8 +95,7 @@ describe("useToastState", () => {
 })
 
 describe("ToastContext", () => {
-  it("provides default empty context", async () => {
-    const { ToastContext } = await import("@/hooks/useToast")
+  it("provides default empty context", () => {
     expect(ToastContext).toBeDefined()
     expect(ToastContext.Provider).toBeDefined()
   })

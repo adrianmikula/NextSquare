@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { createHash } from "node:crypto"
 import { describe, expect, it, beforeEach, afterEach } from "vitest"
 import { verifySquareWebhook, parseWebhookEvent } from "@/lib/webhooks/square"

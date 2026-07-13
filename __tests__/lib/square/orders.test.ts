@@ -1,5 +1,7 @@
+// @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 import { mockOrdersApi } from "../../../__mocks__/square/legacy"
+import { createOrder, getOrder, searchOrders } from "@/lib/square/orders"
 
 vi.mock("square/legacy")
 
@@ -21,7 +23,6 @@ describe("createOrder", () => {
       },
     })
 
-    const { createOrder } = await import("@/lib/square/orders")
     const result = await createOrder({
       lineItems: [
         {
@@ -71,7 +72,6 @@ describe("createOrder", () => {
       },
     })
 
-    const { createOrder } = await import("@/lib/square/orders")
     const result = await createOrder({
       lineItems: [
         {
@@ -122,7 +122,6 @@ describe("createOrder", () => {
       result: { order: { id: "order-789" } },
     })
 
-    const { createOrder } = await import("@/lib/square/orders")
     await createOrder({
       lineItems: [
         {
@@ -168,7 +167,6 @@ describe("getOrder", () => {
       },
     })
 
-    const { getOrder } = await import("@/lib/square/orders")
     const order = await getOrder("order-123")
 
     expect(order).toEqual({ id: "order-123", state: "COMPLETED" })
@@ -177,7 +175,6 @@ describe("getOrder", () => {
   it("returns null on error", async () => {
     mockOrdersApi.retrieveOrder.mockRejectedValue(new Error("Not found"))
 
-    const { getOrder } = await import("@/lib/square/orders")
     const order = await getOrder("order-404")
 
     expect(order).toBeNull()
@@ -192,7 +189,6 @@ describe("searchOrders", () => {
       },
     })
 
-    const { searchOrders } = await import("@/lib/square/orders")
     const orders = await searchOrders({
       locationId: "loc-123",
       limit: 50,
@@ -204,7 +200,6 @@ describe("searchOrders", () => {
   it("returns empty array on error", async () => {
     mockOrdersApi.searchOrders.mockRejectedValue(new Error("API error"))
 
-    const { searchOrders } = await import("@/lib/square/orders")
     const orders = await searchOrders({ locationId: "loc-123" })
 
     expect(orders).toEqual([])

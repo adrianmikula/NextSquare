@@ -1,8 +1,11 @@
 // @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 import { NextResponse, NextRequest } from "next/server"
+import proxy from "@/proxy"
 
-const mockDecrypt = vi.fn()
+const { mockDecrypt } = vi.hoisted(() => ({
+  mockDecrypt: vi.fn(),
+}))
 
 vi.mock("@/lib/auth/session", () => ({
   decrypt: mockDecrypt,
@@ -39,7 +42,6 @@ describe("proxy", () => {
   it("redirects unauthenticated user to /login for /dashboard", async () => {
     mockDecrypt.mockResolvedValue(undefined)
 
-    const { default: proxy } = await import("@/proxy")
     const req = createRequest("/dashboard")
     const res = await proxy(req)
 
@@ -52,7 +54,6 @@ describe("proxy", () => {
   it("redirects unauthenticated user for /dashboard/menu", async () => {
     mockDecrypt.mockResolvedValue(undefined)
 
-    const { default: proxy } = await import("@/proxy")
     const req = createRequest("/dashboard/menu")
     const res = await proxy(req)
 
@@ -63,7 +64,6 @@ describe("proxy", () => {
   it("allows authenticated user to access /dashboard", async () => {
     mockDecrypt.mockResolvedValue({ userId: "admin" })
 
-    const { default: proxy } = await import("@/proxy")
     const req = createRequest("/dashboard", "valid-token")
     const res = await proxy(req)
 
@@ -73,7 +73,6 @@ describe("proxy", () => {
   it("redirects authenticated user away from /login to /dashboard", async () => {
     mockDecrypt.mockResolvedValue({ userId: "admin" })
 
-    const { default: proxy } = await import("@/proxy")
     const req = createRequest("/login", "valid-token")
     const res = await proxy(req)
 
@@ -84,7 +83,6 @@ describe("proxy", () => {
   it("allows unauthenticated user to access /login", async () => {
     mockDecrypt.mockResolvedValue(undefined)
 
-    const { default: proxy } = await import("@/proxy")
     const req = createRequest("/login")
     const res = await proxy(req)
 
@@ -94,7 +92,6 @@ describe("proxy", () => {
   it("allows access to public paths without session check", async () => {
     mockDecrypt.mockResolvedValue(undefined)
 
-    const { default: proxy } = await import("@/proxy")
     const req = createRequest("/menu")
     const res = await proxy(req)
 
@@ -104,7 +101,6 @@ describe("proxy", () => {
   it("allows access to root path", async () => {
     mockDecrypt.mockResolvedValue(undefined)
 
-    const { default: proxy } = await import("@/proxy")
     const req = createRequest("/")
     const res = await proxy(req)
 
@@ -114,7 +110,6 @@ describe("proxy", () => {
   it("allows authenticated user to access public routes", async () => {
     mockDecrypt.mockResolvedValue({ userId: "admin" })
 
-    const { default: proxy } = await import("@/proxy")
     const req = createRequest("/about", "valid-token")
     const res = await proxy(req)
 
@@ -124,7 +119,6 @@ describe("proxy", () => {
   it("redirects authenticated user from /login/something to /dashboard", async () => {
     mockDecrypt.mockResolvedValue({ userId: "admin" })
 
-    const { default: proxy } = await import("@/proxy")
     const req = createRequest("/login?redirect=/dashboard/menu", "valid-token")
     const res = await proxy(req)
 

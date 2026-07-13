@@ -17,35 +17,36 @@ vi.mock("@/components/checkout/OrderConfirmed", () => ({
   ),
 }))
 
+import ConfirmationPage from "@/app/checkout/confirmation/page"
+
 beforeEach(() => {
   vi.clearAllMocks()
 })
 
-async function renderConfirmation(searchParams: Record<string, string | null>) {
+function renderConfirmation(searchParams: Record<string, string | null>) {
   vi.mocked(useSearchParams).mockReturnValue({
     get: (key: string) => searchParams[key] ?? null,
   } as any)
-  const ConfirmationPage = (await import("@/app/checkout/confirmation/page")).default
   return render(<ConfirmationPage />)
 }
 
 describe("ConfirmationPage", () => {
-  it("renders orderId and points from search params", async () => {
-    await renderConfirmation({ orderId: "order-123", pointsEarned: "50", totalBalance: "200" })
+  it("renders orderId and points from search params", () => {
+    renderConfirmation({ orderId: "order-123", pointsEarned: "50", totalBalance: "200" })
     expect(screen.getByTestId("confirmed-order-id").textContent).toBe("order-123")
     expect(screen.getByTestId("confirmed-points").textContent).toBe("50")
     expect(screen.getByTestId("confirmed-balance").textContent).toBe("200")
   })
 
-  it("renders with empty orderId when param is missing", async () => {
-    await renderConfirmation({})
+  it("renders with empty orderId when param is missing", () => {
+    renderConfirmation({})
     expect(screen.getByTestId("confirmed-order-id").textContent).toBe("")
     expect(screen.getByTestId("confirmed-points").textContent).toBe("undefined")
     expect(screen.getByTestId("confirmed-balance").textContent).toBe("undefined")
   })
 
-  it("renders pointsEarned as undefined when params are not numbers", async () => {
-    await renderConfirmation({ orderId: "order-456", pointsEarned: null, totalBalance: null })
+  it("renders pointsEarned as undefined when params are not numbers", () => {
+    renderConfirmation({ orderId: "order-456", pointsEarned: null, totalBalance: null })
     expect(screen.getByTestId("confirmed-order-id").textContent).toBe("order-456")
     expect(screen.getByTestId("confirmed-points").textContent).toBe("undefined")
     expect(screen.getByTestId("confirmed-balance").textContent).toBe("undefined")

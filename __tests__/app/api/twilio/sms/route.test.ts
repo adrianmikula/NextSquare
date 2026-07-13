@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest"
+import { POST } from "@/app/api/twilio/sms/route"
 
-const mockSendSms = vi.fn()
+const { mockSendSms } = vi.hoisted(() => ({ mockSendSms: vi.fn() }))
 
 vi.mock("@/lib/twilio/client", () => ({
   sendSms: mockSendSms,
 }))
 
-async function callPost(body: any) {
-  const { POST } = await import("@/app/api/twilio/sms/route")
+function callPost(body: any) {
   const request = {
     json: () => Promise.resolve(body),
     headers: { get: () => null },

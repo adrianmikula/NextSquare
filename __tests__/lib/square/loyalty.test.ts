@@ -1,5 +1,11 @@
+// @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 import { mockLoyaltyApi } from "../../../__mocks__/square/legacy"
+import {
+  getOrCreateLoyaltyAccount,
+  calculateLoyaltyPoints,
+  getLoyaltyProgram,
+} from "@/lib/square/loyalty"
 
 vi.mock("square/legacy")
 
@@ -39,7 +45,6 @@ afterEach(() => {
 describe("getOrCreateLoyaltyAccount", () => {
   it("returns demo account when in demo mode", async () => {
     mockIsDemoMode.mockReturnValue(true)
-    const { getOrCreateLoyaltyAccount } = await import("@/lib/square/loyalty")
     const result = await getOrCreateLoyaltyAccount("+61400000000")
     expect(result.accountId).toBe("demo-loyalty-+61400000000")
     expect(result.balance).toBe(120)
@@ -47,7 +52,6 @@ describe("getOrCreateLoyaltyAccount", () => {
 
   it("creates a new demo account for unknown phone numbers", async () => {
     mockIsDemoMode.mockReturnValue(true)
-    const { getOrCreateLoyaltyAccount } = await import("@/lib/square/loyalty")
     const result = await getOrCreateLoyaltyAccount("+61499999999")
     expect(result.balance).toBe(0)
     expect(result.accountId).toContain("demo-loyalty-")
@@ -62,7 +66,6 @@ describe("getOrCreateLoyaltyAccount", () => {
       },
     })
 
-    const { getOrCreateLoyaltyAccount } = await import("@/lib/square/loyalty")
     const result = await getOrCreateLoyaltyAccount("+61412345678")
 
     expect(result.accountId).toBe("loyalty-456")
@@ -83,7 +86,6 @@ describe("getOrCreateLoyaltyAccount", () => {
       },
     })
 
-    const { getOrCreateLoyaltyAccount } = await import("@/lib/square/loyalty")
     const result = await getOrCreateLoyaltyAccount("+61412345678")
 
     expect(result.accountId).toBe("loyalty-new")
@@ -101,7 +103,6 @@ describe("getOrCreateLoyaltyAccount", () => {
 describe("calculateLoyaltyPoints", () => {
   it("returns demo points in demo mode", async () => {
     mockIsDemoMode.mockReturnValue(true)
-    const { calculateLoyaltyPoints } = await import("@/lib/square/loyalty")
     const result = await calculateLoyaltyPoints("order-001")
     expect(result.points).toBe(15)
   })
@@ -111,7 +112,6 @@ describe("calculateLoyaltyPoints", () => {
       result: { points: 42 },
     })
 
-    const { calculateLoyaltyPoints } = await import("@/lib/square/loyalty")
     const result = await calculateLoyaltyPoints("order-001")
     expect(result.points).toBe(42)
     expect(mockLoyaltyApi.calculateLoyaltyPoints).toHaveBeenCalledWith(
@@ -124,7 +124,6 @@ describe("calculateLoyaltyPoints", () => {
 describe("getLoyaltyProgram", () => {
   it("returns demo program in demo mode", async () => {
     mockIsDemoMode.mockReturnValue(true)
-    const { getLoyaltyProgram } = await import("@/lib/square/loyalty")
     const program = await getLoyaltyProgram()
     expect(program.id).toBe("demo-program")
     expect(program.rewardTiers).toHaveLength(1)
@@ -143,7 +142,6 @@ describe("getLoyaltyProgram", () => {
       },
     })
 
-    const { getLoyaltyProgram } = await import("@/lib/square/loyalty")
     const program = await getLoyaltyProgram()
     expect(program.id).toBe("prog-real")
     expect(program.rewardTiers).toHaveLength(1)

@@ -1,15 +1,14 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
+import { GET } from "@/app/api/square/catalog/route"
 
-const mockFetchMenu = vi.fn()
-const mockFetchItemBySlug = vi.fn()
+const { mockFetchMenu, mockFetchItemBySlug } = vi.hoisted(() => ({ mockFetchMenu: vi.fn(), mockFetchItemBySlug: vi.fn() }))
 
 vi.mock("@/lib/square/catalog", () => ({
   fetchMenu: mockFetchMenu,
   fetchItemBySlug: mockFetchItemBySlug,
 }))
 
-async function callGet(url: string) {
-  const { GET } = await import("@/app/api/square/catalog/route")
+function callGet(url: string) {
   const request = { url } as any
   return GET(request)
 }

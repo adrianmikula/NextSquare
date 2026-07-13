@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { compileSpecsToCssVars } from "@/lib/dimensions/compile"
 import type { DimensionName, DimensionSpec } from "@/lib/dimensions/types"
@@ -42,7 +43,6 @@ describe("compileSpecsToCssVars", () => {
     expect(vars["--color-stone-900"]).toBe("#111111")
     expect(vars["--color-stone-50"]).toBe("#ffffff")
     expect(vars["--color-background"]).toBe("#ffffff")
-    expect(vars["--color-background-type"]).toBe("gradient")
     expect(vars["--color-background-value"]).toBe("linear-gradient(180deg, red, blue)")
   })
 
@@ -52,7 +52,6 @@ describe("compileSpecsToCssVars", () => {
       palette: { primary: "#123456", secondary: "#fff", background: "#eee", surface: "#ddd", text: "#111", accent: "#789abc", border: "#ccc" },
     }
     const vars = compileSpecsToCssVars(specs)
-    expect(vars["--color-background-type"]).toBe("color")
     expect(vars["--color-background-value"]).toBe("#eee")
   })
 
@@ -181,13 +180,12 @@ describe("compileSpecsToCssVars", () => {
     expect(vars["--section-py"]).toBe("3rem")
   })
 
-  it("compiles rhythm spec to density and section-py spacing (not --section-py)", () => {
+  it("compiles rhythm spec to section-py spacing (not --section-py)", () => {
     const specs = makeEmptySpecs()
     specs.rhythm = {
       density: "relaxed",
     }
     const vars = compileSpecsToCssVars(specs)
-    expect(vars["--rhythm-density"]).toBe("relaxed")
     expect(vars["--rhythm-section-py"]).toBe("5rem")
     expect(vars["--section-py"]).toBeUndefined()
   })

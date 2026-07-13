@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest"
+import { POST } from "@/app/api/square/payment/route"
 
-const mockProcessPayment = vi.fn()
+const { mockProcessPayment } = vi.hoisted(() => ({ mockProcessPayment: vi.fn() }))
 
 vi.mock("@/lib/square/payments", () => ({
   processPayment: mockProcessPayment,
 }))
 
-async function callPost(body: unknown) {
-  const { POST } = await import("@/app/api/square/payment/route")
+function callPost(body: unknown) {
   const request = {
     json: () => Promise.resolve(body),
     headers: { get: () => null },

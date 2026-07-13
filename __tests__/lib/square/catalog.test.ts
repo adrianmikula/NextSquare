@@ -1,4 +1,6 @@
+// @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
+import { fetchMenu, fetchItemBySlug } from "@/lib/square/catalog"
 
 beforeEach(() => {
   vi.stubEnv("SQUARE_ACCESS_TOKEN", "test-token")
@@ -50,7 +52,6 @@ describe("fetchMenu", () => {
       })
     )
 
-    const { fetchMenu } = await import("@/lib/square/catalog")
     const result = await fetchMenu()
 
     expect(result.items).toHaveLength(1)
@@ -116,7 +117,6 @@ describe("fetchMenu", () => {
       })
     )
 
-    const { fetchMenu } = await import("@/lib/square/catalog")
     const result = await fetchMenu()
 
     expect(result.items).toHaveLength(1)
@@ -170,7 +170,6 @@ describe("fetchItemBySlug", () => {
       })
     )
 
-    const { fetchItemBySlug } = await import("@/lib/square/catalog")
     const result = await fetchItemBySlug("nonexistent")
     expect(result).toBeNull()
   })

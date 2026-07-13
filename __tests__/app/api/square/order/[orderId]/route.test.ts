@@ -1,13 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from "vitest"
+import { GET } from "@/app/api/square/order/[orderId]/route"
 
-const mockGetOrder = vi.fn()
+const { mockGetOrder } = vi.hoisted(() => ({ mockGetOrder: vi.fn() }))
 
 vi.mock("@/lib/square/orders", () => ({
   getOrder: mockGetOrder,
 }))
 
-async function callGet(orderId: string) {
-  const { GET } = await import("@/app/api/square/order/[orderId]/route")
+function callGet(orderId: string) {
   const request = {} as any
   const params = Promise.resolve({ orderId })
   return GET(request, { params })

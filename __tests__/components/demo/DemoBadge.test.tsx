@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, afterEach } from "vitest"
 import { render, screen } from "@testing-library/react"
+import { DemoBadge } from "@/components/demo/DemoBadge"
 
 vi.mock("@/lib/demo/config", () => ({
   isDemoMode: vi.fn(),
@@ -12,20 +13,19 @@ afterEach(() => {
 })
 
 describe("DemoBadge", () => {
-  async function renderBadge() {
-    const { DemoBadge } = await import("@/components/demo/DemoBadge")
+  function renderBadge() {
     return render(<DemoBadge />)
   }
 
-  it("renders nothing when not in demo mode", async () => {
+  it("renders nothing when not in demo mode", () => {
     vi.mocked(isDemoMode).mockReturnValue(false)
-    const { container } = await renderBadge()
+    const { container } = renderBadge()
     expect(container.textContent).toBe("")
   })
 
-  it("renders demo badge when in demo mode", async () => {
+  it("renders demo badge when in demo mode", () => {
     vi.mocked(isDemoMode).mockReturnValue(true)
-    await renderBadge()
+    renderBadge()
     expect(screen.getByText("Demo Mode")).toBeInTheDocument()
   })
 })

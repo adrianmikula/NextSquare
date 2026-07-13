@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest"
 import { render, screen, act } from "@testing-library/react"
 import { Suspense } from "react"
 
-const mockUseOrderStatus = vi.fn()
+const mockUseOrderStatus = vi.hoisted(() => vi.fn())
 
 vi.mock("@/hooks/useOrderStatus", () => ({
   useOrderStatus: mockUseOrderStatus,
@@ -16,8 +16,9 @@ vi.mock("@/components/loyalty/LoyaltyBadge", () => ({
   LoyaltyBadge: ({ phoneNumber }: any) => <div data-testid="loyalty-badge">{phoneNumber}</div>,
 }))
 
+import OrderStatusPage from "@/app/order/[orderId]/page"
+
 async function renderOrderPage(orderId: string) {
-  const OrderStatusPage = (await import("@/app/order/[orderId]/page")).default
   return await act(async () => {
     return render(
       <Suspense fallback={<div>Loading...</div>}>

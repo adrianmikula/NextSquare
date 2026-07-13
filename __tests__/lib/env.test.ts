@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it, beforeEach, afterEach } from "vitest"
 import { requireEnv } from "@/lib/env"
 

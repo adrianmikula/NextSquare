@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { OrderSummary } from "@/components/checkout/OrderSummary"
+import { useCartStore } from "@/lib/store/cart"
 
-beforeEach(async () => {
-  const { useCartStore } = await import("@/lib/store/cart")
+beforeEach(() => {
   useCartStore.setState({ items: [], fulfillmentType: "PICKUP" })
 })
 
@@ -13,8 +13,7 @@ describe("OrderSummary", () => {
     expect(screen.getByText("Order Summary")).toBeInTheDocument()
   })
 
-  it("renders cart items with quantities and totals", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("renders cart items with quantities and totals", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",

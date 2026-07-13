@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest"
+import { GET, POST } from "@/app/api/outstatic/[[...ost]]/route"
 
 vi.mock("outstatic", () => ({
   OutstaticApi: {
@@ -9,14 +10,12 @@ vi.mock("outstatic", () => ({
 }))
 
 describe("Outstatic API route", () => {
-  it("exports GET handler from OutstaticApi", async () => {
-    const { GET } = await import("@/app/api/outstatic/[[...ost]]/route")
+  it("exports GET handler from OutstaticApi", () => {
     expect(GET).toBeDefined()
     expect(typeof GET).toBe("function")
   })
 
-  it("exports POST handler from OutstaticApi", async () => {
-    const { POST } = await import("@/app/api/outstatic/[[...ost]]/route")
+  it("exports POST handler from OutstaticApi", () => {
     expect(POST).toBeDefined()
     expect(typeof POST).toBe("function")
   })

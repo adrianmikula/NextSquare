@@ -1,4 +1,6 @@
+// @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
+import { sendSms } from "@/lib/twilio/client"
 
 const mockCreate = vi.fn()
 
@@ -22,7 +24,6 @@ afterEach(() => {
 describe("sendSms", () => {
   it("sends an SMS with correct parameters", async () => {
     mockCreate.mockResolvedValue({ sid: "SM123" })
-    const { sendSms } = await import("@/lib/twilio/client")
     const result = await sendSms("+15559876543", "Hello from the cafe!")
     expect(mockCreate).toHaveBeenCalledWith({
       body: "Hello from the cafe!",
@@ -34,7 +35,6 @@ describe("sendSms", () => {
 
   it("throws when Twilio API fails", async () => {
     mockCreate.mockRejectedValue(new Error("Twilio error"))
-    const { sendSms } = await import("@/lib/twilio/client")
     await expect(sendSms("+15559876543", "test")).rejects.toThrow("Twilio error")
   })
 })

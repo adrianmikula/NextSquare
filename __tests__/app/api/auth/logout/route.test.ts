@@ -1,14 +1,14 @@
 // @vitest-environment node
 import { describe, expect, it, vi, beforeEach } from "vitest"
+import { POST } from "@/app/api/auth/logout/route"
 
-const mockDeleteSession = vi.fn()
+const { mockDeleteSession } = vi.hoisted(() => ({ mockDeleteSession: vi.fn() }))
 
 vi.mock("@/lib/auth/session", () => ({
   deleteSession: mockDeleteSession,
 }))
 
-async function callPost() {
-  const { POST } = await import("@/app/api/auth/logout/route")
+function callPost() {
   return POST()
 }
 

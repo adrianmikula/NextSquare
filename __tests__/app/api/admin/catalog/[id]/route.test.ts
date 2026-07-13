@@ -25,15 +25,17 @@ vi.mock("next/headers", () => ({
   }),
 }))
 
-const mockRetrieveCatalogObject = vi.fn()
-const mockUpsertCatalogObject = vi.fn()
-
-class MockClient {
-  catalogApi = {
-    retrieveCatalogObject: mockRetrieveCatalogObject,
-    upsertCatalogObject: mockUpsertCatalogObject,
+const { mockRetrieveCatalogObject, mockUpsertCatalogObject, MockClient } = vi.hoisted(() => {
+  const mockRetrieveCatalogObject = vi.fn()
+  const mockUpsertCatalogObject = vi.fn()
+  class MockClient {
+    catalogApi = {
+      retrieveCatalogObject: mockRetrieveCatalogObject,
+      upsertCatalogObject: mockUpsertCatalogObject,
+    }
   }
-}
+  return { mockRetrieveCatalogObject, mockUpsertCatalogObject, MockClient }
+})
 
 vi.mock("square/legacy", () => ({
   Client: MockClient,
@@ -41,9 +43,9 @@ vi.mock("square/legacy", () => ({
 }))
 
 import { getSession } from "@/lib/auth/session"
+import { PATCH } from "@/app/api/admin/catalog/[id]/route"
 
-async function callPatch(id: string, body: any) {
-  const { PATCH } = await import("@/app/api/admin/catalog/[id]/route")
+function callPatch(id: string, body: any) {
   const request = {
     json: () => Promise.resolve(body),
     url: `http://localhost/api/admin/catalog/${id}`,

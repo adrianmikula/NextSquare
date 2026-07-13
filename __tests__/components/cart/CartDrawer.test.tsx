@@ -2,9 +2,9 @@ import { describe, expect, it, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { CartDrawer } from "@/components/cart/CartDrawer"
+import { useCartStore } from "@/lib/store/cart"
 
-beforeEach(async () => {
-  const { useCartStore } = await import("@/lib/store/cart")
+beforeEach(() => {
   useCartStore.setState({ items: [], fulfillmentType: "PICKUP", drawerOpen: false })
 })
 
@@ -14,16 +14,14 @@ describe("CartDrawer", () => {
     expect(container.firstChild).toBeNull()
   })
 
-  it("shows empty cart message when no items", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("shows empty cart message when no items", () => {
     useCartStore.setState({ drawerOpen: true })
     render(<CartDrawer />)
     expect(screen.getByText("Your cart is empty")).toBeInTheDocument()
     expect(screen.getByText("Browse our menu")).toBeInTheDocument()
   })
 
-  it("shows cart items when items exist", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("shows cart items when items exist", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",
@@ -37,8 +35,7 @@ describe("CartDrawer", () => {
     expect(screen.getByText("Proceed to Checkout")).toBeInTheDocument()
   })
 
-  it("shows fulfillment type toggle", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("shows fulfillment type toggle", () => {
     useCartStore.setState({ drawerOpen: true })
     render(<CartDrawer />)
     expect(screen.getByText("Pickup")).toBeInTheDocument()
@@ -46,7 +43,6 @@ describe("CartDrawer", () => {
   })
 
   it("closes drawer when close button clicked", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
     useCartStore.setState({ drawerOpen: true })
     render(<CartDrawer />)
     const closeBtn = screen.getAllByRole("button").find(
@@ -58,8 +54,7 @@ describe("CartDrawer", () => {
     }
   })
 
-  it("displays item count in title", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("displays item count in title", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",

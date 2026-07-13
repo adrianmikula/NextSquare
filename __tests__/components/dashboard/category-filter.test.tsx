@@ -29,7 +29,7 @@ describe("CategoryFilter", () => {
       />
     )
     const coffeeBtn = screen.getByText("Coffee")
-    expect(coffeeBtn.className).toContain("bg-amber-600")
+    expect(coffeeBtn.className).toContain("var(--color-primary)")
   })
 
   it("calls onSelect when category is clicked", async () => {

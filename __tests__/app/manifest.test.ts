@@ -1,8 +1,9 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
+import manifest from "@/app/manifest"
 
 describe("manifest", () => {
-  it("returns PWA manifest with correct metadata", async () => {
-    const manifest = (await import("@/app/manifest")).default
+  it("returns PWA manifest with correct metadata", () => {
     const result = manifest()
     expect(result.name).toBe("Aydin's Cafe")
     expect(result.short_name).toBe("Aydin's")

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { DIMENSION_NAMES, VARIANT_NAMES, isDimensionName, isVariant, normalizeVariant } from "@/lib/dimensions/types"
 

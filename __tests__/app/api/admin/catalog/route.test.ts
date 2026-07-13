@@ -12,15 +12,17 @@ vi.mock("@/lib/env", () => ({
   }),
 }))
 
-const mockRetrieveCatalogObject = vi.fn()
-const mockSearchCatalogItems = vi.fn()
-
-class MockClient {
-  catalogApi = {
-    retrieveCatalogObject: mockRetrieveCatalogObject,
-    searchCatalogItems: mockSearchCatalogItems,
+const { mockRetrieveCatalogObject, mockSearchCatalogItems, MockClient } = vi.hoisted(() => {
+  const mockRetrieveCatalogObject = vi.fn()
+  const mockSearchCatalogItems = vi.fn()
+  class MockClient {
+    catalogApi = {
+      retrieveCatalogObject: mockRetrieveCatalogObject,
+      searchCatalogItems: mockSearchCatalogItems,
+    }
   }
-}
+  return { mockRetrieveCatalogObject, mockSearchCatalogItems, MockClient }
+})
 
 vi.mock("square/legacy", () => ({
   Client: MockClient,
@@ -28,9 +30,9 @@ vi.mock("square/legacy", () => ({
 }))
 
 import { getSession } from "@/lib/auth/session"
+import { GET } from "@/app/api/admin/catalog/route"
 
-async function callGet(url: string) {
-  const { GET } = await import("@/app/api/admin/catalog/route")
+function callGet(url: string) {
   const request = { url, headers: { get: () => null } } as any
   return GET(request)
 }

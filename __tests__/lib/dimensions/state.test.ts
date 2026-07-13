@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from "vitest"
 import { defaultDimensionState, parseDimensionState, buildDimensionSearchParams } from "@/lib/dimensions/state"
 import { DIMENSION_NAMES } from "@/lib/dimensions/types"

@@ -27,19 +27,20 @@ vi.mock("@/components/ui/button", () => ({
   ),
 }))
 
+import { LoginForm } from "@/app/login/login-form"
+
 beforeEach(() => {
   vi.clearAllMocks()
   mockGet.mockReturnValue(null)
 })
 
-async function renderLoginForm() {
-  const { LoginForm } = await import("@/app/login/login-form")
+function renderLoginForm() {
   return render(<LoginForm />)
 }
 
 describe("LoginForm", () => {
   it("renders password input and send code button", async () => {
-    await renderLoginForm()
+    renderLoginForm()
     expect(
       screen.getByPlaceholderText("Enter dashboard password")
     ).toBeDefined()
@@ -54,7 +55,7 @@ describe("LoginForm", () => {
         json: () => Promise.resolve({ error: "Invalid password" }),
       })
     )
-    await renderLoginForm()
+    renderLoginForm()
 
     const input = screen.getByPlaceholderText("Enter dashboard password")
     await userEvent.type(input, "wrong-password")
@@ -76,7 +77,7 @@ describe("LoginForm", () => {
         json: () => Promise.resolve({ success: true }),
       })
     )
-    await renderLoginForm()
+    renderLoginForm()
 
     const passwordInput = screen.getByPlaceholderText("Enter dashboard password")
     await userEvent.type(passwordInput, "correct-password")
@@ -104,7 +105,7 @@ describe("LoginForm", () => {
         json: () => Promise.resolve({ success: true }),
       })
     )
-    await renderLoginForm()
+    renderLoginForm()
 
     const passwordInput = screen.getByPlaceholderText("Enter dashboard password")
     await userEvent.type(passwordInput, "correct-password")
@@ -122,7 +123,7 @@ describe("LoginForm", () => {
 
   it("shows generic error on fetch failure", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("Network error")))
-    await renderLoginForm()
+    renderLoginForm()
 
     const input = screen.getByPlaceholderText("Enter dashboard password")
     await userEvent.type(input, "any-password")
@@ -144,7 +145,7 @@ describe("LoginForm", () => {
         })
       )
     )
-    await renderLoginForm()
+    renderLoginForm()
 
     const input = screen.getByPlaceholderText("Enter dashboard password")
     await userEvent.type(input, "password")

@@ -1,13 +1,12 @@
 import { describe, expect, it, beforeEach } from "vitest"
+import { useCartStore } from "@/lib/store/cart"
 
 describe("useCartStore", () => {
-  beforeEach(async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  beforeEach(() => {
     useCartStore.setState({ items: [], fulfillmentType: "PICKUP" })
   })
 
-  it("adds an item to the cart", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("adds an item to the cart", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",
@@ -21,8 +20,7 @@ describe("useCartStore", () => {
     expect(state.items[0].quantity).toBe(1)
   })
 
-  it("increments quantity when adding duplicate item", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("increments quantity when adding duplicate item", () => {
     const item = {
       catalogObjectId: "item-1",
       name: "Flat White",
@@ -37,8 +35,7 @@ describe("useCartStore", () => {
     expect(state.items[0].quantity).toBe(2)
   })
 
-  it("adds separate items for different modifiers", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("adds separate items for different modifiers", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Latte",
@@ -57,8 +54,7 @@ describe("useCartStore", () => {
     expect(state.items).toHaveLength(2)
   })
 
-  it("removes an item from the cart", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("removes an item from the cart", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",
@@ -71,8 +67,7 @@ describe("useCartStore", () => {
     expect(useCartStore.getState().items).toHaveLength(0)
   })
 
-  it("updates item quantity", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("updates item quantity", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",
@@ -85,8 +80,7 @@ describe("useCartStore", () => {
     expect(useCartStore.getState().items[0].quantity).toBe(3)
   })
 
-  it("removes item when quantity set to 0", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("removes item when quantity set to 0", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",
@@ -99,14 +93,12 @@ describe("useCartStore", () => {
     expect(useCartStore.getState().items).toHaveLength(0)
   })
 
-  it("sets fulfillment type", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("sets fulfillment type", () => {
     useCartStore.getState().setFulfillmentType("DELIVERY")
     expect(useCartStore.getState().fulfillmentType).toBe("DELIVERY")
   })
 
-  it("clears the cart", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("clears the cart", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",
@@ -118,8 +110,7 @@ describe("useCartStore", () => {
     expect(useCartStore.getState().items).toHaveLength(0)
   })
 
-  it("computes item count from store items", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("computes item count from store items", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",
@@ -139,8 +130,7 @@ describe("useCartStore", () => {
     expect(count).toBe(3)
   })
 
-  it("computes subtotal including modifiers", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("computes subtotal including modifiers", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Latte",
@@ -162,8 +152,7 @@ describe("useCartStore", () => {
     expect(subtotal).toBe(1300) // (550 + 100) * 2
   })
 
-  it("persists state to localStorage", async () => {
-    const { useCartStore } = await import("@/lib/store/cart")
+  it("persists state to localStorage", () => {
     useCartStore.getState().addItem({
       catalogObjectId: "item-1",
       name: "Flat White",

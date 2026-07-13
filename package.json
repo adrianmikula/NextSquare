@@ -16,7 +16,7 @@
     "test:fast": "vitest run --reporter=dot"
   },
   "simple-git-hooks": {
-    "pre-commit": "npx lint-staged"
+    "pre-commit": "npm run test:fast"
   },
   "overrides": {
     "dompurify": "^3.4.10",
@@ -27,9 +27,6 @@
     "@next-devtools/next-devtools-mcp": "1.0.0",
     "@square/square-mcp-server": "1.0.0",
     "@twilio-alpha/mcp": "1.0.0"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": "eslint --quiet --fix"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
@@ -60,7 +57,7 @@
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
-    "jsdom": "^29.1.1",
+    "happy-dom": "^20.10.6",
     "lint-staged": "^15.5.2",
     "simple-git-hooks": "^2.13.1",
     "tailwindcss": "4.1.10",

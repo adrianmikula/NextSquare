@@ -87,6 +87,8 @@ vi.mock("@/components/checkout/SquareFallback", () => ({
   SquareFallback: () => <div data-testid="square-fallback" />,
 }))
 
+import CheckoutPage from "@/app/checkout/page"
+
 let mockFetch: any
 beforeEach(() => {
   vi.clearAllMocks()
@@ -97,21 +99,20 @@ beforeEach(() => {
   global.fetch = vi.fn()
 })
 
-async function renderCheckout() {
-  const CheckoutPage = (await import("@/app/checkout/page")).default
+function renderCheckout() {
   return render(<CheckoutPage />)
 }
 
 describe("CheckoutPage", () => {
   it("shows empty cart message when no items", async () => {
     cartStoreState.items = []
-    const { container } = await renderCheckout()
+    const { container } = renderCheckout()
     expect(screen.getByText("Your cart is empty")).toBeInTheDocument()
     expect(screen.getByText("Browse our menu")).toBeInTheDocument()
   })
 
   it("renders pickup info by default", async () => {
-    await renderCheckout()
+    renderCheckout()
     expect(screen.getByTestId("pickup-info")).toBeInTheDocument()
     expect(screen.getByTestId("order-summary")).toBeInTheDocument()
     expect(screen.getByTestId("payment-form")).toBeInTheDocument()
@@ -119,7 +120,7 @@ describe("CheckoutPage", () => {
   })
 
   it("switches to delivery info when toggled", async () => {
-    await renderCheckout()
+    renderCheckout()
     await userEvent.click(screen.getByText("Delivery"))
     expect(cartStoreState.fulfillmentType).toBe("DELIVERY")
   })
@@ -127,7 +128,7 @@ describe("CheckoutPage", () => {
   it("validates customer name and phone before submitting", async () => {
     mockAddToast = vi.fn()
 
-    await renderCheckout()
+    renderCheckout()
     await userEvent.click(screen.getByText("Pay"))
     expect(mockAddToast).toHaveBeenCalledWith("Please fill in your name and phone number", "error")
   })
@@ -148,7 +149,7 @@ describe("CheckoutPage", () => {
       json: () => Promise.resolve({ pointsEarned: 50, balanceAfterEarning: 200 }),
     })
 
-    await renderCheckout()
+    renderCheckout()
 
     const nameInput = screen.getByTestId("pickup-name")
     const phoneInput = screen.getByTestId("pickup-phone")
@@ -175,7 +176,7 @@ describe("CheckoutPage", () => {
       json: () => Promise.resolve({ error: "Card declined" }),
     })
 
-    await renderCheckout()
+    renderCheckout()
 
     const nameInput = screen.getByTestId("pickup-name")
     const phoneInput = screen.getByTestId("pickup-phone")
@@ -201,7 +202,7 @@ describe("CheckoutPage", () => {
     })
     ;(global.fetch as any).mockRejectedValueOnce(new Error("Loyalty API down"))
 
-    await renderCheckout()
+    renderCheckout()
 
     const nameInput = screen.getByTestId("pickup-name")
     const phoneInput = screen.getByTestId("pickup-phone")

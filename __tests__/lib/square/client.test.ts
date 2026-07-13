@@ -1,4 +1,6 @@
+// @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
+import { fetchCatalog, fetchLocation } from "@/lib/square/client"
 
 beforeEach(() => {
   vi.stubEnv("SQUARE_ACCESS_TOKEN", "test-token")
@@ -51,7 +53,6 @@ describe("fetchCatalog", () => {
       })
     )
 
-    const { fetchCatalog } = await import("@/lib/square/client")
     const items = await fetchCatalog()
     expect(items).toHaveLength(2)
     expect(items[0]).toEqual({
@@ -100,7 +101,6 @@ describe("fetchCatalog", () => {
         status: 500,
       })
     )
-    const { fetchCatalog } = await import("@/lib/square/client")
     await expect(fetchCatalog()).rejects.toThrow("Square API error: 500")
   })
 
@@ -113,7 +113,6 @@ describe("fetchCatalog", () => {
         json: () => Promise.resolve({}),
       })
     )
-    const { fetchCatalog } = await import("@/lib/square/client")
     const items = await fetchCatalog()
     expect(items).toEqual([])
   })
@@ -121,7 +120,6 @@ describe("fetchCatalog", () => {
 
 describe("fetchLocation", () => {
   it("returns empty object when SQUARE_LOCATION_ID is not set", async () => {
-    const { fetchLocation } = await import("@/lib/square/client")
     const result = await fetchLocation()
     expect(result).toEqual({})
   })
@@ -145,7 +143,6 @@ describe("fetchLocation", () => {
           }),
       })
     )
-    const { fetchLocation } = await import("@/lib/square/client")
     const result = await fetchLocation()
     expect(result).toEqual({
       address: {
@@ -168,7 +165,6 @@ describe("fetchLocation", () => {
         status: 404,
       })
     )
-    const { fetchLocation } = await import("@/lib/square/client")
     const result = await fetchLocation()
     expect(result).toEqual({})
   })

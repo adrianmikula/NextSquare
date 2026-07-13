@@ -1,8 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
+import { POST } from "@/app/api/square/webhook/route"
 
-const mockVerify = vi.fn()
-const mockParse = vi.fn()
-const mockSendSms = vi.fn()
+const { mockVerify, mockParse, mockSendSms } = vi.hoisted(() => ({ mockVerify: vi.fn(), mockParse: vi.fn(), mockSendSms: vi.fn() }))
 
 vi.mock("@/lib/webhooks/square", () => ({
   verifySquareWebhook: mockVerify,
@@ -13,8 +12,7 @@ vi.mock("@/lib/twilio/client", () => ({
   sendSms: mockSendSms,
 }))
 
-async function callPost(body: string, signatureHeader?: string) {
-  const { POST } = await import("@/app/api/square/webhook/route")
+function callPost(body: string, signatureHeader?: string) {
   const headers = new Headers()
   if (signatureHeader !== undefined) {
     headers.set("x-square-hmacsha256-signature", signatureHeader)

@@ -58,22 +58,26 @@ export function ThemeProvider({ cssVars, children }: { cssVars?: Record<string, 
 }
 ```
 
-The server-side layout in `app/[tenant]/layout.tsx` now reads the theme from `content/themes/<tenant>/theme-<variant>.json` using `ACTIVE_TENANT` and `THEME_VARIANT` env vars, converts it with `toCssVars()`, and injects a `<style>` tag on `:root` before first paint. The client-side `ThemeProvider` only reapplies if the variant changes without a full reload.
+The server-side layout in `app/layout.tsx` reads the bundle config from `content/dimensions/bundles/`, resolves the active dimension specs from `content/dimensions/specs/*.json`, compiles them with `compileSpecsToCssVars()`, and injects a `<style>` tag on `:root` before first paint. The client-side `ThemeProvider` only reapplies if the variant changes without a full reload (via `DimensionThemeSync`).
 
 ```tsx
-// app/[tenant]/layout.tsx
-const theme = readTheme(activeTenant, themeVariant)
-const cssVars = theme ? toCssVars(theme, themeVariant) : undefined
+// app/layout.tsx
+const bundleId = (process.env.NEXT_PUBLIC_THEME_BUNDLE || "A").toUpperCase()
+const bundles = getAllBundleConfigs()
+const activeBundle = bundles.find((b) => b.id === bundleId)
+const dimState = activeBundle?.dimensions ?? defaultDimensionState()
+const dimSpecs = resolveDimensionSpecs(dimState)
+const cssVars = compileSpecsToCssVars(dimSpecs)
 
 return (
-  <ThemeProvider tenant={activeTenant} cssVars={cssVars}>
+  <ThemeProvider cssVars={cssVars}>
     <style dangerouslySetInnerHTML={{ __html: `:root{${cssVarsStyle}}` }} />
     {children}
   </ThemeProvider>
 )
 ```
 
-**Old behaviour (removed):** client-side `fetch('/api/cms/theme?...')` based on `useSearchParams()`. This caused a visible flash of default colours before the theme loaded.
+**Old behaviour (removed):** The legacy `ThemeConfig` system (`content/themes/theme-*.json` + `toCssVars()`) was removed in favour of the dimension-based system. The `?theme=a|b` URL param no longer works — use `?bundle=a|b` instead.
 
 ### 3. Avoid `dynamic = "force-dynamic"` unless required
 

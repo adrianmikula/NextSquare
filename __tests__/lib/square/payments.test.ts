@@ -1,5 +1,7 @@
+// @vitest-environment node
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 import { mockPaymentsApi } from "../../../__mocks__/square/legacy"
+import { processPayment, getPayment } from "@/lib/square/payments"
 
 vi.mock("square/legacy")
 
@@ -20,7 +22,6 @@ describe("processPayment", () => {
       },
     })
 
-    const { processPayment } = await import("@/lib/square/payments")
     const result = await processPayment({
       nonce: "cnon:test-nonce",
       orderId: "order-123",
@@ -48,7 +49,6 @@ describe("processPayment", () => {
       result: {},
     })
 
-    const { processPayment } = await import("@/lib/square/payments")
     const result = await processPayment({
       nonce: "cnon:test-nonce",
       orderId: "order-123",
@@ -66,7 +66,6 @@ describe("processPayment", () => {
       },
     })
 
-    const { processPayment } = await import("@/lib/square/payments")
     await processPayment({
       nonce: "cnon:test-nonce",
       orderId: "order-456",
@@ -91,7 +90,6 @@ describe("getPayment", () => {
       },
     })
 
-    const { getPayment } = await import("@/lib/square/payments")
     const payment = await getPayment("payment-123")
 
     expect(payment).toEqual({ id: "payment-123", status: "COMPLETED" })
@@ -100,7 +98,6 @@ describe("getPayment", () => {
   it("returns null on error", async () => {
     mockPaymentsApi.getPayment.mockRejectedValue(new Error("Not found"))
 
-    const { getPayment } = await import("@/lib/square/payments")
     const payment = await getPayment("payment-404")
 
     expect(payment).toBeNull()

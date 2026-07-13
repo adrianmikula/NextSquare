@@ -1,8 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest"
+import { POST } from "@/app/api/square/loyalty/route"
 
-const mockGetOrCreate = vi.fn()
-const mockCalculate = vi.fn()
-const mockGetProgram = vi.fn()
+const { mockGetOrCreate, mockCalculate, mockGetProgram } = vi.hoisted(() => ({ mockGetOrCreate: vi.fn(), mockCalculate: vi.fn(), mockGetProgram: vi.fn() }))
 
 vi.mock("@/lib/square/loyalty", () => ({
   getOrCreateLoyaltyAccount: mockGetOrCreate,
@@ -10,8 +9,7 @@ vi.mock("@/lib/square/loyalty", () => ({
   getLoyaltyProgram: mockGetProgram,
 }))
 
-async function callPost(body: unknown) {
-  const { POST } = await import("@/app/api/square/loyalty/route")
+function callPost(body: unknown) {
   const request = {
     json: () => Promise.resolve(body),
     headers: { get: () => null },

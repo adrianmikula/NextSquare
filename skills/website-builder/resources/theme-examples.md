@@ -312,5 +312,5 @@ When the user does not specify a look:
 - All colour values above are hex. Convert to the theme JSON format exactly as shown.
 - Typography names should match web-safe font families available via `next/font/google` or already bundled.
 - Keep accessibility in mind: maintain WCAG AA contrast between `text` and `background`, and between `primary` text on `secondary` surfaces.
-- Theme variant names in JSON (`theme-a.json`, `theme-b.json`) should use the chosen direction keyword as the `name` field (e.g. `"Rustic Warmth"`, `"Cool Minimal"`).
+- Dimension spec bundle names should use the chosen direction keyword (e.g. `"Rustic Warmth"`, `"Cool Minimal"`).
 - **Reference links:** Use these to ground theme generation in authoritative, current (2026) real-world design. When generating themes for a given subcategory, fetch at least one of the listed links, identify the dominant design patterns (palette, typography, card style, hero treatment), and use those to seed or validate the chosen direction.

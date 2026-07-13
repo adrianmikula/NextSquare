@@ -30,41 +30,42 @@ vi.mock("@/lib/store/cart", () => ({
   useCartSubtotal: () => 1700,
 }))
 
+import CartPage from "@/app/cart/page"
+
 beforeEach(() => {
   vi.clearAllMocks()
   currentItems = [...mockItems]
   currentFulfillment = "PICKUP"
 })
 
-async function renderCart() {
-  const CartPage = (await import("@/app/cart/page")).default
+function renderCart() {
   return render(<CartPage />)
 }
 
 describe("CartPage", () => {
-  it("renders cart items with quantities", async () => {
-    await renderCart()
+  it("renders cart items with quantities", () => {
+    renderCart()
     expect(screen.getByText("Flat White")).toBeInTheDocument()
     expect(screen.getByText("Latte")).toBeInTheDocument()
     expect(screen.getByText("Cart")).toBeInTheDocument()
   })
 
-  it("shows empty cart when no items", async () => {
+  it("shows empty cart when no items", () => {
     currentItems = []
-    await renderCart()
+    renderCart()
     expect(screen.getByText("Your cart is empty")).toBeInTheDocument()
     expect(screen.getByText("Browse our menu")).toBeInTheDocument()
   })
 
-  it("shows checkout link when items exist", async () => {
-    await renderCart()
+  it("shows checkout link when items exist", () => {
+    renderCart()
     const checkoutLink = screen.getByText("Proceed to Checkout")
     expect(checkoutLink).toBeInTheDocument()
     expect(checkoutLink).toHaveAttribute("href", "/checkout")
   })
 
-  it("renders delivery pickup toggle", async () => {
-    await renderCart()
+  it("renders delivery pickup toggle", () => {
+    renderCart()
     expect(screen.getByText("Proceed to Checkout")).toBeInTheDocument()
   })
 })
