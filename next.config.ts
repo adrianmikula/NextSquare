@@ -1,6 +1,9 @@
 import type { NextConfig } from "next"
 
+const themeBundle = process.env.NEXT_PUBLIC_THEME_BUNDLE?.toLowerCase()
+
 const nextConfig: NextConfig = {
+  distDir: themeBundle ? `.next-${themeBundle}` : ".next",
   productionBrowserSourceMaps: false,
   images: {
     remotePatterns: [

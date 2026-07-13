@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "NEXT_PUBLIC_THEME_BUNDLE=A next dev -p 3000",
+    "theme:a": "NEXT_PUBLIC_THEME_BUNDLE=A next dev -p 3000",
+    "theme:b": "NEXT_PUBLIC_THEME_BUNDLE=B next dev -p 3001",
+    "theme:c": "NEXT_PUBLIC_THEME_BUNDLE=C next dev -p 3002",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

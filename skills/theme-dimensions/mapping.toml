@@ -1,0 +1,471 @@
+# Skill-to-code mapping for theme-dimensions
+# Generated: 2026-07-11
+
+skill_version = "0.1.0"
+codebase_version = "{git-hash}"
+
+[[capabilities]]
+name = "Define Dimension Spec"
+description = "Create, load, and validate per-dimension variant spec files"
+
+  [[capabilities.sections]]
+  skill_section = "Logic — load dimension spec file"
+  config_path = "paths.specs_root"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/loader.ts", type = "service", function = "loadDimensionSpec" },
+    { file = "lib/dimensions/types.ts", type = "model", function = "DimensionSpec" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — load all spec data"
+  config_path = "paths.specs_root"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/loader.ts", type = "service", function = "loadAllSpecData" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Error states — spec file not found or parse failure"
+  # config_path: none (error handling)
+  impl_files = [
+    { file = "lib/dimensions/loader.ts", type = "service", function = "loadDimensionSpec" },
+  ]
+  test_files = []
+
+[[capabilities]]
+name = "Resolve Dimension State"
+description = "Parse URL search params and bundle configs to resolve active variant per dimension"
+
+  [[capabilities.sections]]
+  skill_section = "Logic — default state"
+  config_path = "default_variant"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/resolve.ts", type = "logic", function = "defaultDimensionState" },
+    { file = "lib/dimensions/types.ts", type = "model", function = "DimensionState" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — bundle resolution"
+  config_path = "paths.bundles_root"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/resolve.ts", type = "logic", function = "parseDimensionState" },
+    { file = "lib/dimensions/loader.ts", type = "service", function = "getAllBundleConfigs" },
+    { file = "lib/dimensions/resolve.ts", type = "model", function = "BundleDimInfo" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — URL override per dimension"
+  config_path = "variant_names"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/resolve.ts", type = "logic", function = "parseDimensionState" },
+    { file = "lib/dimensions/types.ts", type = "util", function = "isVariant" },
+    { file = "lib/dimensions/types.ts", type = "util", function = "normalizeVariant" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — state with bundle configs (state.ts wrapper)"
+  # config_path: none (orchestration wrapper)
+  impl_files = [
+    { file = "lib/dimensions/state.ts", type = "logic", function = "parseDimensionState" },
+    { file = "lib/dimensions/state.ts", type = "logic", function = "defaultDimensionState" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — build search params from state"
+  # config_path: none (serialization utility)
+  impl_files = [
+    { file = "lib/dimensions/resolve.ts", type = "logic", function = "buildDimensionSearchParams" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Error states — unknown bundle ID"
+  # config_path: none (error handling)
+  impl_files = [
+    { file = "lib/dimensions/resolve.ts", type = "logic", function = "parseDimensionState" },
+    { file = "lib/dimensions/loader.ts", type = "service", function = "loadBundleConfig" },
+  ]
+  test_files = []
+
+[[capabilities]]
+name = "Compile Dimensions to CSS"
+description = "Compile resolved dimension specs into flat CSS custom properties map"
+
+  [[capabilities.sections]]
+  skill_section = "Logic — overall compilation orchestration"
+  # config_path: none (orchestration)
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compileSpecsToCssVars" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — color dimension compilation"
+  config_path = "compilation.color.*"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compileColor" },
+    { file = "lib/dimensions/compile.ts", type = "util", function = "resolveColor" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — typography dimension compilation"
+  config_path = "compilation.typography.*"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compileTypography" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — spatial dimension compilation"
+  config_path = "compilation.spatial.*"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compileSpatial" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — components dimension compilation"
+  config_path = "compilation.components.*"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compileComponents" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — motion dimension compilation"
+  config_path = "compilation.motion.*"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compileMotion" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — rhythm dimension compilation"
+  config_path = "compilation.rhythm.*"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compileRhythm" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — imagery dimension compilation"
+  config_path = "compilation.imagery.*"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compileImagery" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Error states — null spec for a dimension"
+  # config_path: none (error handling)
+  impl_files = [
+    { file = "lib/dimensions/compile.ts", type = "logic", function = "compileSpecsToCssVars" },
+  ]
+  test_files = []
+
+[[capabilities]]
+name = "Manage Bundle Configs"
+description = "CRUD operations for dimension bundle configs"
+
+  [[capabilities.sections]]
+  skill_section = "Logic — load single bundle config"
+  config_path = "paths.bundles_root"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "lib/dimensions/loader.ts", type = "service", function = "loadBundleConfig" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — list available bundles"
+  # config_path: none (directory scan)
+  impl_files = [
+    { file = "lib/dimensions/loader.ts", type = "service", function = "listAvailableBundles" },
+    { file = "lib/dimensions/loader.ts", type = "service", function = "isBundleName" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Logic — get all bundle configs"
+  # config_path: none (composition)
+  impl_files = [
+    { file = "lib/dimensions/loader.ts", type = "service", function = "getAllBundleConfigs" },
+    { file = "lib/dimensions/loader.ts", type = "service", function = "loadBundleMetadata" },
+  ]
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Error states — bundle file not found"
+  # config_path: none (error handling)
+  impl_files = [
+    { file = "lib/dimensions/loader.ts", type = "service", function = "isBundleName" },
+  ]
+  test_files = []
+
+[[capabilities]]
+name = "Verify Dimension Delta"
+description = "Optional verification that A/B variant specs differ by a minimum threshold"
+
+  [[capabilities.sections]]
+  skill_section = "Logic — per-dimension delta check"
+  config_path = "verification.delta.*"
+  config_file = "config.yaml"
+  impl_files = [
+    { file = "skills/theme-dimensions/SKILL.md", type = "specification", function = "Capability: Verify Dimension Delta" },
+  ]
+  test_files = [
+    { file = "skills/theme-dimensions/resources/test-cases.md", type = "specification", function = "TC-17 through TC-23" },
+  ]
+
+  [[capabilities.sections]]
+  skill_section = "Behavior modes — default vs skip"
+  # config_path: none (process-level decision)
+  impl_files = []
+  test_files = []
+
+  [[capabilities.sections]]
+  skill_section = "Edge case — null spec skips check gracefully"
+  # config_path: none (error handling)
+  impl_files = []
+  test_files = []
+
+[data_models]
+
+  [[data_models.fields]]
+  model = "DimensionState"
+  field = "(per dimension)"
+  type = "Record<DimensionName, Variant>"
+  maps_to_skill_param = "dimensionState"
+  config_path = "dimension_names"
+  file = "lib/dimensions/types.ts"
+
+  [[data_models.fields]]
+  model = "DimensionState"
+  field = "dimension value"
+  type = "Variant (A | B)"
+  maps_to_skill_param = "variant"
+  config_path = "variant_names"
+  file = "lib/dimensions/types.ts"
+
+  [[data_models.fields]]
+  model = "DimensionSpec"
+  field = "(dimension-specific)"
+  type = "Record<string, unknown>"
+  maps_to_skill_param = "specData"
+  config_path = "compilation.*"
+  file = "lib/dimensions/types.ts"
+
+  [[data_models.fields]]
+  model = "BundleConfig"
+  field = "name"
+  type = "string"
+  maps_to_skill_param = "bundleName"
+  # config_path: none (user-defined)
+  file = "lib/dimensions/types.ts"
+
+  [[data_models.fields]]
+  model = "BundleConfig"
+  field = "description"
+  type = "string | undefined"
+  maps_to_skill_param = "bundleDescription"
+  # config_path: none (user-defined)
+  file = "lib/dimensions/types.ts"
+
+  [[data_models.fields]]
+  model = "BundleConfig"
+  field = "dimensions"
+  type = "Record<DimensionName, Variant>"
+  maps_to_skill_param = "bundleDimensions"
+  config_path = "dimension_names"
+  file = "lib/dimensions/types.ts"
+
+  [[data_models.fields]]
+  model = "BundleDimInfo"
+  field = "id"
+  type = "string"
+  maps_to_skill_param = "bundleId"
+  # config_path: none (derived from filename)
+  file = "lib/dimensions/resolve.ts"
+
+  [[data_models.fields]]
+  model = "BundleDimInfo"
+  field = "dimensions"
+  type = "Record<DimensionName, Variant>"
+  maps_to_skill_param = "bundleDimensions"
+  config_path = "dimension_names"
+  file = "lib/dimensions/resolve.ts"
+
+[[config_mapping]]
+skill_var = "dimension_names"
+code_var = "DIMENSION_NAMES constant array in types.ts"
+file = "lib/dimensions/types.ts:1-10"
+
+[[config_mapping]]
+skill_var = "variant_names"
+code_var = "VARIANT_NAMES constant array ['A', 'B']"
+file = "lib/dimensions/types.ts:14"
+
+[[config_mapping]]
+skill_var = "default_variant"
+code_var = "defaultDimensionState() returns all 'A'"
+file = "lib/dimensions/resolve.ts:4-9"
+
+[[config_mapping]]
+skill_var = "paths.specs_root"
+code_var = "SPECS_ROOT = path.join(DIMENSIONS_ROOT, 'specs')"
+file = "lib/dimensions/loader.ts:7"
+
+[[config_mapping]]
+skill_var = "paths.bundles_root"
+code_var = "BUNDLES_ROOT = path.join(DIMENSIONS_ROOT, 'bundles')"
+file = "lib/dimensions/loader.ts:8"
+
+[[config_mapping]]
+skill_var = "compilation.color.default_harmony"
+code_var = "harmony = String(spec.harmony ?? 'monochromatic')"
+file = "lib/dimensions/compile.ts:73"
+
+[[config_mapping]]
+skill_var = "compilation.color.default_chroma"
+code_var = "chroma = String(spec.chroma ?? 'muted')"
+file = "lib/dimensions/compile.ts:74"
+
+[[config_mapping]]
+skill_var = "compilation.color.palette_defaults"
+code_var = "resolveColor(c.primary, '#b45309'), c.secondary -> '#fef3c7', etc"
+file = "lib/dimensions/compile.ts:78-84"
+
+[[config_mapping]]
+skill_var = "compilation.typography.default_heading_font"
+code_var = "String(spec.headingFont ?? heading?.font ?? 'Inter')"
+file = "lib/dimensions/compile.ts:117"
+
+[[config_mapping]]
+skill_var = "compilation.typography.default_body_font"
+code_var = "String(spec.bodyFont ?? body?.font ?? 'Inter')"
+file = "lib/dimensions/compile.ts:118"
+
+[[config_mapping]]
+skill_var = "compilation.typography.default_heading_weight"
+code_var = "lookupNumber(spec, ['headingWeight', 'heading.weight'], 600)"
+file = "lib/dimensions/compile.ts:119"
+
+[[config_mapping]]
+skill_var = "compilation.typography.default_body_weight"
+code_var = "lookupNumber(spec, ['bodyWeight', 'body.weight'], 400)"
+file = "lib/dimensions/compile.ts:120"
+
+[[config_mapping]]
+skill_var = "compilation.typography.default_heading_case"
+code_var = "String(spec.headingCase ?? heading?.case ?? 'normal')"
+file = "lib/dimensions/compile.ts:121"
+
+[[config_mapping]]
+skill_var = "compilation.typography.default_letter_spacing"
+code_var = "String(spec.letterSpacing ?? heading?.tracking ?? 'normal')"
+file = "lib/dimensions/compile.ts:122"
+
+[[config_mapping]]
+skill_var = "compilation.typography.default_line_height"
+code_var = "String(spec.lineHeight ?? body?.leading ?? '1.5')"
+file = "lib/dimensions/compile.ts:123"
+
+[[config_mapping]]
+skill_var = "compilation.typography.default_scale"
+code_var = "String(spec.scale ?? '1.25')"
+file = "lib/dimensions/compile.ts:124"
+
+[[config_mapping]]
+skill_var = "compilation.spatial.default_container_max"
+code_var = "lookupString(default: '72rem')"
+file = "lib/dimensions/compile.ts:144"
+
+[[config_mapping]]
+skill_var = "compilation.spatial.default_section_padding_y"
+code_var = "lookupString(default: '4rem')"
+file = "lib/dimensions/compile.ts:145"
+
+[[config_mapping]]
+skill_var = "compilation.spatial.default_section_padding_x"
+code_var = "lookupString(default: '1rem')"
+file = "lib/dimensions/compile.ts:146"
+
+[[config_mapping]]
+skill_var = "compilation.spatial.default_grid_gap"
+code_var = "lookupString(default: '1.5rem')"
+file = "lib/dimensions/compile.ts:147"
+
+[[config_mapping]]
+skill_var = "compilation.spatial.default_content_align"
+code_var = "lookupString(default: 'center')"
+file = "lib/dimensions/compile.ts:148"
+
+[[config_mapping]]
+skill_var = "compilation.components.shadow_map"
+code_var = "SHADOW_MAP constant in compile.ts"
+file = "lib/dimensions/compile.ts:4-11"
+
+[[config_mapping]]
+skill_var = "compilation.components.default_border_radius"
+code_var = "lookupString(default: '0.5rem')"
+file = "lib/dimensions/compile.ts:162"
+
+[[config_mapping]]
+skill_var = "compilation.components.default_nav_bg_opacity"
+code_var = "lookupNumber(default: 0.95)"
+file = "lib/dimensions/compile.ts:173"
+
+[[config_mapping]]
+skill_var = "compilation.motion.speed_map"
+code_var = "speedMap = { fast: '150ms', normal: '300ms', slow: '500ms' }"
+file = "lib/dimensions/compile.ts:191"
+
+[[config_mapping]]
+skill_var = "compilation.rhythm.spacing_map"
+code_var = "spacingMap = { compact: '2rem', standard: '4rem', spacious: '6rem' }"
+file = "lib/dimensions/compile.ts:210-213"
+
+[[config_mapping]]
+skill_var = "compilation.imagery.default_aspect"
+code_var = "String(spec.defaultAspect ?? spec.aspect ?? '4:3')"
+file = "lib/dimensions/compile.ts:223"
+
+[[config_mapping]]
+skill_var = "compilation.imagery.default_treatment"
+code_var = "String(spec.treatment ?? 'cover')"
+file = "lib/dimensions/compile.ts:226"
+
+[[config_mapping]]
+skill_var = "verification.delta.enabled"
+code_var = "n/a (specification-level — checked when generating variant specs)"
+file = "skills/theme-dimensions/SKILL.md"
+
+[[config_mapping]]
+skill_var = "verification.delta.threshold_percent"
+code_var = "n/a (specification-level — minimum 80% of fields must differ)"
+file = "skills/theme-dimensions/config.yaml"
+
+[external_services]
+name = "Content filesystem"
+purpose = "All dimension data read/write via local JSON files under content/dimensions/"
+api_version = "n/a"
+config_key = "paths.*"
+skill_impact = "Spec and bundle files live in content/dimensions/ — changes require filesystem access"

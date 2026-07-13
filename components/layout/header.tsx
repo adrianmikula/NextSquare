@@ -26,9 +26,10 @@ export function Header({ siteProfile, blocks }: { siteProfile?: SiteProfile | nu
 
   return (
     <header
-      className="sticky top-0 z-50 w-full backdrop-blur supports-[backdrop-filter]:bg-white/60"
+      className="top-0 z-50 w-full backdrop-blur supports-[backdrop-filter]:bg-white/60"
       style={{
-         height: "var(--nav-height, 5rem)",
+        position: "var(--header-style, sticky)" as any,
+        height: "var(--nav-height, 5rem)",
         borderBottom: "var(--theme-border-width, 1px) solid var(--color-stone-200)",
         backgroundColor: `rgba(255,255,255, var(--nav-bg-opacity, 0.95))`,
       }}

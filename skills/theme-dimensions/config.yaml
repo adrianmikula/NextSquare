@@ -1,0 +1,119 @@
+# Config for skill theme-dimensions
+# SKILL VERSION: 0.1.0
+
+dimension_names:
+  - spatial
+  - color
+  - typography
+  - wording
+  - imagery
+  - components
+  - rhythm
+  - motion
+
+variant_names:
+  - A
+  - B
+
+default_variant: "A"
+
+paths:
+  specs_root: "content/dimensions/specs/"
+  bundles_root: "content/dimensions/bundles/"
+
+font_library:
+  available_fonts:
+    - name: "Inter"
+      category: "sans-serif"
+      description: "Modern neutral sans-serif, excellent readability"
+      variable: "--font-inter"
+    - name: "Nunito"
+      category: "sans-serif"
+      description: "Rounded friendly sans-serif, warm personality"
+      variable: "--font-nunito"
+    - name: "Playfair Display"
+      category: "serif"
+      description: "Elegant high-contrast serif for headings"
+      variable: "--font-playfair"
+    - name: "Lora"
+      category: "serif"
+      description: "Readable serif, ideal for body text"
+      variable: "--font-lora"
+    - name: "DM Sans"
+      category: "sans-serif"
+      description: "Clean geometric sans-serif, minimal aesthetic"
+      variable: "--font-dm-sans"
+    - name: "Fraunces"
+      category: "serif"
+      description: "Soft old-style serif with character"
+      variable: "--font-fraunces"
+    - name: "Space Grotesk"
+      category: "sans-serif"
+      description: "Modern monospace-adjacent sans-serif"
+      variable: "--font-space-grotesk"
+    - name: "Instrument Sans"
+      category: "sans-serif"
+      description: "Friendly humanist sans-serif"
+      variable: "--font-instrument-sans"
+
+compilation:
+  color:
+    default_harmony: "monochromatic"
+    default_chroma: "muted"
+    default_background_type: "color"
+    palette_defaults:
+      primary: "#b45309"
+      secondary: "#fef3c7"
+      background: "#ffffff"
+      surface: "#fffbeb"
+      text: "#1c1917"
+      accent: "#d4a373"
+  typography:
+    default_heading_font: "Inter"
+    default_body_font: "Inter"
+    default_heading_weight: 600
+    default_body_weight: 400
+    default_heading_case: "normal"
+    default_letter_spacing: "normal"
+    default_line_height: 1.5
+    default_scale: "1.25"
+  spatial:
+    default_container_max: "72rem"
+    default_section_padding_y: "4rem"
+    default_section_padding_x: "1rem"
+    default_grid_gap: "1.5rem"
+    default_content_align: "center"
+    default_page_columns: 12
+    default_sidebar: "none"
+    default_hero_enabled: "true"
+    default_header_style: "solid"
+    default_design_balance: "balanced"
+    default_margin_width: "auto"
+  components:
+    shadow_map:
+      none: "none"
+      sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+      md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)"
+      lg: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)"
+      xl: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)"
+      "2xl": "0 25px 50px -12px rgb(0 0 0 / 0.25)"
+    default_border_radius: "0.5rem"
+    default_nav_bg_opacity: 0.95
+  motion:
+    speed_map:
+      fast: "150ms"
+      normal: "300ms"
+      slow: "500ms"
+  rhythm:
+    spacing_map:
+      compact: "2rem"
+      standard: "4rem"
+      spacious: "6rem"
+  imagery:
+    default_aspect: "4:3"
+    default_treatment: "cover"
+
+verification:
+  delta:
+    enabled: true
+    threshold_percent: 80

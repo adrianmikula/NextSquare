@@ -44,6 +44,19 @@ Never run `npm install`, `npm ci`, or `npm audit` without `--ignore-scripts`. Pi
 
 Details: [`docs/patterns/supply-chain-hardening.md`](docs/patterns/supply-chain-hardening.md)
 
+<!-- BEGIN:theme-variant-servers -->
+# Theme Variant Dev Servers
+
+Run each theme variant on a separate port using npm scripts:
+- `npm run dev` or `npm run theme:a` — Port 3000, bundle A (default)
+- `npm run theme:b` — Port 3001, bundle B
+- `npm run theme:c` — Port 3002, bundle C
+
+**RAM constraint:** Never run more than 1 theme variant server concurrently without first checking available RAM (`free -h`) and getting explicit user consent. Each Next.js dev server uses ~500-700MB RAM.
+
+Config uses `NEXT_PUBLIC_THEME_BUNDLE` env var + dynamic `distDir` (`.next-a`, `.next-b`, etc.) in `next.config.ts`.
+<!-- END:theme-variant-servers -->
+
 <!-- BEGIN:debugging-rules -->
 # Debugging Workflow
 

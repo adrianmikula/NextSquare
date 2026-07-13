@@ -39,6 +39,14 @@ function lookupNumber(spec: DimensionSpec, keys: string[], fallback: number): nu
   return fallback
 }
 
+function lookupBoolean(spec: DimensionSpec, keys: string[], fallback: boolean): boolean {
+  for (const key of keys) {
+    const val = spec[key]
+    if (typeof val === "boolean") return val
+  }
+  return fallback
+}
+
 function compileDimension(dim: DimensionName, spec: DimensionSpec): Record<string, string> {
   switch (dim) {
     case "color":
@@ -83,6 +91,9 @@ function compileColor(spec: DimensionSpec): Record<string, string> {
   const accent = resolveColor(c.accent, "#d4a373")
   const border = resolveColor(c.border, text)
 
+  const backgroundType = String(spec.backgroundType ?? "color")
+  const backgroundValue = String(spec.backgroundValue ?? background)
+
   return {
     "--color-primary": primary,
     "--color-secondary": secondary,
@@ -104,10 +115,24 @@ function compileColor(spec: DimensionSpec): Record<string, string> {
     "--color-stone-600": text,
     "--color-stone-500": text,
     "--color-stone-400": text,
+    "--color-stone-300": border,
     "--color-stone-200": border,
     "--color-harmony": harmony,
     "--color-chroma": chroma,
+    "--color-background-type": backgroundType,
+    "--color-background-value": backgroundValue,
   }
+}
+
+const FONT_VAR_MAP: Record<string, string> = {
+  Inter: "var(--font-inter)",
+  Nunito: "var(--font-nunito)",
+  "Playfair Display": "var(--font-playfair)",
+  Lora: "var(--font-lora)",
+  "DM Sans": "var(--font-dm-sans)",
+  Fraunces: "var(--font-fraunces)",
+  "Space Grotesk": "var(--font-space-grotesk)",
+  "Instrument Sans": "var(--font-instrument-sans)",
 }
 
 function compileTypography(spec: DimensionSpec): Record<string, string> {
@@ -124,8 +149,8 @@ function compileTypography(spec: DimensionSpec): Record<string, string> {
   const scale = String(spec.scale ?? "1.25")
 
   return {
-    "--font-heading": `'${headingFont}', sans-serif`,
-    "--font-body": `'${bodyFont}', sans-serif`,
+    "--font-heading": FONT_VAR_MAP[headingFont] ?? `'${headingFont}', sans-serif`,
+    "--font-body": FONT_VAR_MAP[bodyFont] ?? `'${bodyFont}', sans-serif`,
     "--font-heading-weight": String(headingWeight),
     "--font-body-weight": String(bodyWeight),
     "--text-transform-heading":
@@ -146,6 +171,12 @@ function compileSpatial(spec: DimensionSpec): Record<string, string> {
   const sectionPx = lookupString(spec, ["sectionPaddingX", "sectionPx", "spacing.sectionPaddingX"], "1rem")
   const gridGap = lookupString(spec, ["gridGap", "spacing.gridGap"], "1.5rem")
   const contentAlign = lookupString(spec, ["contentAlign", "spacing.contentAlign"], "center")
+  const pageColumns = lookupNumber(spec, ["pageColumns", "layout.pageColumns"], 12)
+  const sidebar = lookupString(spec, ["sidebar", "layout.sidebar"], "none")
+  const heroEnabled = lookupBoolean(spec, ["heroEnabled", "layout.heroEnabled"], true)
+  const headerStyle = lookupString(spec, ["headerStyle", "layout.headerStyle"], "solid")
+  const designBalance = lookupString(spec, ["designBalance", "layout.designBalance"], "balanced")
+  const marginWidth = lookupString(spec, ["marginWidth", "layout.marginWidth"], "auto")
 
   return {
     "--container-max": containerMax,
@@ -153,6 +184,12 @@ function compileSpatial(spec: DimensionSpec): Record<string, string> {
     "--section-px": sectionPx,
     "--grid-gap": gridGap,
     "--content-align": contentAlign,
+    "--page-columns": String(pageColumns),
+    "--sidebar-width": sidebar,
+    "--hero-enabled": heroEnabled ? "block" : "none",
+    "--header-style": headerStyle,
+    "--design-balance": designBalance,
+    "--margin-width": marginWidth,
   }
 }
 
@@ -194,26 +231,41 @@ function compileMotion(spec: DimensionSpec): Record<string, string> {
   const hover = spec.hover as Record<string, unknown> | undefined
   const scroll = spec.scroll as Record<string, unknown> | undefined
   const hoverLift = spec.hoverLift ?? hover?.lift ?? true
+  const hoverLiftTransform = hoverLift ? "translateY(-4px)" : "none"
   const fadeIn = spec.fadeIn ?? scroll?.fadeIn ?? false
   const smoothScroll = spec.smoothScroll ?? scroll?.smooth ?? false
+  const staggerEnabled = spec.staggerEnabled ?? false
+  const rawEasing = String(spec.transitionEasing ?? "ease")
+  const easingMap: Record<string, string> = {
+    "ease-out": "ease-out",
+    "ease-in-out": "ease-in-out",
+    "ease-in": "ease-in",
+    ease: "ease",
+  }
+  const easing = easingMap[rawEasing] ?? "ease"
 
   return {
     "--transition-speed": speed,
     "--motion-hover-lift": hoverLift ? "1" : "0",
+    "--motion-hover-lift-transform": hoverLiftTransform,
     "--motion-fade-in": fadeIn ? "1" : "0",
     "--motion-smooth-scroll": smoothScroll ? "1" : "0",
+    "--motion-stagger": staggerEnabled ? "1" : "0",
+    "--motion-easing": easing,
   }
 }
 
 function compileRhythm(spec: DimensionSpec): Record<string, string> {
-  const sectionSpacing = String(spec.sectionSpacing ?? spec.density ?? "standard")
-  const spacingMap: Record<string, string> = {
+  const density = String(spec.density ?? "balanced")
+  const densitySpacingMap: Record<string, string> = {
     compact: "2rem",
-    standard: "4rem",
+    balanced: "4rem",
+    relaxed: "5rem",
     spacious: "6rem",
   }
   return {
-    "--section-py": spacingMap[sectionSpacing] ?? spacingMap["standard"],
+    "--rhythm-density": density,
+    "--rhythm-section-py": densitySpacingMap[density] ?? "4rem",
   }
 }
 

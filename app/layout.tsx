@@ -1,23 +1,37 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import {
+  Inter,
+  Nunito,
+  Playfair_Display,
+  Lora,
+  DM_Sans,
+  Fraunces,
+  Space_Grotesk,
+  Instrument_Sans,
+} from "next/font/google"
 import "./globals.css"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { CartDrawer } from "@/components/cart/CartDrawer"
 import { ToastProvider } from "@/components/ui/ToastProvider"
 import { DemoBadge } from "@/components/demo/DemoBadge"
-import { DemoModePopup } from "@/components/demo/DemoModePopup"
-import { ClientThemeSync } from "@/components/demo/ClientThemeSync"
+
 import { ThemeProvider } from "@/components/cms/ThemeProvider"
 import { ToastContainer } from "@/components/ui/toast"
 import { requireEnv } from "@/lib/env"
 import { readSiteProfile, readCmsPageVariants } from "@/lib/cms"
-import { parseDemoState, resolvePageBlocks, dimensionStateToDemoState } from "@/lib/demo/demo-state"
-import { parseDimensionState, resolveDimensionSpecs, compileSpecsToCssVars, getAllBundleConfigs, loadAllSpecData } from "@/lib/dimensions"
-import { safeSearchParams } from "@/lib/utils"
+import { resolvePageBlocks } from "@/lib/demo/demo-state"
+import { defaultDimensionState, resolveDimensionSpecs, compileSpecsToCssVars, getAllBundleConfigs } from "@/lib/dimensions"
 import type { CmsBlock } from "@/lib/cms"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" })
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" })
+const lora = Lora({ subsets: ["latin"], variable: "--font-lora" })
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" })
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces" })
+const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" })
+const instrumentSans = Instrument_Sans({ subsets: ["latin"], variable: "--font-instrument-sans" })
 
 export async function generateMetadata(): Promise<Metadata> {
   const profile = readSiteProfile()
@@ -41,25 +55,20 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({
   children,
-  searchParams,
 }: Readonly<{
   children: React.ReactNode
-  searchParams: Promise<Record<string, string | string[] | undefined>>
 }>) {
   const siteProfile = readSiteProfile()
   const headerPage = readCmsPageVariants("header")
   const footerPage = readCmsPageVariants("footer")
 
-  const sp = await searchParams
-  const searchQuery = safeSearchParams(sp)
+  const bundleId = (process.env.NEXT_PUBLIC_THEME_BUNDLE || "A").toUpperCase()
+  const bundles = getAllBundleConfigs()
+  const activeBundle = bundles.find((b) => b.id === bundleId)
+  const dimState = activeBundle?.dimensions ?? defaultDimensionState()
 
-  const state = parseDemoState(searchQuery)
-  const dimState = parseDimensionState(searchQuery)
-  const legacyState = dimensionStateToDemoState(dimState)
-  const layoutVariant = state.layout ?? legacyState.layout ?? "A"
-
-  const headerBlocks: CmsBlock[] = headerPage ? resolvePageBlocks(headerPage, layoutVariant) : []
-  const footerBlocks: CmsBlock[] = footerPage ? resolvePageBlocks(footerPage, layoutVariant) : []
+  const headerBlocks: CmsBlock[] = headerPage ? resolvePageBlocks(headerPage, "A") : []
+  const footerBlocks: CmsBlock[] = footerPage ? resolvePageBlocks(footerPage, "A") : []
 
   const dimSpecs = resolveDimensionSpecs(dimState)
   const cssVars = compileSpecsToCssVars(dimSpecs)
@@ -67,12 +76,9 @@ export default async function RootLayout({
     .map(([k, v]) => `${k}:${v}`)
     .join(";")
 
-  const bundles = getAllBundleConfigs()
-  const allSpecData = loadAllSpecData()
-
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} ${inter.variable} ${nunito.variable} ${playfair.variable} ${lora.variable} ${dmSans.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${instrumentSans.variable}`}>
         <ThemeProvider cssVars={cssVars}>
           <style
             dangerouslySetInnerHTML={{
@@ -87,8 +93,6 @@ export default async function RootLayout({
         </ThemeProvider>
         <ToastContainer />
         <DemoBadge />
-        <ClientThemeSync bundles={bundles} specData={allSpecData} />
-        <DemoModePopup bundles={bundles} />
         <CartDrawer />
       </body>
     </html>

@@ -69,40 +69,50 @@
 
   body {
     font-family: var(--font-body);
+    font-weight: var(--font-body-weight, 400);
     color: var(--color-stone-900);
-    background-color: var(--color-stone-50);
+    background: var(--color-background-value, var(--color-stone-50));
     line-height: var(--line-height);
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    font-weight: var(--font-heading-weight, 600);
     text-transform: var(--text-transform-heading);
     letter-spacing: var(--letter-spacing);
     line-height: var(--line-height);
   }
 
+  .hero-section {
+    display: var(--hero-enabled, block);
+  }
+
   .section-py { padding-top: var(--section-py); padding-bottom: var(--section-py); }
   .section-px { padding-left: var(--section-px); padding-right: var(--section-px); }
-  .container-max { max-width: var(--container-max); margin-left: auto; margin-right: auto; }
+  .container-max { max-width: var(--container-max); margin-left: var(--margin-width, auto); margin-right: var(--margin-width, auto); }
+  main { text-align: var(--content-align, left); }
 }
 
 @layer components {
   .card-themed {
     border-radius: var(--theme-card-radius) !important;
     box-shadow: var(--theme-shadow-card);
-    transition: box-shadow var(--transition-speed, 300ms) ease, transform var(--transition-speed, 300ms) ease;
-    border: var(--theme-border-width, 1px) solid var(--color-stone-200) !important;
+    transition: box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease);
+    border: var(--theme-border-width, 1px) var(--theme-border-style, solid) var(--color-stone-200) !important;
   }
   .card-themed:hover {
     box-shadow: var(--theme-shadow-card-hover);
+    transform: var(--motion-hover-lift-transform, none);
   }
   .button-themed {
     border-radius: var(--theme-button-radius);
     font-family: var(--font-heading);
-    transition: all var(--transition-speed, 300ms) ease;
+    transition: all var(--transition-speed, 300ms) var(--motion-easing, ease);
   }
   .image-themed {
     border-radius: var(--theme-image-radius);
+    object-fit: var(--image-treatment, cover);
+    aspect-ratio: var(--image-default-aspect, auto);
   }
   .divider-themed {
     height: var(--divider-height, 2rem);

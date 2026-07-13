@@ -125,7 +125,7 @@ function CmsHero({ data }: { data: Record<string, unknown> }) {
   const sizeClass = headingClass(headingSize)
 
   return (
-    <section className={cn(sectionClass("relative overflow-hidden bg-stone-900"), paddingY)}>
+    <section className={cn("hero-section", sectionClass("relative overflow-hidden bg-stone-900"), paddingY)}>
       {backgroundStyle === "image" && hasImage ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
