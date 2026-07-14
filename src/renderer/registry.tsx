@@ -1,4 +1,15 @@
+import type { ComponentRegistry } from "@json-render/react"
 import type { GeneDefinition } from "@/src/schema/site-config"
+
+import {
+  HeroCentered,
+  HeroSplit,
+  HeroMinimal,
+  FeaturesGrid,
+  FeaturesAlternating,
+  CtaSimple,
+  CtaSplit,
+} from "@/src/genes"
 
 const geneCatalog = new Map<string, GeneDefinition>()
 
@@ -16,7 +27,7 @@ export const heroCenteredDef = defineGene({
     ctaLink: { type: "string" },
     image: { type: "string" },
   },
-  tuners: ["warmth", "density", "motion", "depth"],
+  tuners: ["abstraction", "density", "motion", "contrast", "narrative"],
 })
 
 export const heroSplitDef = defineGene({
@@ -28,7 +39,7 @@ export const heroSplitDef = defineGene({
     ctaLink: { type: "string" },
     image: { type: "string" },
   },
-  tuners: ["warmth", "density", "contrast", "narrative"],
+  tuners: ["abstraction", "density", "contrast", "narrative"],
 })
 
 export const heroMinimalDef = defineGene({
@@ -36,10 +47,8 @@ export const heroMinimalDef = defineGene({
   props: {
     headline: { type: "string", required: true },
     subheadline: { type: "string" },
-    ctaLabel: { type: "string" },
-    ctaLink: { type: "string" },
   },
-  tuners: ["warmth", "contrast", "narrative"],
+  tuners: ["contrast", "narrative"],
 })
 
 export const featuresGridDef = defineGene({
@@ -48,7 +57,7 @@ export const featuresGridDef = defineGene({
     headline: { type: "string", required: true },
     items: { type: "array", required: true },
   },
-  tuners: ["density", "contrast", "depth"],
+  tuners: ["density", "contrast", "abstraction"],
 })
 
 export const featuresAlternatingDef = defineGene({
@@ -67,7 +76,7 @@ export const ctaSimpleDef = defineGene({
     ctaLabel: { type: "string" },
     ctaLink: { type: "string" },
   },
-  tuners: ["warmth", "contrast", "motion"],
+  tuners: ["abstraction", "contrast", "motion"],
 })
 
 export const ctaSplitDef = defineGene({
@@ -79,13 +88,23 @@ export const ctaSplitDef = defineGene({
     ctaLink: { type: "string" },
     image: { type: "string" },
   },
-  tuners: ["warmth", "density", "contrast", "narrative"],
+  tuners: ["abstraction", "density", "contrast", "narrative"],
 })
 
-export function getCatalog(): GeneDefinition[] {
+export function getGeneCatalog(): GeneDefinition[] {
   return Array.from(geneCatalog.values())
 }
 
 export function getGene(name: string): GeneDefinition | undefined {
   return geneCatalog.get(name)
+}
+
+export const componentRegistry: ComponentRegistry = {
+  HeroCentered: ({ element: { props } }) => <HeroCentered {...(props as any)} />,
+  HeroSplit: ({ element: { props } }) => <HeroSplit {...(props as any)} />,
+  HeroMinimal: ({ element: { props } }) => <HeroMinimal {...(props as any)} />,
+  FeaturesGrid: ({ element: { props } }) => <FeaturesGrid {...(props as any)} />,
+  FeaturesAlternating: ({ element: { props } }) => <FeaturesAlternating {...(props as any)} />,
+  CtaSimple: ({ element: { props } }) => <CtaSimple {...(props as any)} />,
+  CtaSplit: ({ element: { props } }) => <CtaSplit {...(props as any)} />,
 }

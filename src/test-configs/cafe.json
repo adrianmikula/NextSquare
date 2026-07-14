@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "name": "Corner Brew",
+    "industry": "cafe",
+    "tone": "warm and inviting"
+  },
+  "designLanguage": {
+    "relief": "flat",
+    "finish": "matte",
+    "shape": "squircle"
+  },
+  "tuners": {
+    "warmth": 0.8,
+    "density": 0.3,
+    "motion": 0.4,
+    "contrast": 0.5,
+    "narrative": 0.6
+  },
+  "spec": {
+    "root": "page",
+    "elements": {
+      "page": {
+        "type": "Container",
+        "props": {},
+        "children": ["hero-1", "features-1", "cta-1"]
+      },
+      "hero-1": {
+        "type": "HeroCentered",
+        "props": {
+          "headline": "Fresh Coffee, Great Vibes",
+          "subheadline": "Handcrafted coffee in Melbourne",
+          "ctaLabel": "View Menu"
+        },
+        "children": []
+      },
+      "features-1": {
+        "type": "FeaturesGrid",
+        "props": {
+          "headline": "Why You'll Love It Here",
+          "items": [
+            { "title": "Single Origin Beans", "description": "Sourced directly from small farms in Ethiopia, Colombia, and Guatemala." },
+            { "title": "Expert Baristas", "description": "Our team has won multiple national latte art championships." },
+            { "title": "Cozy Atmosphere", "description": "Warm lighting, vinyl records, and the best playlist in town." }
+          ]
+        },
+        "children": []
+      },
+      "cta-1": {
+        "type": "CtaSimple",
+        "props": {
+          "headline": "Ready for the best cup of your life?",
+          "ctaLabel": "Find Us"
+        },
+        "children": []
+      }
+    }
+  },
+  "content": {
+    "hero-headline": "Fresh Coffee, Great Vibes",
+    "features-headline": "Why You'll Love It Here",
+    "cta-headline": "Ready for the best cup of your life?"
+  }
+}

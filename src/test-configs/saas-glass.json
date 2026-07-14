@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "name": "FlowDash",
+    "industry": "saas",
+    "tone": "modern and technical"
+  },
+  "designLanguage": {
+    "relief": "glassmorphic",
+    "finish": "frosted",
+    "shape": "superellipse"
+  },
+  "tuners": {
+    "warmth": 0.2,
+    "density": 0.7,
+    "motion": 0.6,
+    "contrast": 0.8,
+    "narrative": 0.3
+  },
+  "spec": {
+    "root": "page",
+    "elements": {
+      "page": {
+        "type": "Container",
+        "props": {},
+        "children": ["hero-1", "features-1", "cta-1"]
+      },
+      "hero-1": {
+        "type": "HeroSplit",
+        "props": {
+          "headline": "Analytics that actually make sense",
+          "subheadline": "Stop drowning in spreadsheets. FlowDash gives you real-time insights your whole team can understand.",
+          "ctaLabel": "Start Free Trial"
+        },
+        "children": []
+      },
+      "features-1": {
+        "type": "FeaturesAlternating",
+        "props": {
+          "headline": "Everything you need, nothing you don't",
+          "items": [
+            { "title": "Real-time dashboards", "description": "Live data streams update as your business changes. No refresh button needed." },
+            { "title": "Team collaboration", "description": "Share views, annotate charts, and assign action items directly from any report." },
+            { "title": "API-first architecture", "description": "Pull your data into any tool with our REST and GraphQL APIs. Webhooks included." }
+          ]
+        },
+        "children": []
+      },
+      "cta-1": {
+        "type": "CtaSplit",
+        "props": {
+          "headline": "Trusted by 5,000+ teams",
+          "subheadline": "Join companies like Acme, Globex, and Initech who switched to FlowDash.",
+          "ctaLabel": "See Pricing"
+        },
+        "children": []
+      }
+    }
+  },
+  "content": {
+    "hero-headline": "Analytics that actually make sense",
+    "features-headline": "Everything you need, nothing you don't",
+    "cta-headline": "Trusted by 5,000+ teams"
+  }
+}

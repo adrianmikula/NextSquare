@@ -1,0 +1,6 @@
+export { HeroCentered } from "./hero-centered"
+export type { HeroCenteredProps } from "./hero-centered"
+export { HeroSplit } from "./hero-split"
+export type { HeroSplitProps } from "./hero-split"
+export { HeroMinimal } from "./hero-minimal"
+export type { HeroMinimalProps } from "./hero-minimal"
