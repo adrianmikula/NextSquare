@@ -124,7 +124,7 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 right-4 z-[100] rounded-full bg-[var(--color-primary)] text-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-primary-hover)]"
+        className="fixed bottom-4 right-4 z-[var(--z-demo)] rounded-full bg-[var(--color-primary)] text-[var(--color-background)] px-4 py-2 text-sm font-medium hover:bg-[var(--color-primary-hover)]"
         style={{ boxShadow: "var(--theme-shadow-card)" }}
       >
         Demo Mode
@@ -133,7 +133,7 @@ export function DemoModePopup({ bundles = [] }: { bundles?: BundleInfo[] }) {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-[100] w-96 card bg-base-100 border-card" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}>
+    <div className="fixed bottom-4 right-4 z-[var(--z-demo)] w-96 card bg-base-100 border-card" style={{ boxShadow: "var(--card-shadow, var(--theme-shadow-card))", border: "var(--card-border-toggle, var(--theme-border-width, 1px)) var(--theme-border-style, solid) var(--color-card-border)", transition: "box-shadow var(--transition-speed, 300ms) var(--motion-easing, ease), transform var(--transition-speed, 300ms) var(--motion-easing, ease)" }}>
       <div className="flex items-center justify-between border-b border-card px-4 py-3">
         <h3 className="text-sm font-semibold text-heading">
           {tab === "bundles" ? "Choose a Bundle" : DIMENSION_LABELS[tab]}

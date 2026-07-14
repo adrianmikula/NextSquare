@@ -13,6 +13,7 @@ Controls high-level page structure — hero layout style, navigation variant, se
 | `sectionContainer` | enum | `alternating`, `bordered`, `seamless`, `cards` |
 | `cardVariant` | enum | `elevated`, `flat`, `outlined` |
 | `footerVariant` | enum | `columns`, `minimal`, `social`, `simple`, `centered` |
+| `componentOverrides` | object (optional) | Maps block type names to alternative component names. Overrides the default component-to-block-type mapping in the component registry. E.g. `{ "hero": "video-hero", "testimonials": "carousel-testimonials" }` references pre-registered components. See `lib/component-registry.ts`. |
 
 ## Variant Differences
 

@@ -57,9 +57,12 @@ export function readSiteProfile(): SiteProfile | null {
 
 // ── CMS Pages ─────────────────────────────────────────────────────────────────
 
+export type BlockLayout = "full-width" | "half-width" | "two-thirds" | "sidebar-content" | "card-grid" | "full-bleed"
+
 export interface CmsBlock {
   type: string
   data: Record<string, unknown>
+  layout?: BlockLayout
 }
 
 export interface CmsPage {

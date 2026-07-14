@@ -2,7 +2,10 @@ import Link from "next/link"
 import { Star, Clock, MapPin, Coffee, Sandwich, GlassWater } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { CmsBlock } from "@/lib/cms"
+import type { CmsBlock, BlockLayout } from "@/lib/cms"
+import type { ComponentOverrides } from "@/lib/component-registry"
+import { resolveComponentName } from "@/lib/component-registry"
+import { CmsCarouselTestimonials } from "@/components/cms/CmsCarouselTestimonials"
 
 function IconRenderer({ name }: { name: string }) {
   const icons: Record<string, React.ElementType> = {
@@ -18,67 +21,65 @@ function IconRenderer({ name }: { name: string }) {
   return <Icon className="h-6 w-6" />
 }
 
-export function CmsBlockRenderer({ block }: { block: CmsBlock }) {
-  const { type, data } = block
+const COMPONENT_MAP: Record<string, (props: { data: Record<string, unknown> }) => React.JSX.Element | null> = {
+  hero: CmsHero,
+  "overlay-hero": CmsHero,
+  "split-hero": CmsSplitHero,
+  text: CmsText,
+  products: CmsProducts,
+  testimonials: CmsTestimonials,
+  "compact-testimonials": CmsCompactTestimonials,
+  "carousel-testimonials": CmsCarouselTestimonials,
+  delivery: CmsDelivery,
+  hours: CmsHours,
+  gallery: CmsGallery,
+  cta: CmsCta,
+  services: CmsServices,
+  form: CmsForm,
+  faq: CmsFaq,
+  promo: CmsPromo,
+  slideshow: CmsSlideshow,
+  "social-icons": CmsSocialIcons,
+  callout: CmsCallout,
+  hr: CmsHR,
+  "image-text": CmsImageText,
+  comparison: CmsComparison,
+  logo: CmsLogo,
+  "business-name": CmsBusinessName,
+  slogan: CmsSlogan,
+  nav: CmsNav,
+  sitemap: CmsSitemap,
+  announcement: CmsAnnouncement,
+  copyright: CmsCopyright,
+  phone: CmsPhone,
+  "page-layout": () => null,
+}
 
-  switch (type) {
-    case "hero":
-      return <CmsHero data={data as CmsBlock["data"] & { headline: string; subheadline: string; ctaLabel: string; ctaLink: string; image?: string }} />
-    case "text":
-      return <CmsText data={data as CmsBlock["data"] & { heading: string; body: string }} />
-    case "products":
-      return <CmsProducts data={data as CmsBlock["data"] & { title: string; items: Array<{ name: string; description: string; price?: number }> }} />
-    case "testimonials":
-      return <CmsTestimonials data={data as CmsBlock["data"] & { items: Array<{ author: string; text: string; source?: string }> }} />
-    case "delivery":
-      return <CmsDelivery data={data as CmsBlock["data"] & { heading: string; body: string; platforms: Array<{ name: string; url: string; label: string }> }} />
-    case "hours":
-      return <CmsHours data={data as CmsBlock["data"] & { schedule: Array<{ day: string; open: string; close: string }> }} />
-    case "gallery":
-      return <CmsGallery data={data as CmsBlock["data"] & { images: string[]; caption?: string }} />
-    case "cta":
-      return <CmsCta data={data as CmsBlock["data"] & { heading: string; subtext: string; buttonLabel: string; buttonLink: string }} />
-    case "services":
-      return <CmsServices data={data as CmsBlock["data"] & { title: string; items: Array<{ name: string; description: string; priceHint?: number; duration?: string }> }} />
-    case "form":
-      return <CmsForm data={data as CmsBlock["data"] & { title: string; fields: Array<{ name: string; type: string; label: string; required: boolean }> }} />
-    case "faq":
-      return <CmsFaq data={data as CmsBlock["data"] & { items: Array<{ question: string; answer: string }> }} />
-    case "promo":
-      return <CmsPromo data={data as CmsBlock["data"] & { heading: string; body: string; ctaLabel: string; ctaLink: string; image?: string }} />
-    case "slideshow":
-      return <CmsSlideshow data={data as CmsBlock["data"] & { images: string[]; caption?: string; interval?: number }} />
-    case "social-icons":
-      return <CmsSocialIcons data={data as CmsBlock["data"] & { platforms: Array<{ name: string; url: string; icon?: string }> }} />
-    case "callout":
-      return <CmsCallout data={data as CmsBlock["data"] & { quote: string; author?: string; role?: string } } />
-    case "hr":
-      return <CmsHR data={data as CmsBlock["data"] & { style?: "solid" | "dashed" | "dotted"; color?: string } } />
-    case "image-text":
-      return <CmsImageText data={data as CmsBlock["data"] & { items: Array<{ image?: string; heading: string; body: string; align?: "left" | "right" }> } } />
-    case "comparison":
-      return <CmsComparison data={data as CmsBlock["data"] & { title?: string; columns: Array<{ header: string; features: Array<{ name: string; included: boolean }> }>; ctaLabel?: string; ctaLink?: string } } />
-    case "logo":
-      return <CmsLogo data={data as CmsBlock["data"] & { image?: string; text?: string; link?: string }} />
-    case "business-name":
-      return <CmsBusinessName data={data as CmsBlock["data"] & { text: string; link?: string }} />
-    case "slogan":
-      return <CmsSlogan data={data as CmsBlock["data"] & { text: string }} />
-    case "nav":
-      return <CmsNav data={data as CmsBlock["data"] & { links: Array<{ href: string; label: string }>; sticky?: boolean; variant?: string }} />
-    case "sitemap":
-      return <CmsSitemap data={data as CmsBlock["data"] & { columns: Array<{ title: string; links: Array<{ href: string; label: string }> }> }} />
-    case "announcement":
-      return <CmsAnnouncement data={data as CmsBlock["data"] & { text: string; link?: string; linkLabel?: string }} />
-    case "copyright":
-      return <CmsCopyright data={data as CmsBlock["data"] & { text?: string; name?: string; year?: number }} />
-    case "phone":
-      return <CmsPhone data={data as CmsBlock["data"] & { number: string; display?: string; label?: string }} />
-    case "page-layout":
-      return null
-    default:
-      return null
+const LAYOUT_CLASSES: Record<BlockLayout, string> = {
+  "full-width": "block-layout-full-width",
+  "half-width": "block-layout-half-width",
+  "two-thirds": "block-layout-two-thirds",
+  "sidebar-content": "block-layout-sidebar-content",
+  "card-grid": "block-layout-card-grid",
+  "full-bleed": "block-layout-full-bleed",
+}
+
+export function CmsBlockRenderer({ block, componentOverrides }: { block: CmsBlock; componentOverrides?: ComponentOverrides }) {
+  const { type, data } = block
+  const layout = block.layout as BlockLayout | undefined
+
+  const componentName = resolveComponentName(type, componentOverrides)
+  const Component = COMPONENT_MAP[componentName] ?? COMPONENT_MAP[type]
+  if (!Component) return null
+
+  const rendered = <Component data={data} />
+
+  if (layout && layout !== "full-width") {
+    const layoutClass = LAYOUT_CLASSES[layout]
+    return <div className={layoutClass}>{rendered}</div>
   }
+
+  return rendered
 }
 
 function sectionClass(semanticBg?: string) {
@@ -155,6 +156,39 @@ function CmsHero({ data }: { data: Record<string, unknown> }) {
   )
 }
 
+function CmsSplitHero({ data }: { data: Record<string, unknown> }) {
+  const headline = String(data.headline || "")
+  const subheadline = String(data.subheadline || "")
+  const ctaLabel = String(data.ctaLebel || data.ctaLabel || "")
+  const ctaLink = String(data.ctaLink || "/menu")
+  const image = data.image as string | undefined
+  const hasImage = image && !image.includes("placeholder")
+  const headingSize = (data.variant as Record<string, unknown> | undefined)?.headingSize as string | undefined || "4xl"
+
+  return (
+    <section className={cn(sectionClass("bg-section"), "py-16")}>
+      <div className={containerClass()}>
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <h1 className={cn(headingClass(headingSize), "text-heading")}>{headline}</h1>
+            {subheadline && <p className="mt-4 text-lg text-body">{subheadline}</p>}
+            {ctaLabel && (
+              <div className="mt-8">
+                <Link href={ctaLink} className={cn(buttonVariants({ size: "lg" }), "no-underline")}>{ctaLabel}</Link>
+              </div>
+            )}
+          </div>
+          {hasImage && (
+            <div className="relative aspect-[4/3] rounded-xl overflow-hidden">
+              <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function CmsText({ data }: { data: Record<string, unknown> }) {
   const heading = String(data.heading || "")
   const body = String(data.body || "")
@@ -222,6 +256,22 @@ function CmsTestimonials({ data }: { data: Record<string, unknown> }) {
   )
 }
 
+function CmsCompactTestimonials({ data }: { data: Record<string, unknown> }) {
+  const items = (data.items as Array<{ author: string; text: string; source?: string }>) || []
+  return (
+    <section className={cn(sectionClass("bg-section-alt"), "py-12")}>
+      <div className={cn(containerClass(), "divide-y divide-border")}>
+        {items.map((item) => (
+          <div key={item.author} className="py-4">
+            <p className="text-sm text-body leading-relaxed">&ldquo;{item.text}&rdquo;</p>
+            <p className="mt-1 text-xs font-medium text-muted">— {item.author}{item.source ? `, ${item.source}` : ""}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
 function CmsDelivery({ data }: { data: Record<string, unknown> }) {
   const heading = String(data.heading || "")
   const body = String(data.body || "")
@@ -277,7 +327,7 @@ function CmsGallery({ data }: { data: Record<string, unknown> }) {
         {caption && <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{caption}</h2>}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: "var(--grid-gap)" }}>
           {images.map((src, i) => (
-            <div key={i} className={cn("aspect-square overflow-hidden bg-stone-100 rounded-box")}>
+            <div key={i} className={cn("aspect-square overflow-hidden bg-placeholder rounded-box")}>
               <img src={src} alt={`Gallery ${i + 1}`} className="h-full w-full object-cover" />
             </div>
           ))}
@@ -419,7 +469,7 @@ function CmsSlideshow({ data }: { data: Record<string, unknown> }) {
         {caption && <h2 className={cn(headingClass("3xl"), "mb-8 text-center")}>{caption}</h2>}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: "var(--grid-gap)" }}>
           {images.map((src, i) => (
-            <div key={i} className={cn("aspect-video overflow-hidden bg-stone-100 rounded-box")}>
+            <div key={i} className={cn("aspect-video overflow-hidden bg-placeholder rounded-box")}>
               <img src={src} alt={`Slide ${i + 1}`} className="h-full w-full object-cover" />
             </div>
           ))}
@@ -484,11 +534,11 @@ function CmsImageText({ data }: { data: Record<string, unknown> }) {
             const isReversed = item.align === "right"
             return (
               <div key={i} className={cn("grid items-center gap-8 md:grid-cols-2", isReversed && "md:direction-rtl")}>
-                <div className={cn("overflow-hidden rounded-xl bg-stone-100 rounded-box", isReversed && "md:order-2")}>
+                <div className={cn("overflow-hidden rounded-xl bg-placeholder rounded-box", isReversed && "md:order-2")}>
                   {item.image ? (
                     <img src={item.image} alt={item.heading} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="aspect-video w-full bg-stone-200" />
+                    <div className="aspect-video w-full bg-placeholder" />
                   )}
                 </div>
                 <div className={cn(isReversed && "md:order-1")}>

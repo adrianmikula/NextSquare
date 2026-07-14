@@ -2,8 +2,8 @@ import { OrderButton } from "@/components/order-button"
 
 export function Hero() {
   return (
-    <section className="hero relative overflow-hidden bg-stone-900">
-      <div className="hero-overlay bg-opacity-60" />
+    <section className="hero relative overflow-hidden bg-hero">
+      <div className="hero-overlay" />
       <div className="hero-content text-center" style={{ flexDirection: "var(--hero-content-flow, column)" as unknown as React.CSSProperties["flexDirection"] }}>
         <h1 className="text-4xl font-bold tracking-tight text-hero-text sm:text-5xl md:text-6xl">
           Fresh Coffee,

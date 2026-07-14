@@ -2,16 +2,17 @@ import Link from "next/link"
 import type { SiteProfile } from "@/lib/cms"
 import type { CmsBlock } from "@/lib/cms"
 import { CmsBlockRenderer } from "@/components/cms/CmsRenderer"
+import type { ComponentOverrides } from "@/lib/component-registry"
 import { FALLBACK_NAME, DEFAULT_LINKS } from "@/lib/constants"
 
-export function Footer({ siteProfile, blocks }: { siteProfile?: SiteProfile | null; blocks?: CmsBlock[] }) {
+export function Footer({ siteProfile, blocks, componentOverrides }: { siteProfile?: SiteProfile | null; blocks?: CmsBlock[]; componentOverrides?: ComponentOverrides }) {
   const year = new Date().getFullYear()
   const name = siteProfile?.siteName || FALLBACK_NAME
   const tagline = siteProfile?.tagline || "Fresh coffee, great food, good vibes."
   const hasBlocks = blocks && blocks.length > 0
 
   const renderBlock = (block: CmsBlock, idx: number) => (
-    <CmsBlockRenderer key={`${block.type}-${idx}`} block={block} />
+    <CmsBlockRenderer key={`${block.type}-${idx}`} block={block} componentOverrides={componentOverrides} />
   )
 
   return (

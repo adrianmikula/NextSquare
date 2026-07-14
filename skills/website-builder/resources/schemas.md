@@ -112,6 +112,8 @@ interface CmsBlock {
   type: 'hero' | 'text' | 'gallery' | 'products' | 'services'
     | 'testimonials' | 'cta' | 'hours' | 'faq' | 'form' | 'promo' | 'delivery';
   data: Record<string, unknown>;
+  layout?: 'full-width' | 'half-width' | 'two-thirds'
+    | 'sidebar-content' | 'card-grid' | 'full-bleed';
 }
 
 interface PageBundle {

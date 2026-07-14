@@ -22,7 +22,7 @@ export default function OrderStatusPage({
 
         {isLoading ? (
           <div className="animate-pulse space-y-4">
-            <div className="h-6 w-48 rounded bg-stone-200" />
+            <div className="h-6 w-48 rounded bg-placeholder" />
             <div className="h-64 rounded-xl bg-section-alt" />
             <div className="h-20 rounded-xl bg-section-alt" />
           </div>

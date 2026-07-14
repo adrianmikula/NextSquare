@@ -7,10 +7,9 @@ All TypeScript interfaces and JSON shapes used by the dimension system.
 ## DimensionName
 
 ```typescript
-type DimensionName = "spatial" | "color" | "typography" | "wording" | "imagery" | "components" | "rhythm" | "motion"
-```
+type DimensionName = "spatial" | "color" | "typography" | "wording" | "imagery" | "components" | "rhythm" | "motion" | "page-layout"
 
-8 orthogonal design axes. Each dimension is independently variant and independently compiled.
+9 orthogonal design axes. Each dimension is independently variant and independently compiled.
 
 **Source:** `lib/dimensions/types.ts:1-10`
 
@@ -120,6 +119,7 @@ Shorthand bundle descriptor returned by `loadBundleMetadata()` — used when onl
 | imagery | defaultAspect, treatment, overlayOpacity, overlayStyle | aspect string, enum, number 0-1 |
 | components | borderRadius, cardRadius, buttonRadius, imageRadius, borderWidth, borderStyle, cardBorder, divider, cardShadow, cardHoverShadow, heroStyle, cardStyle, buttonStyle, navStyle, navHeight, navBgOpacity, navLinkStyle | CSS lengths, booleans, enum, number 0-1 |
 | rhythm | sectionSpacing, density, dividerStyle, alternationPattern | enum |
-| motion | transitionSpeed, transitionEasing, hoverLift, fadeIn, smoothScroll, staggerEnabled | enum, booleans |
+ | motion | transitionSpeed, transitionEasing, hoverLift, fadeIn, smoothScroll, staggerEnabled | enum, booleans |
+| page-layout | heroVariant, navVariant, sectionContainer, cardVariant, footerVariant, componentOverrides | enum, object (component name map) |
 
 For full field-level details per dimension, see the individual `dimension-*.md` files.

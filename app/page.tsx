@@ -2,7 +2,9 @@ import { notFound } from "next/navigation"
 import { CmsBlockRenderer } from "@/components/cms/CmsRenderer"
 import { readCmsPageVariants, resolvePageLayoutCssVars } from "@/lib/cms"
 import { parseDemoState, resolvePageBlocks, resolveBlockData, dimensionStateToDemoState } from "@/lib/demo/demo-state"
-import { parseDimensionState } from "@/lib/dimensions"
+import { parseDimensionState, resolveDimensionSpecs } from "@/lib/dimensions"
+import { extractComponentOverrides } from "@/lib/component-registry"
+import type { ComponentOverrides } from "@/lib/component-registry"
 import { safeSearchParams } from "@/lib/utils"
 
 interface PageProps {
@@ -16,6 +18,9 @@ export default async function RootHomePage({ searchParams }: PageProps) {
   const state = parseDemoState(searchQuery)
   const dimState = parseDimensionState(searchQuery)
   const legacyState = dimensionStateToDemoState(dimState)
+
+  const dimSpecs = resolveDimensionSpecs(dimState)
+  const componentOverrides: ComponentOverrides | undefined = extractComponentOverrides(dimSpecs)
 
   const page = readCmsPageVariants("home")
   const layoutPage = readCmsPageVariants("page-layout")
@@ -32,7 +37,7 @@ export default async function RootHomePage({ searchParams }: PageProps) {
   const contentBlocks = blocks.filter((b) => b.type !== "page-layout")
   const resolvedBlocks = contentBlocks.map((block, idx) => {
     const resolved = resolveBlockData(block, textVariant)
-    return <CmsBlockRenderer key={`${resolved.type}-${idx}`} block={resolved} />
+    return <CmsBlockRenderer key={`${resolved.type}-${idx}`} block={resolved} componentOverrides={componentOverrides} />
   })
 
   return (

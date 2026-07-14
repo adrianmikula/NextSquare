@@ -73,6 +73,9 @@
     --motion-easing: ease;
     --motion-hover-lift-transform: translateY(-4px);
     --theme-border-style: solid;
+    --hero-overlay-opacity: 0.6;
+    --z-demo: 100;
+    --z-toast: 100;
 
     /* Semantic color role defaults (fallbacks when dimension system not active) */
     --color-section-bg: #ffffff;
@@ -197,6 +200,8 @@
   }
   .hero-overlay {
     display: var(--hero-overlay-display, none);
+    background-color: var(--color-hero-bg);
+    opacity: var(--hero-overlay-opacity, 0.6);
   }
   nav.navbar {
     position: var(--nav-position, fixed);
@@ -230,6 +235,8 @@
   .bg-section-inverse { background-color: var(--color-section-bg-inverse); }
   .bg-section-cta { background-color: var(--color-section-bg-cta); }
   .bg-card { background-color: var(--color-card-bg); }
+  .bg-hero { background-color: var(--color-hero-bg); }
+  .bg-placeholder { background-color: var(--color-card-border); }
   .bg-nav { background-color: var(--color-nav-bg); }
   .bg-footer { background-color: var(--color-footer-bg); }
 
@@ -257,6 +264,33 @@
   .text-footer-link { color: var(--color-footer-link); }
   .hover-text-link-hover:hover { color: var(--color-link-hover); }
   .hover-text-footer-link-hover:hover { color: var(--color-footer-link-hover); }
+
+  .bg-hero-subtle { background-color: color-mix(in srgb, var(--color-hero-text) 10%, transparent); }
+  .hover-bg-hero-subtle:hover { background-color: color-mix(in srgb, var(--color-hero-text) 20%, transparent); }
+  .bg-hero-dot { background-color: color-mix(in srgb, var(--color-hero-text) 30%, transparent); }
+
+  /* Block layout utilities */
+  .block-layout-full-width { width: 100%; }
+  .block-layout-half-width { width: 100%; max-width: 50%; margin-inline: auto; }
+  .block-layout-two-thirds { width: 100%; max-width: 66.666667%; margin-inline: auto; }
+  .block-layout-sidebar-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: var(--grid-gap, 1.5rem);
+    max-width: var(--container-max, 72rem);
+    margin-inline: auto;
+    padding-left: var(--section-px, 1rem);
+    padding-right: var(--section-px, 1rem);
+  }
+  .block-layout-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--grid-gap, 1.5rem);
+  }
+  .block-layout-full-bleed {
+    width: 100vw;
+    margin-inline: calc(-50vw + 50%);
+  }
 
   /* Status semantic color utilities */
   .bg-success { background-color: var(--color-success); }

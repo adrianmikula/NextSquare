@@ -18,7 +18,7 @@ unconsumed CSS var represents a gap where generated themes will look identical.
 
 Run this skill to:
 
-1. **Audit** the entire codebase for violations across 5 detection layers
+1. **Audit** the entire codebase for violations across 12 detection layers
 2. **Fix** every violation by converting to CSS vars / semantic utility classes / explicit config
 3. **Verify** that all generated variant pairs differ in ALL controllable dimensions
 4. **Validate** no silent fallbacks or dead CSS vars remain
@@ -34,7 +34,7 @@ Run this skill to:
 
 1. **No hardcoded colors.** Every color class must be a semantic utility class (`.text-heading`, `.bg-card`, `.text-success`, etc.) or reference a CSS var directly. Tailwind scales (`text-stone-*`, `bg-amber-*`, `bg-green-*`) are violations.
 2. **No silent fallbacks.** Every `|| "default"` or `?? "default"` must log a warning or throw.
-3. **Themes must differ.** Any pair of generated themes must differ in ALL 8 dimensions and ALL 5 component properties. If they don't, regenerate the weaker variant.
+3. **Themes must differ.** Any pair of generated themes must differ in ALL 9 dimensions and ALL 5 component properties. If they don't, regenerate the weaker variant.
 4. **Every emitted CSS var must be consumed.** No dead code in `:root`.
 5. **No `FALLBACK_NAME` duplication.** Shared fallback constants live in `lib/constants.ts`.
 6. **No hardcoded business info.** Address, hours, social handles, CTA links must come from `siteProfile` or throw when missing.
@@ -50,144 +50,49 @@ Audit Codebase  →  Categorize Violations  →  Fix Layer by Layer  →  Verify
 
 ### Step 1: Auditing the Codebase
 
-Run each of these 5 detection layers. Use **grep over source directories only** (`components/`, `app/`, `lib/`; exclude `node_modules/`, `.next/`, `content/`, `docs/`, `skills/`).
+Run the 12 detection layers below. Each layer catches a different category of hardcoding.
+All grep commands with fix instructions live in `resources/uniqueness-layers.md`.
 
-#### Layer A: Hardcoded Color Classes — Status Colors
+| Layer | Category | What it catches | Typical fix |
+|-------|----------|-----------------|-------------|
+| **A** | Status colours | `bg-green-*`, `text-red-*`, `bg-blue-*` etc. | Replace with `bg-success`, `text-error`, `bg-info` |
+| **B** | Flat Tailwind scale | `text-stone-*`, `bg-amber-*`, `border-stone-*` | Replace with `text-heading`, `bg-section-cta`, `border-card` |
+| **C** | White/black | `bg-white`, `text-white`, `bg-black/*` | Replace with `bg-card`, `bg-section`, `--color-overlay` |
+| **D** | Dimension values | `max-w-7xl`, `py-24`, `gap-8`, `shadow-lg`, `duration-300` | Replace with `container-max`, `section-py`, `--grid-gap`, `--theme-shadow-card`, `--transition-speed` |
+| **E** | Silent fallbacks | `\|\| "A"`, `\|\| "#b45309"`, duplicated `FALLBACK_NAME`, hardcoded business info | Add `console.warn` before fallback, extract constants to `lib/constants.ts` |
+| **F** | Non-daisyUI CSS | `bg-section`, `text-heading`, `card-themed`, `button-themed`, `ToastContainer` | Migrate to daisyUI `card`, `btn`, `bg-base-*`, `toast` |
+| **G** | Typography | `text-[*px]`, `leading-[*]`, `font-[*]`, `tracking-[*]` replace | Use `headingClass()`, `--line-height`, theme font weights, `--letter-spacing` |
+| **H** | Spacing & sizing | `m-[*]`, `p-[*]`, `w-[*]`, `h-[*]`, `gap-[*]` arbitrary values | Use `section-py`/`section-px`, `--grid-gap`, theme spacing |
+| **I** | Positioning & layout | `top-[*]`, `z-[*]`, `translate-[*]`, `min-h-[*]` | Use `--hero-min-height`, z-index scale, `--motion-*` vars |
+| **J** | Border & divide colours | `border-gray-*`, `divide-stone-*`, `ring-amber-*` | Replace with `--color-border`, `border-card`, `--color-primary` |
+| **K** | Arbitrary values | Any `[*px]`, `[*rem]`, `[*%]` not in exempted list | Evaluate each — add CSS var + spec field if theme-dependent |
+| **L** | Inline styles | `style={{"#hex"}}`, `style={{"100px"}}` non-var values | Replace with `var(--color-*)`, `var(--nav-height)` etc. |
 
+**All grep commands and full fix instructions:** `resources/uniqueness-layers.md`
+
+To run a quick scan across all layers:
 ```bash
-# Success/error/info (should use text-success, bg-success-subtle, etc.)
-rg -n 'bg-green-\d+|text-green-\d+|bg-red-\d+|text-red-\d+|bg-blue-\d+|text-blue-\d+' --include='*.tsx' --include='*.ts' components/ app/ | grep -v node_modules | grep -v '.next'
+# Source only, exclude noise
+SRC="components/ app/ lib/"
+for layer in A B C D E F G H I J K L; do
+  echo "=== Layer $layer ==="
+  case $layer in
+    A) grep -rn 'bg-green-\|text-green-\|bg-red-\|text-red-\|bg-blue-\|text-blue-' $SRC --include='*.tsx' 2>/dev/null ;;
+    B) grep -rn 'text-stone-\|bg-amber-\|fill-amber-\|border-stone-' $SRC --include='*.tsx' 2>/dev/null ;;
+    C) grep -rn 'class.*bg-white\|class.*text-white\|bg-black/' $SRC --include='*.tsx' 2>/dev/null ;;
+    D) grep -rn 'max-w-6xl\|max-w-7xl\|py-20\|py-24\|gap-6\|gap-8\|gap-12' $SRC --include='*.tsx' 2>/dev/null | grep -v 'style=' ;;
+    E) grep -rn 'NEXT_PUBLIC_THEME_BUNDLE.*||' $SRC --include='*.tsx' --include='*.ts' 2>/dev/null ;;
+    F) grep -rn 'bg-section\|text-heading\|text-body\|text-muted\|card-themed\|button-themed' $SRC --include='*.tsx' 2>/dev/null | head -10 ;;
+    G) grep -rn 'text-\[[0-9.]*px\|leading-\[[0-9.]*px\|font-\[[0-9]*\]\|tracking-\[' $SRC --include='*.tsx' 2>/dev/null ;;
+    H) grep -rn 'min-h-\[[0-9.]*\(px\|rem\|vh\)' $SRC --include='*.tsx' 2>/dev/null ;;
+    I) grep -rn 'z-\[[0-9]*\]' $SRC --include='*.tsx' 2>/dev/null ;;
+    J) grep -rn 'border-\(gray\|slate\|zinc\|neutral\)-[0-9]' $SRC --include='*.tsx' 2>/dev/null ;;
+    K) grep -rn '\[-?[0-9]\{1,4\}\(px\|rem\|%\)\]' $SRC --include='*.tsx' 2>/dev/null | grep -v 'style=' | grep -v 'var(' | head -5 ;;
+    L) grep -rn 'style={[^}]*"#[0-9a-fA-F]\{3,6\}' $SRC --include='*.tsx' 2>/dev/null ;;
+  esac
+  echo ""
+done
 ```
-
-**Fix:** Replace with `bg-success` / `text-success` / `bg-success-subtle` / `bg-error` / `text-error` / `bg-error-subtle` / `bg-info` / `text-info` / `bg-info-subtle` semantic classes. If the CSS var doesn't exist yet, add it to `compile.ts` and `globals.css` first.
-
-#### Layer B: Hardcoded Color Classes — Flat Tailwind Scale
-
-```bash
-# text-stone-* / bg-amber-* / fill-amber-* / border-stone-*
-rg -n 'text-stone-\d+|bg-amber-\d+|fill-amber-\d+|border-stone-\d+' --include='*.tsx' --include='*.ts' components/ app/ | grep -v node_modules | grep -v '.next'
-```
-
-**Fix:** Replace with semantic utility classes:
-- `text-stone-900` → `text-heading`
-- `text-stone-700`/`text-stone-600` → `text-body`
-- `text-stone-500`/`text-stone-400` → `text-muted`
-- `bg-amber-600`/`bg-amber-700` → `bg-section-cta` or `bg-[var(--color-primary)]`
-- `bg-amber-100`/`bg-amber-50` → `bg-section-alt`
-- `fill-amber-400` → `fill-star`
-- `border-stone-300`/`border-stone-200` → `border-card`
-
-#### Layer C: bg-white / text-white / bg-black
-
-```bash
-# bg-white / text-white / bg-black (not theme-controlled)
-rg -n 'bg-white|text-white|bg-black/\d+' --include='*.tsx' --include='*.ts' components/ app/ | grep -v node_modules | grep -v '.next' | grep -v '//.*exempt'
-```
-
-**Fix:** 
-- `bg-white` on cards → `bg-card`
-- `bg-white` on sections → `bg-section`
-- `text-white` on buttons → `text-[var(--color-background)]`
-- `bg-black/50` overlays → `--color-overlay` (add CSS var + utility class)
-
-#### Layer D: Hardcoded Non-Color Dimension Values
-
-```bash
-# Container widths (should use container-max)
-rg -n 'max-w-6xl|max-w-7xl' --include='*.tsx' --include='*.ts' components/ app/ | grep -v node_modules | grep -v '.next'
-
-# Section padding (should use section-py)
-rg -n 'py-20|py-24' --include='*.tsx' --include='*.ts' components/ app/ | grep -v node_modules | grep -v '.next'
-
-# Hardcoded card patterns (should use card-themed)
-rg -n 'rounded-xl border.*bg' --include='*.tsx' --include='*.ts' components/ app/ | grep -v node_modules | grep -v '.next'
-
-# Grid gaps (should use --grid-gap via style={})
-rg -n 'gap-6|gap-8|gap-12' --include='*.tsx' --include='*.ts' components/ app/ | grep -v node_modules | grep -v '.next' | grep -v 'style='
-
-# Shadows (should use theme shadow vars)
-rg -n 'shadow-lg|shadow-xl' --include='*.tsx' --include='*.ts' components/ app/ | grep -v node_modules | grep -v '.next' | grep -v 'style='
-
-# Transition durations (should use --transition-speed)
-rg -n 'duration-200|duration-300|duration-500' --include='*.tsx' --include='*.ts' components/ app/ | grep -v node_modules | grep -v '.next' | grep -v 'style='
-```
-
-**Fix:** Replace with CSS var utility classes or inline `style={{}}` references:
-- `max-w-7xl` → `container-max`
-- `py-20` → `section-py`
-- `rounded-xl border bg-white` → `card-themed bg-card`
-- `gap-6` → `style={{ gap: "var(--grid-gap)" }}`
-- `shadow-lg` → `style={{ boxShadow: "var(--theme-shadow-card)" }}`
-- `duration-300` → `style={{ transitionDuration: "var(--transition-speed)" }}`
-
-#### Layer F: Custom CSS Not Using daisyUI
-
-```bash
-# Custom card utility (should use daisyUI card)
-rg -n 'card-themed' --include='*.tsx' components/ app/ | grep -v node_modules
-
-# Custom button utility (should use daisyUI btn)
-rg -n 'button-themed' --include='*.tsx' components/ app/ | grep -v node_modules
-
-# Custom semantic backgrounds (should use daisyUI bg-base-* / bg-primary / etc.)
-rg -n 'bg-section|bg-card|bg-nav|bg-footer' --include='*.tsx' components/ app/ | grep -v node_modules
-
-# Custom semantic text colors (daisyUI components inherit text from base-content)
-rg -n 'text-heading|text-body|text-muted' --include='*.tsx' components/ app/ | grep -v node_modules
-
-# Old-style CVA Button component (should use daisyUI btn)
-rg -n 'buttonVariants' --include='*.tsx' components/ app/ | grep -v node_modules
-
-# Custom toast (should use daisyUI toast + alert)
-rg -n 'variantStyles|ToastContainer' --include='*.tsx' components/ app/ | grep -v node_modules
-```
-
-**Fix:** Replace with daisyUI component classes:
-
-| Custom class | daisyUI replacement |
-|---|---|
-| `card-themed bg-card` | `card` + `card-body` + `card-title` |
-| `button-themed` | `btn` + `btn-primary` / `btn-outline` / `btn-ghost` / `btn-error` |
-| `image-themed` | `card` figure + `image-full` |
-| `bg-section` | `bg-base-200` |
-| `bg-section-alt` | `bg-base-200` (via component hierarchy) |
-| `bg-section-inverse` | `bg-neutral` |
-| `bg-section-cta` | `bg-primary` |
-| `bg-card` | `bg-base-100` (cards inherit from `card`) |
-| `bg-nav` | `navbar` handles its own bg |
-| `bg-footer` | `footer` handles its own bg |
-| `text-heading` / `text-body` / `text-muted` | daisyUI components set these automatically via `--color-base-content` |
-
-**For each migration:**
-1. Replace the HTML structure with daisyUI component pattern (e.g. `<div class="card">` -> `<div class="card-body">` -> content)
-2. Remove the custom class from the component
-3. After all consumers are migrated, delete the corresponding CSS rule from `globals.css`
-4. Verify the migrated component renders correctly across all theme variants
-
-#### Layer E: Silent Fallbacks & Defaults
-
-```bash
-# Silent "A" fallback in layout files
-rg -n 'NEXT_PUBLIC_THEME_BUNDLE.*\|\|.*"A"' --include='*.tsx' --include='*.ts' app/
-
-# Palette color fallback defaults (hardcoded warm-amber bias)
-rg -n 'resolveColor.*#b45309\|resolveColor.*#fef3c7\|resolveColor.*#fffbeb\|resolveColor.*#1c1917\|resolveColor.*#d4a373' --include='*.ts' lib/
-
-# Duplicated FALLBACK_NAME
-rg -n 'FALLBACK_NAME' --include='*.tsx' --include='*.ts' components/ app/ lib/
-
-# Hardcoded business info in section components
-rg -n '"7:00 AM\|"123 Coffee\|"@cafetemplate\|"hello@cafetemplate"' --include='*.tsx' components/
-
-# Hardcoded CTA links
-rg -n '"/menu"' --include='*.tsx' --include='*.ts' components/ lib/ | grep -v 'node_modules'
-```
-
-**Fix:**
-- Add `console.warn("[theme] ...")` before any `|| "default"` fallback
-- Replace warm-amber palette defaults with neutral CSS variable defaults (e.g. `#cccccc` or leave as last-resort CSS var reference)
-- Extract shared constants to `lib/constants.ts` and import
-- Fallback business string literals → `siteProfile?.field || ""` with console warning when empty
 
 ### Step 2: Fix by Category
 
@@ -199,7 +104,13 @@ Priority order (most impactful first):
 3. **Silent fallbacks** (Layer E) — cause silent theme collapse
 4. **Semantic utility migration** (Layer B, C) — bulk of remaining work
 5. **Dimension values** (Layer D) — mechanical replacements
-6. **Unconsumed CSS vars** — cleanup dead code
+6. **Typography values** (Layer G) — affects readability consistency
+7. **Spacing & sizing** (Layer H) — affects layout consistency
+8. **Positioning & layout** (Layer I) — affects structural integrity
+9. **Border & divide colors** (Layer J) — affects card/divider theming
+10. **Arbitrary Tailwind values** (Layer K) — catch-all for uncategorized
+11. **Inline style hardcodings** (Layer L) — catch-all for inline values
+12. **Unconsumed CSS vars** — cleanup dead code
 
 #### Adding New CSS Variables
 
@@ -415,16 +326,20 @@ for (const k of Object.keys(spatialValues)) {
   free += Math.min((spatialValues[k] || new Set()).size, 3);
 }
 
-// 6. DaisyUI baseline (rigid: shared component library)
+// 6. Component registry + block layouts (free: themes can pick different components & layouts per page slot)
+// Blocker 2 (component registry) + Blocker 3 (block layout) from docs/techdebt/theme-freedom-spectrum.md
+free += 8; // +5-8 for component overrides, +3-5 for block layouts (conservative combined estimate)
+
+// 7. DaisyUI baseline (rigid: shared component library)
 rigid += 4; // all components go through daisyUI
 
-// 7. ThemeProvider + compile.ts constraints (rigid)
+// 8. ThemeProvider + compile.ts constraints (rigid)
 rigid += 3; // fixed compilation path, fixed CSS var names, fixed data flow
 
-// 8. Spec-based architecture vs arbitrary generation (rigid)
+// 9. Spec-based architecture vs arbitrary generation (rigid)
 rigid += 2; // spec files constrain possible output to predefined dimension schemas
 
-// 9. Custom CSS / injected styles (free: grep for style={} with non-var values)
+// 10. Custom CSS / injected styles (free: grep for style={} with non-var values)
 // This is approximate — counts inline styles that aren't using CSS vars as 'custom expression'
 rigid += 1; // default penalty; overridden if free-form CSS is detected
 
@@ -505,14 +420,18 @@ if (pct < 50) {
 
 Run this after every theme generation or spec regeneration:
 
-- [ ] Layer A: 0 hardcoded status colors (green/red/blue)
-- [ ] Layer B: 0 hardcoded `text-stone-*` / `bg-amber-*` / `fill-amber-*` classes
-- [ ] Layer C: 0 `bg-white` / `text-white` / `bg-black/*` outside exempted locations
-- [ ] Layer D: 0 hardcoded non-color dimension values
-- [ ] Layer E: 0 silent fallbacks (every `||` has a warning; no warm-amber bias; no duplicated constants)
-- [ ] Layer F: 0 `card-themed` / `button-themed` / `image-themed` usages (all migrated to daisyUI)
-- [ ] Layer F: CVA `Button` component replaced with daisyUI `btn`
-- [ ] Layer F: Custom toast replaced with daisyUI `toast` + `alert`
+- [ ] **Layer A** — 0 hardcoded status colours (green/red/blue Tailwind scale)
+- [ ] **Layer B** — 0 hardcoded flat Tailwind scale colours (`text-stone-*`, `bg-amber-*`, etc.)
+- [ ] **Layer C** — 0 `bg-white` / `text-white` / `bg-black/*` outside exempted locations
+- [ ] **Layer D** — 0 hardcoded dimension values (`max-w-*`, `py-*`, `gap-*`, `shadow-*`, `duration-*`)
+- [ ] **Layer E** — 0 silent fallbacks (every `||` has a warning; no warm-amber bias; no duplicated constants)
+- [ ] **Layer F** — 0 custom daisyUI violations (no `card-themed`, `button-themed`; use daisyUI components)
+- [ ] **Layer G** — 0 hardcoded typography arbitrary values (`text-[*]`, `leading-[*]`, `font-[*]`)
+- [ ] **Layer H** — 0 hardcoded spacing/sizing arbitrary values (`m-[*]`, `p-[*]`, `w-[*]`, `h-[*]`, `gap-[*]`)
+- [ ] **Layer I** — 0 hardcoded positioning/layout arbitrary values (`z-[*]`, `min-h-[*]`, `translate-[*]`)
+- [ ] **Layer J** — 0 hardcoded border/divide/ring Tailwind scale colours (`border-gray-*`, `divide-stone-*`)
+- [ ] **Layer K** — 0 hardcoded arbitrary values (`[*px]`, `[*rem]`, `[*%]`) — each evaluated
+- [ ] **Layer L** — 0 hardcoded inline style non-var values (hex colours, numeric px)
 - [ ] All 9 dimensions differ between every variant pair
 - [ ] All 5 component properties differ between every variant pair
 - [ ] Every emitted CSS var is consumed by at least one file

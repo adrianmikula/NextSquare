@@ -15,7 +15,7 @@ export function ToastContainer() {
   if (toasts.length === 0) return null
 
   return (
-    <div className="toast toast-top toast-end z-[100]">
+    <div className="toast toast-top toast-end z-[var(--z-toast)]">
       {toasts.map((toast) => (
         <div
           key={toast.id}

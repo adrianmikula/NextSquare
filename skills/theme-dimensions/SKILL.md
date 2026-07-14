@@ -141,7 +141,7 @@ For each of the 9 dimensions, if a spec exists, compile it:
 6. **Rhythm** — extract section spacing density (compact/standard/spacious → rem). Map to `--section-py`.
 7. **Imagery** — extract default aspect ratio and image treatment. Map to `--image-default-aspect`, `--image-treatment`.
 8. **Wording** — no CSS vars emitted (content dimension only).
-9. **Page-Layout** — extract hero variant, nav variant, section container style, card variant, footer variant. Map to `--layout-hero-variant`, `--layout-nav-variant`, `--layout-section-container`, `--layout-card-variant`, `--layout-footer-variant`. Emit structural CSS overrides: `--hero-min-height`, `--hero-overlay-display`, `--hero-content-align`, `--hero-content-flow`, `--nav-position`, `--nav-layout`, `--nav-width`, `--nav-inset-block-start`, `--nav-inset-block-end`, `--nav-inline-size`, `--nav-min-height-block`, `--nav-align`, `--section-columns`, `--section-list-style`, `--card-shadow`, `--card-border-toggle`, `--card-bg-fill`, `--footer-grid`, `--footer-text-align`.
+9. **Page-Layout** — extract hero variant, nav variant, section container style, card variant, footer variant. Map to `--layout-hero-variant`, `--layout-nav-variant`, `--layout-section-container`, `--layout-card-variant`, `--layout-footer-variant`. Emit structural CSS overrides: `--hero-min-height`, `--hero-overlay-display`, `--hero-content-align`, `--hero-content-flow`, `--nav-position`, `--nav-layout`, `--nav-width`, `--nav-inset-block-start`, `--nav-inset-block-end`, `--nav-inline-size`, `--nav-min-height-block`, `--nav-align`, `--section-columns`, `--section-list-style`, `--card-shadow`, `--card-border-toggle`, `--card-bg-fill`, `--footer-grid`, `--footer-text-align`. The optional `componentOverrides` field is **not compiled to CSS** — it is extracted separately by `lib/component-registry.ts` to select alternative React components per block type at render time.
 
 Aggregate all dimension CSS vars into a single flat map.
 
@@ -287,6 +287,7 @@ Full configuration reference in `config.yaml`. Key sections:
 - **Runtime:** Node.js 20+, Next.js 16+
 - **External services:** None — entirely local filesystem-based
 - **Key exports:** `lib/dimensions/index.ts` (server), `lib/dimensions/client.ts` (client-safe)
+- **Component registry:** `lib/component-registry.ts` — resolves component overrides from page-layout specs (see `dimension-page-layout.md`)
 
 ## Post-Step: Verify Theme Uniqueness
 

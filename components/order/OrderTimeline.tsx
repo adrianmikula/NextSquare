@@ -60,7 +60,7 @@ export function OrderTimeline({ currentState }: OrderTimelineProps) {
               {index < steps.length - 1 && (
                 <div
                   className={`mt-1 h-full w-0.5 ${
-                    index < currentIndex ? "bg-[var(--color-primary)]" : "bg-stone-200"
+                    index < currentIndex ? "bg-[var(--color-primary)]" : "bg-[var(--color-card-border)]"
                   }`}
                 />
               )}

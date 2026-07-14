@@ -22,7 +22,9 @@ import { requireEnv } from "@/lib/env"
 import { readSiteProfile, readCmsPageVariants } from "@/lib/cms"
 import { resolvePageBlocks } from "@/lib/demo/demo-state"
 import { defaultDimensionState, resolveDimensionSpecs, compileSpecsToCssVars, getAllBundleConfigs } from "@/lib/dimensions"
+import { extractComponentOverrides } from "@/lib/component-registry"
 import type { CmsBlock } from "@/lib/cms"
+import type { ComponentOverrides } from "@/lib/component-registry"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito" })
@@ -79,6 +81,7 @@ export default async function RootLayout({
   const cssVarsStyle = Object.entries(cssVars)
     .map(([k, v]) => `${k}:${v}`)
     .join(";")
+  const componentOverrides: ComponentOverrides | undefined = extractComponentOverrides(dimSpecs)
 
   return (
     <html lang="en">
@@ -90,9 +93,9 @@ export default async function RootLayout({
             }}
           />
           <ToastProvider>
-            <Header siteProfile={siteProfile} blocks={headerBlocks} />
+            <Header siteProfile={siteProfile} blocks={headerBlocks} componentOverrides={componentOverrides} />
             <main className="flex-1">{children}</main>
-            <Footer siteProfile={siteProfile} blocks={footerBlocks} />
+            <Footer siteProfile={siteProfile} blocks={footerBlocks} componentOverrides={componentOverrides} />
           </ToastProvider>
         </ThemeProvider>
         <ToastContainer />

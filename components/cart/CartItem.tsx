@@ -19,7 +19,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
     item.quantity
 
   return (
-    <div className="flex gap-4 border-stone-100 py-4" style={{ borderBottomWidth: "var(--theme-border-width)" }}>
+    <div className="flex gap-4 border-card py-4" style={{ borderBottomWidth: "var(--theme-border-width)" }}>
       {item.imageUrl && (
         <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-box bg-section-alt">
           <img

@@ -355,9 +355,14 @@ export type TextVariant = z.infer<typeof TextVariantSchema>
 
 // ── Layer 3 / Final: Page Bundle ─────────────────────────────────────────────
 
+export const BlockLayoutSchema = z.enum([
+  "full-width", "half-width", "two-thirds", "sidebar-content", "card-grid", "full-bleed",
+])
+
 export const CmsBlockSchema = z.object({
   type: z.string(),
   data: z.record(z.string(), z.unknown()),
+  layout: BlockLayoutSchema.optional(),
 })
 
 export const CmsPageSchema = z.object({

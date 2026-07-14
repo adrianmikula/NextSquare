@@ -79,6 +79,21 @@ Note: `loader.ts` functions are NOT re-exported from `client.ts` — they use `f
 
 ---
 
+## Component Registry
+
+### `lib/component-registry.ts`
+
+| Function | Signature | Purpose |
+|----------|-----------|---------|
+| `resolveComponentName` | `(blockType: string, overrides?: ComponentOverrides) => string` | Resolve component name for a block type, with optional override |
+| `extractComponentOverrides` | `(specs: Record<DimensionName, DimensionSpec \| null>) => ComponentOverrides \| undefined` | Extract `componentOverrides` from resolved page-layout spec |
+
+The component registry decouples block type → component mapping from the `CmsBlockRenderer` switch statement. Dimension specs can now influence which React component renders a given block type, enabling per-theme component selection without source code changes.
+
+### `components/cms/CmsRenderer.tsx`
+
+`CmsBlockRenderer` now accepts an optional `componentOverrides` prop and wraps rendered blocks in layout shells based on the block's `layout` property.
+
 ## Component Integration
 
 ### `components/cms/ThemeProvider.tsx`
@@ -106,18 +121,20 @@ URL params          Bundle configs
            v
     DimensionState         content/dimensions/specs/
            |                         |
-           v                         v
-    resolveDimensionSpecs()
-           |
-           v
-    DimensionSpec[8]        config.yaml (defaults)
-           |                         |
-           v                         v
-    compileSpecsToCssVars()
-           |
-           v
-    CSS vars map (Record<string, string>)
-           |
-           v
-    ThemeProvider (setProperty on :root)
+           |                         v
+           |               resolveDimensionSpecs()
+           |                    /          \
+           v                   v            v
+    compileSpecsToCssVars()  DimensionSpec[9]    extractComponentOverrides()
+           |                   |                         |
+           v                   v                         v
+    CSS vars map          config.yaml              ComponentOverrides
+           |               (defaults)                   |
+           v                                            v
+    ThemeProvider                                 CmsBlockRenderer
+    (setProperty on :root)                       (registry dispatch)
+                                                      |
+                                                      v
+                                                BlockLayoutShell
+                                                (layout wrapper)
 ```
