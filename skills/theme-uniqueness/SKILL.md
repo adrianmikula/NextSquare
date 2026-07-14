@@ -4,11 +4,14 @@ description: >
   Audit the entire codebase for hardcoded, defaulted, or deterministic theme values that bypass
   the CSS variable system, and fix them so any 2 generated themes are truly unique and distinct
   in all dimensions. Run after dimension spec generation or whenever theme integrity is suspect.
+  Includes a visual uniqueness reality check (Step 7 v2) that detects when spec-level uniqueness
+  does not translate to visible thematic difference, with deep root cause detection: color-mix
+  evaluation, component alias detection, dead dimension detection, and block-type identity audit.
 ---
 
 # Theme Uniqueness Skill
 
-> **v0.2.0** — Added Step 6: Market Spectrum Positioning
+> **v0.4.0** — Upgraded Step 7 to v2: color-mix evaluation, alias detection, dead dimension detection, block-type identity audit, page-layout diversity check, skeleton rigidity check
 
 ## Mission
 
@@ -22,6 +25,7 @@ Run this skill to:
 2. **Fix** every violation by converting to CSS vars / semantic utility classes / explicit config
 3. **Verify** that all generated variant pairs differ in ALL controllable dimensions
 4. **Validate** no silent fallbacks or dead CSS vars remain
+5. **Reality-check** that spec-level uniqueness translates to visible visual difference (Step 7)
 
 ## Prerequisites
 
@@ -45,7 +49,7 @@ Run this skill to:
 ## Workflow
 
 ```
-Audit Codebase  →  Categorize Violations  →  Fix Layer by Layer  →  Verify Distinctness  →  Re-test  →  Market Spectrum
+Audit Codebase  →  Categorize Violations  →  Fix Layer by Layer  →  Verify Distinctness  →  Re-test  →  Market Spectrum  →  Visual Reality Check
 ```
 
 ### Step 1: Auditing the Codebase
@@ -416,6 +420,479 @@ if (pct < 50) {
 
 ---
 
+### Step 7: Visual Uniqueness Reality Check (v2 — Deep Root Cause Detection)
+
+**Why this step exists:** The 12-layer audit (Steps 1-3) only verifies that spec-file values *differ on paper*. It does not compute what the compiled CSS variables actually *resolve to visually*. The compiler's `color-mix()` derivations, dead dimensions (wording/rhythm that produce zero CSS output), component aliases (overrides that point to the same function), and block-type identity (18 of 20+ block types sharing the same component) can all cause spec-level uniqueness to not translate to human-perceived uniqueness.
+
+This step detects that gap and identifies the **root cause** (compiler collapse, dead dimension, alias, or block-type identity).
+
+Run this check after every spec regeneration to catch cases where the analysis says "unique" but the human eye says "same."
+
+```bash
+node --input-type=module -e "
+import { readFileSync, readdirSync } from 'fs';
+import { createRequire } from 'module';
+
+const DIMS = ['color','typography','spatial','components','motion','imagery','rhythm','wording','page-layout'];
+const VARIANTS = readdirSync('content/dimensions/specs')
+  .filter(f => f.endsWith('.json'))
+  .map(f => f.match(/-(a|b|c)\.json$/)?.[1])
+  .filter(Boolean)
+  .filter((v,i,a) => a.indexOf(v) === i)
+  .sort();
+
+const NAMES = {a:'Theme A', b:'Theme B', c:'Theme C'};
+
+// --- Helpers ---
+
+function hexToRgb(hex) {
+  if (!hex || typeof hex !== 'string') return null;
+  const m = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return null;
+  return [parseInt(m[1],16), parseInt(m[2],16), parseInt(m[3],16)];
+}
+
+function colorMix(fgHex, pct, bgHex) {
+  // Replicate CSS color-mix(in srgb, fg pct%, bg)
+  const fg = hexToRgb(fgHex), bg = hexToRgb(bgHex);
+  if (!fg || !bg) return fgHex || bgHex || '#000';
+  const t = pct / 100;
+  const r = Math.round(fg[0]*t + bg[0]*(1-t));
+  const g = Math.round(fg[1]*t + bg[1]*(1-t));
+  const b = Math.round(fg[2]*t + bg[2]*(1-t));
+  return '#'+[r,g,b].map(x => x.toString(16).padStart(2,'0')).join('');
+}
+
+function luminance(hex) {
+  if (!hex || typeof hex !== 'string') return 0;
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
+  const [r,g,b] = rgb.map(x => x/255).map(c => c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4));
+  return 0.2126*r + 0.7152*g + 0.0722*b;
+}
+
+function fontCategory(font) {
+  const serifs = ['fraunces','playfair','lora','merriweather','garamond','times','palatino'];
+  const sans = ['inter','nunito','dm sans','space grotesk','helvetica','arial','roboto','open sans','montserrat','poppins','instrument sans'];
+  const display = ['caveat','pacifico','alex brush','great vibes','lobster','bebas','anton','oswald'];
+  const f = (font || '').toLowerCase();
+  if (serifs.some(s => f.includes(s))) return 'serif';
+  if (display.some(d => f.includes(d))) return 'display';
+  if (sans.some(s => f.includes(s))) return 'sans-serif';
+  return 'other';
+}
+
+function loadSpecs(v) {
+  const specs = {};
+  for (const d of DIMS) {
+    try { specs[d] = JSON.parse(readFileSync('content/dimensions/specs/'+d+'-'+v+'.json','utf8')); }
+    catch { specs[d] = {}; }
+  }
+  return specs;
+}
+
+// --- Step 7a: Compiled CSS Variable Values (with color-mix evaluation) ---
+console.log('=== Step 7a: Compiled CSS Variable Values (color-mix evaluated) ===\n');
+
+let totalCollapseWarnings = 0;
+for (const v of VARIANTS) {
+  const specs = loadSpecs(v);
+  const c = specs.color;
+  const p = c.palette ?? c.colors ?? {};
+
+  const bg = typeof p.background === 'string' ? p.background : '#ffffff';
+  const text = typeof p.text === 'string' ? p.text : '#111827';
+  const surface = typeof p.surface === 'string' ? p.surface : '#f9fafb';
+  const secondary = typeof p.secondary === 'string' ? p.secondary : '#f3f4f6';
+  const border = typeof p.border === 'string' ? p.border : text;
+  const primary = typeof p.primary === 'string' ? p.primary : '#6b7280';
+  const accent = typeof p.accent === 'string' ? p.accent : '#6b7280';
+
+  // Replicate compile.ts color-mix derivations
+  const compiled = {
+    '--color-section-bg': bg,
+    '--color-section-bg-alt': secondary,
+    '--color-section-bg-inverse': text,
+    '--color-section-bg-cta': primary,
+    '--color-heading': text,
+    '--color-body': text,
+    '--color-muted': colorMix(text, 55, bg),
+    '--color-label': colorMix(text, 75, bg),
+    '--color-link': colorMix(text, 85, bg),
+    '--color-hero-bg': text,
+    '--color-hero-text': bg,
+    '--color-hero-muted': colorMix(bg, 65, text),
+    '--color-card-bg': surface,
+    '--color-card-border': border,
+    '--color-nav-bg': colorMix(bg, 96, text),
+    '--color-nav-link': colorMix(text, 85, bg),
+    '--color-footer-bg': colorMix(bg, 90, text),
+    '--color-footer-heading': colorMix(text, 80, bg),
+    '--color-footer-muted': colorMix(text, 55, bg),
+    '--color-cta-text': bg,
+    '--color-primary': primary,
+    '--color-accent': accent,
+    '--color-price': primary,
+    '--color-star': accent,
+    '--color-link-hover': primary,
+  };
+
+  const uniqueValues = new Set(Object.values(compiled));
+  const totalSlots = Object.keys(compiled).length;
+  const collapsedCount = totalSlots - uniqueValues.size;
+
+  console.log(NAMES[v] + ' (' + v.toUpperCase() + '):');
+  console.log('  Distinct compiled values: ' + uniqueValues.size + ' / ' + totalSlots);
+  console.log('  Collapsed via palette:    ' + collapsedCount + ' slots');
+
+  // Show which slots collapse (value === another slot)
+  if (collapsedCount > 0) {
+    const seen = {};
+    for (const [key, val] of Object.entries(compiled)) {
+      if (seen[val] !== undefined) {
+        console.log('    ' + key + ' = same as ' + seen[val] + ' (' + val + ')');
+      } else {
+        seen[val] = key;
+      }
+    }
+  }
+
+  if (collapsedCount > 8) {
+    console.log('  ⚠️  High collapse: >8 slots resolve to the same value.');
+    console.log('      Still dominated by too few unique color levels.');
+    totalCollapseWarnings++;
+  } else if (collapsedCount > 5) {
+    console.log('  ⚠️  Moderate collapse: >5 slots share a value.');
+    totalCollapseWarnings++;
+  }
+  console.log('');
+
+  // Store for cross-theme comparison
+  if (!globalThis._compiled) globalThis._compiled = {};
+  globalThis._compiled[v] = compiled;
+}
+
+// --- Step 7b: Cross-theme compiled value similarity ---
+console.log('=== Step 7b: Cross-Theme Compiled Value Comparison ===\n');
+
+const pairs = [];
+for (let i = 0; i < VARIANTS.length; i++) {
+  for (let j = i + 1; j < VARIANTS.length; j++) {
+    pairs.push([VARIANTS[i], VARIANTS[j]]);
+  }
+}
+
+let realityScore = 100;
+
+for (const [a, b] of pairs) {
+  const ca = globalThis._compiled[a], cb = globalThis._compiled[b];
+  console.log(NAMES[a] + ' vs ' + NAMES[b] + ' (compiled values):');
+
+  let sameCount = 0;
+  const totalSlots = Object.keys(ca).length;
+
+  for (const slot of Object.keys(ca)) {
+    const va = ca[slot].toLowerCase(), vb = cb[slot].toLowerCase();
+    if (va === vb) {
+      console.log('  IDENTICAL ' + slot + ': ' + va);
+      sameCount++;
+    }
+  }
+
+  const visualPct = Math.round(((totalSlots - sameCount) / totalSlots) * 100);
+  realityScore = Math.min(realityScore, visualPct);
+  console.log('  Distinct compiled slots: ' + (totalSlots - sameCount) + '/' + totalSlots + ' = ' + visualPct + '%');
+  console.log('');
+}
+
+// --- Step 7c: Luminance diversity ---
+console.log('=== Step 7c: Luminance & Contrast Pattern Diversity ===\n');
+
+const bgLums = {}, textLums = {}, surfaceLums = {};
+let allLightBg = true, allDarkText = true, allWhiteSurface = true;
+
+for (const v of VARIANTS) {
+  const c = globalThis._compiled[v];
+  bgLums[v] = luminance(c['--color-section-bg']);
+  textLums[v] = luminance(c['--color-heading']);
+  surfaceLums[v] = luminance(c['--color-card-bg']);
+  if (bgLums[v] < 0.5) allLightBg = false;
+  if (textLums[v] > 0.1) allDarkText = false;
+  if (surfaceLums[v] < 0.95) allWhiteSurface = false;
+  console.log(NAMES[v] + ':');
+  console.log('  Background luminance: ' + bgLums[v].toFixed(3) + ' (' + c['--color-section-bg'] + ')');
+  console.log('  Card surface luminance: ' + surfaceLums[v].toFixed(3) + ' (' + c['--color-card-bg'] + ')');
+  console.log('  Text luminance: ' + textLums[v].toFixed(3) + ' (' + c['--color-heading'] + ')');
+  console.log('');
+}
+
+const maxBgDiff = Math.max(...Object.values(bgLums)) - Math.min(...Object.values(bgLums));
+const maxTextDiff = Math.max(...Object.values(textLums)) - Math.min(...Object.values(textLums));
+const maxSurfaceDiff = Math.max(...Object.values(surfaceLums)) - Math.min(...Object.values(surfaceLums));
+
+console.log('Background luminance range: ' + (maxBgDiff * 100).toFixed(0) + '%');
+console.log('Surface luminance range:    ' + (maxSurfaceDiff * 100).toFixed(0) + '%');
+console.log('Text luminance range:       ' + (maxTextDiff * 100).toFixed(0) + '%');
+
+let lumIssues = 0;
+if (allLightBg) { console.log('⚠️  ALL light backgrounds — no dark/medium-bg variant'); lumIssues++; }
+if (allDarkText) { console.log('⚠️  ALL dark text — no light/medium-text variant'); lumIssues++; }
+if (allWhiteSurface) { console.log('⚠️  ALL surfaces near-white — cards look the same across themes'); lumIssues++; }
+if (maxBgDiff < 0.2) { console.log('⚠️  Background spread < 20% — all backgrounds look like off-white'); lumIssues++; }
+if (maxSurfaceDiff < 0.15) { console.log('⚠️  Surface spread < 15% — cards look the same'); lumIssues++; }
+if (maxTextDiff < 0.15) { console.log('⚠️  Text spread < 15% — all text looks equally dark'); lumIssues++; }
+
+// --- Step 7d: Font category overlap ---
+console.log('\n=== Step 7d: Font Category Overlap ===\n');
+
+const cats = {};
+let fontOverlap = false;
+for (const v of VARIANTS) {
+  const spec = JSON.parse(readFileSync('content/dimensions/specs/typography-'+v+'.json','utf8'));
+  const cat = fontCategory(spec.headingFont || 'Inter');
+  if (!cats[cat]) cats[cat] = [];
+  cats[cat].push(v);
+  console.log(NAMES[v] + ': ' + spec.headingFont + ' → ' + cat);
+}
+console.log('');
+for (const [cat, themes] of Object.entries(cats)) {
+  if (themes.length > 1) {
+    console.log('⚠️  Font category \"' + cat + '\" shared by: ' + themes.map(t => NAMES[t]).join(', '));
+    fontOverlap = true;
+  }
+}
+if (!fontOverlap) console.log('All heading font categories unique. ✓');
+
+// Check if all 4 categories are used
+const usedCats = Object.keys(cats);
+const allCats = ['serif','sans-serif','display','monospace'];
+const missingCats = allCats.filter(c => !usedCats.includes(c));
+if (missingCats.length > 0) {
+  console.log('ℹ️  Unused font categories: ' + missingCats.join(', ') + ' (consider adding for more diversity)');
+}
+
+// --- Step 7e: Component override map audit ---
+console.log('\n=== Step 7e: Component Override Map Audit ===\n');
+
+// Known component map from CmsRenderer.tsx
+const COMPONENT_MAP = {
+  'hero': 'CmsHero',
+  'overlay-hero': 'CmsHero',
+  'split-hero': 'CmsSplitHero',
+  'text': 'CmsText',
+  'products': 'CmsProducts',
+  'testimonials': 'CmsTestimonials',
+  'compact-testimonials': 'CmsCompactTestimonials',
+  'carousel-testimonials': 'CmsCarouselTestimonials',
+  'delivery': 'CmsDelivery',
+  'hours': 'CmsHours',
+  'gallery': 'CmsGallery',
+  'cta': 'CmsCta',
+  'services': 'CmsServices',
+  'form': 'CmsForm',
+  'faq': 'CmsFaq',
+  'promo': 'CmsPromo',
+  'slideshow': 'CmsSlideshow',
+  'social-icons': 'CmsSocialIcons',
+  'callout': 'CmsCallout',
+  'hr': 'CmsHR',
+  'image-text': 'CmsImageText',
+  'comparison': 'CmsComparison',
+  'logo': 'CmsLogo',
+  'business-name': 'CmsBusinessName',
+  'slogan': 'CmsSlogan',
+  'nav': 'CmsNav',
+  'sitemap': 'CmsSitemap',
+  'announcement': 'CmsAnnouncement',
+  'copyright': 'CmsCopyright',
+  'phone': 'CmsPhone',
+  'page-layout': '() => null',
+};
+
+// Find aliases (different names, same function)
+const fnToNames = {};
+for (const [name, fn] of Object.entries(COMPONENT_MAP)) {
+  if (!fnToNames[fn]) fnToNames[fn] = [];
+  fnToNames[fn].push(name);
+}
+console.log('Alias check:');
+let aliasFound = false;
+for (const [fn, names] of Object.entries(fnToNames)) {
+  if (names.length > 1) {
+    console.log('  ⚠️  \"' + names.join('\" / \"') + '\" all map to ' + fn);
+    aliasFound = true;
+  }
+}
+if (!aliasFound) console.log('  No aliases detected. ✓');
+
+// Per-theme override block type count
+console.log('');
+const allBlockTypes = Object.keys(COMPONENT_MAP).filter(k => k !== 'page-layout');
+const defaultTypes = ['hero','text','products','testimonials','delivery','hours','gallery','cta','services','form','faq','promo','slideshow','social-icons','callout','hr','image-text','comparison','logo','business-name','slogan','nav','sitemap','announcement','copyright','phone'];
+
+let maxOverrideCount = 0;
+for (const v of VARIANTS) {
+  const spec = JSON.parse(readFileSync('content/dimensions/specs/page-layout-'+v+'.json','utf8'));
+  const overrides = spec.componentOverrides || {};
+  const overrideKeys = Object.keys(overrides);
+  const overrideCount = overrideKeys.length;
+  if (overrideCount > maxOverrideCount) maxOverrideCount = overrideCount;
+  console.log(NAMES[v] + ': ' + overrideCount + ' block types overridden (of ' + defaultTypes.length + ' total)');
+  if (overrideCount === 0) {
+    console.log('  ⚠️  No component overrides — all blocks use default components');
+  }
+  for (const [blockType, overrideName] of Object.entries(overrides)) {
+    const componentFn = COMPONENT_MAP[overrideName] || '(missing from COMPONENT_MAP!)';
+    const defaultFn = COMPONENT_MAP[blockType] || '(default missing)';
+    const isAlias = componentFn === defaultFn;
+    if (isAlias) {
+      console.log('  ⚠️  ' + blockType + ' → \"' + overrideName + '\" is alias for ' + defaultFn + ' (no visual difference)');
+    } else {
+      console.log('  ✓  ' + blockType + ' → \"' + overrideName + '\" (' + componentFn + ')');
+    }
+  }
+}
+
+const sharedTypeCount = defaultTypes.length - maxOverrideCount;
+console.log('');
+if (sharedTypeCount > 15) {
+  console.log('⚠️  ' + sharedTypeCount + '/' + defaultTypes.length + ' block types use the default component across ALL themes.');
+  console.log('  These blocks will look identical regardless of theme.');
+  console.log('  Root cause: componentOverrides only covers hero and testimonials.');
+  console.log('  Fix: Add override variants for text, cta, gallery, services blocks.');
+}
+
+// --- Step 7f: Dead dimension detection ---
+console.log('\n=== Step 7f: Dead Dimension Detection ===\n');
+
+// Wording dimension: compileWording returns {} in compile.ts
+console.log('Wording dimension:');
+const wordingSpecs = {};
+for (const v of VARIANTS) {
+  const spec = JSON.parse(readFileSync('content/dimensions/specs/wording-'+v+'.json','utf8'));
+  wordingSpecs[v] = spec;
+  console.log('  ' + NAMES[v] + ' tone: ' + (spec.tone || '(none)'));
+}
+console.log('  compileWording() returns {} — no CSS output');
+console.log('  ⚠️  Wording dimension produces ZERO visible output.');
+console.log('  Root cause: compile.ts line 65 returns {} for wording dimension.');
+console.log('  Fix: Either emit CSS that affects text rendering, or remove the dimension.\n');
+
+// Rhythm dimension: compileRhythm returns {} in compile.ts
+console.log('Rhythm dimension:');
+for (const v of VARIANTS) {
+  const spec = JSON.parse(readFileSync('content/dimensions/specs/rhythm-'+v+'.json','utf8'));
+  console.log('  ' + NAMES[v] + ': ' + JSON.stringify(spec).substring(0, 100));
+}
+console.log('  compileRhythm() returns {} — no CSS output');
+console.log('  ⚠️  Rhythm dimension produces ZERO visible output.');
+console.log('  Root cause: compile.ts line 329 returns {} for rhythm dimension.');
+console.log('  Fix: Either emit spacing/rhythm CSS vars, or remove the dimension.\n');
+
+// --- Step 7g: Page-layout variant diversity ---
+console.log('=== Step 7g: Page-Layout Variant Diversity ===\n');
+
+const layoutProps = ['heroVariant','navVariant','sectionContainer','cardVariant','footerVariant'];
+const layoutValues = {};
+for (const v of VARIANTS) {
+  const spec = JSON.parse(readFileSync('content/dimensions/specs/page-layout-'+v+'.json','utf8'));
+  console.log(NAMES[v] + ':');
+  for (const prop of layoutProps) {
+    const val = String(spec[prop] || '(not set)');
+    if (!layoutValues[prop]) layoutValues[prop] = new Set();
+    layoutValues[prop].add(val);
+    console.log('  ' + prop + ': ' + val);
+  }
+  console.log('');
+}
+
+let layoutDiversityIssue = false;
+console.log('Layout variant uniqueness:');
+for (const prop of layoutProps) {
+  const count = layoutValues[prop].size;
+  if (count === 1) {
+    console.log('  ⚠️  ' + prop + ': only 1 unique value across all themes (no variation)');
+    layoutDiversityIssue = true;
+  } else {
+    console.log('  ✓  ' + prop + ': ' + count + ' unique values');
+  }
+}
+
+// --- Step 7h: Page skeleton rigidity ---
+console.log('\n=== Step 7h: Page Skeleton Rigidity ===\n');
+
+console.log('All themes use the fixed skeleton: Header → blocks.map(render) → Footer');
+console.log('No theme can reorder sections, inject decorative elements, or change page architecture.');
+console.log('⚠️  Page skeleton is hardcoded in layout.tsx and identical across all themes.');
+console.log('  Root cause: The layout component does not consume page-layout CSS vars');
+console.log('  for structural changes (nav position is emitted as CSS but layout.tsx');
+console.log('  HTML structure is fixed).');
+console.log('  Fix: Make layout.tsx consume --nav-position, --nav-layout, --nav-width vars');
+console.log('  to restructure the HTML skeleton per-theme.');
+
+// --- Summary ---
+console.log('\n═══════════════════════════════════════════════');
+console.log('  VISUAL UNIQUENESS REALITY CHECK SUMMARY');
+console.log('═══════════════════════════════════════════════\n');
+
+console.log('  Lowest pair-wise compiled distinctness: ' + realityScore + '%');
+console.log('  (12-layer audit typically reports:       70-80%)');
+console.log('');
+
+const gap = 75 - realityScore;
+if (gap > 30) {
+  console.log('  ⚠️  CRITICAL: Spec-level uniqueness (~75%) vs compiled visual uniqueness');
+  console.log('      (' + realityScore + '%) differs by ' + gap + ' percentage points.');
+  console.log('  Root cause: Compiler collapses semantic slots to too-few palette values.');
+  console.log('  See docs/techdebt/visual-uniqueness-gap.md for fixes.');
+} else if (gap > 15) {
+  console.log('  ⚠️  MODERATE GAP: Visual uniqueness (' + realityScore + '%) notably lower.');
+} else {
+  console.log('  ✓  Compiled distinctness (' + realityScore + '%) aligns with spec-level analysis.');
+}
+
+// Overall health summary
+console.log('');
+console.log('  DIMENSION HEALTH:');
+if (totalCollapseWarnings > 0) console.log('  ❌ Color collapse: ' + totalCollapseWarnings + ' theme(s) with >5 collapsed slots');
+else console.log('  ✓  Color collapse: none');
+if (lumIssues > 0) console.log('  ❌ Luminance: ' + lumIssues + ' issue(s)');
+else console.log('  ✓  Luminance: diverse');
+if (fontOverlap) console.log('  ❌ Font categories: overlap detected');
+else console.log('  ✓  Font categories: all unique');
+if (maxOverrideCount < 2) console.log('  ❌ Component overrides: <2 block types overridden');
+else console.log('  ✓  Component overrides: ' + maxOverrideCount + ' block types overridden');
+console.log('  ❌ Dead dimensions: wording, rhythm (both return {} from compiler)');
+console.log('  ❌ Page skeleton: fixed across all themes');
+console.log('');
+console.log('  See docs/techdebt/visual-uniqueness-gap.md for full root cause analysis.');
+console.log('');
+"
+```
+
+**Interpret the output:**
+
+- **Step 7a (Compiled values):** Shows the actual rendered color values including `color-mix()` derivations. Fewer collapsed slots than raw palette check. Each collapsed slot is named so you can see which pairs are identical.
+- **Step 7b (Cross-theme):** Percentage of compiled CSS var values that differ between each theme pair. >80% is good; <60% means themes look very similar.
+- **Step 7c (Luminance):** Background, surface, and text luminance across themes. Flags if all themes are light-bg dark-text or have narrow spread.
+- **Step 7d (Font categories):** Detects when 2+ themes share a font category (serif/sans/display/mono). Also flags unused categories.
+- **Step 7e (Component overrides):** Detects aliases in COMPONENT_MAP (different names → same function). Counts how many block types each theme overrides vs default. Flags when >15/25 block types are shared defaults.
+- **Step 7f (Dead dimensions):** Detects wording and rhythm dimensions that produce zero CSS output from `compile.ts`. These are spec dimensions that exist on paper but do nothing visually.
+- **Step 7g (Layout diversity):** Checks how many unique values each page-layout property (heroVariant, navVariant, etc.) has across themes. Singletons mean no variation in that layout dimension.
+- **Step 7h (Skeleton rigidity):** Documents that all themes share the same fixed HTML skeleton.
+
+**When to investigate:**
+- Compiled distinctness < 80% (themes share too many resolved CSS values)
+- Any theme has >8 collapsed compiled slots
+- Background luminance spread < 20%
+- Any font category shared by 2+ themes
+- <2 block types overridden per theme (component identity issue)
+- wording or rhythm dimensions are dead (zinc output)
+- Any page-layout property has only 1 unique value
+- Gap between audit score (~75%) and compiled score > 15pp
+
+---
+
 ## Audit Checklist
 
 Run this after every theme generation or spec regeneration:
@@ -439,6 +916,10 @@ Run this after every theme generation or spec regeneration:
 - [ ] TypeScript compiles, all tests pass
 - [ ] Market spectrum position calculated and reviewed (Step 6)
 - [ ] Position is in the intended operating range (50-70% for dimension architecture)
+- [ ] Visual uniqueness reality check (Step 7) shows < 30pp gap from spec-level analysis
+- [ ] No font category overlap across themes
+- [ ] At least one theme has a non-white surface or non-light background
+- [ ] Component overrides reference genuinely different components (no aliases)
 
 ---
 
@@ -456,6 +937,8 @@ Run this after every theme generation or spec regeneration:
 ## Related Documents
 
 - `docs/techdebt/theme-rigidity.md` — comprehensive catalogue of remaining issues
+- `docs/techdebt/visual-uniqueness-gap.md` — root causes of the gap between spec-level and rendered visual uniqueness
+- `docs/techdebt/alternative-architecture.md` — research on open-source highest-uniqueness generators and proposed Next.js architecture for 60-80% spectrum position
 - `lib/dimensions/compile.ts` — CSS variable compilation (emits daisyUI theme vars)
 - `app/globals.css` — semantic utility class definitions (to be reduced as daisyUI migration progresses)
 - `skills/theme-dimensions/SKILL.md` — dimension spec generation

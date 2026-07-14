@@ -137,6 +137,7 @@ function CmsHero({ data }: { data: Record<string, unknown> }) {
       ) : (
         <div className="absolute inset-0 bg-section-inverse" />
       )}
+      <div className="hero-overlay" />
       <div className={cn(containerClass(), "relative", alignClass)}>
         <h1 className={cn(sizeClass, "text-hero-text")}>
           {headline}

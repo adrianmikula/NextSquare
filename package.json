@@ -21,6 +21,7 @@
   "overrides": {
     "dompurify": "^3.4.10",
     "cookie": "^0.7.2",
+    "js-yaml": "^3.15.0",
     "tiptap-markdown": {
       "markdown-it": "^14.2.0"
     },
@@ -29,6 +30,13 @@
     "@twilio-alpha/mcp": "1.0.0"
   },
   "dependencies": {
+    "@design-guard/core": "^0.3.1",
+    "@json-render/core": "^0.19.0",
+    "@json-render/next": "^0.19.0",
+    "@json-render/react": "^0.19.0",
+    "@lisse/react": "^0.5.2",
+    "@soltana-ui/react": "^0.1.0",
+    "@soltana-ui/tokens": "^0.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "daisyui": "^5.6.18",
@@ -39,10 +47,13 @@
     "outstatic": "^2.1.12",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "soltana-ui": "^0.1.0",
     "square": "^44.1.0",
     "swr": "^2.4.1",
     "tailwind-merge": "^3.6.0",
+    "taste-engine": "^0.5.0",
     "twilio": "^6.0.2",
+    "useinkjet": "^2.0.0",
     "zod": "^3.24.0",
     "zustand": "^5.0.14"
   },
