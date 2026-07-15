@@ -51,6 +51,75 @@ Next.js 16 + Tailwind v4
 └──────────────────────┘
 ```
 
+## Site Generator (New Architecture)
+
+> **Status:** Phase 3 — Renderer MVP complete. Generates visually distinct pages from hand-authored `SiteConfig` JSON.
+
+The project includes a generator architecture that produces unique, industry-specific websites using a stack of design tools: json-render (rendering), taste-engine (continuous tuners), soltana-ui (design language archetypes), and @lisse (shape geometry).
+
+### How it works
+
+```
+SiteConfig JSON → Soltana archetype + Taste Engine tuners → json-render spec → rendered page
+```
+
+A `SiteConfig` defines the industry, tone, design language (relief/finish/shape), tuner values (warmth, density, motion, contrast, narrative), and a json-render spec with gene components (hero, features, CTA variants).
+
+### Preview
+
+```bash
+npm run dev
+# Open http://localhost:3000/preview?config=cafe.json
+# Or http://localhost:3000/preview?config=saas-glass.json
+```
+
+The `/preview` route renders any SiteConfig from `src/test-configs/`. The toolbar shows current config info and quick-relief-switch buttons for visual comparison. A "Download HTML" button exports a self-contained standalone HTML file.
+
+### Generation workflow (AI agent)
+
+The generation loop is agent-guided — an AI agent (Claude) edits SiteConfig JSON between previews:
+
+1. **Interpret** the user's brief (industry, tone, style)
+2. **Write** a `SiteConfig` JSON in `src/test-configs/`
+3. **Run** the dev server and open the preview
+4. **Iterate** by editing the JSON and hot-reloading
+5. **Verify** uniqueness using `skills/theme-uniqueness/`
+
+See [`skills/agent/SKILL.md`](skills/agent/SKILL.md) for the full agent workflow, tuner reference tables, industry→archetype guidance, and iteration troubleshooting.
+
+### Roadmap
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 0-3 | ✅ Complete | Foundation, gene library, tuners, renderer MVP |
+| 4 | 🔲 Planned | Sequencing engine — automated page assembly from industry profiles |
+| 5 | 🔲 Planned | Ticonderoga integration + snapshot history |
+| 5b | 🔲 Planned | Interactive dev panel (tuner sliders, section swapping) |
+| 6-9 | 🔲 Planned | Content generation, validation, gene expansion, migration |
+
+Full details: [`docs/roadmap/generator-architecture/README.md`](docs/roadmap/generator-architecture/README.md)
+
+### Config reference
+
+```bash
+src/test-configs/
+├── cafe.json                  # Warm, inviting — flat relief
+├── saas-glass.json            # Cool, modern — glassmorphic relief
+└── portfolio-neumorphic.json  # Minimal, elegant — neumorphic relief
+```
+
+### Gene library
+
+| Category | Variants | Location |
+|----------|----------|----------|
+| Hero | Centered, Split, Minimal | `src/genes/hero/` |
+| Features | Grid, Alternating | `src/genes/features/` |
+| CTA | Simple, Split | `src/genes/cta/` |
+
+Each gene is a React component registered in `@json-render/react`'s catalog, consuming soltana-ui archetype tokens and taste-engine tuners via context hooks.
+
+---
+
 ### Prerequisites
 
 - Node.js 20+
@@ -75,6 +144,7 @@ Next.js 16 + Tailwind v4
 | Payments | Square Web Payments SDK + Orders API |
 | Testing | Vitest + React Testing Library + jsdom |
 | Auth | JWT session tokens (crypto-agile, no server DB) |
+| Site generation (new) | json-render, taste-engine, soltana-ui, @lisse, useinkjet, @design-guard |
 
 ---
 
@@ -166,10 +236,22 @@ The project ships with [`mcp.json`](mcp.json) for AI coding agents and MCP-aware
 ```
 
 | Server | Purpose |
-|---|---|
+|--------|---------|
 | **next-devtools** | Next.js debugging, route inspection, server logs |
 | **square** | Direct Square API access (catalog, orders, payments, webhooks) via MCP |
 | **twilio** | Send SMS / manage Twilio resources via MCP |
+
+### Generator skills for AI agents
+
+| Skill | Purpose |
+|-------|---------|
+| [`skills/agent/SKILL.md`](skills/agent/SKILL.md) | Primary agent workflow — guides the full generation loop |
+| [`skills/generator/SKILL.md`](skills/generator/SKILL.md) | Full pipeline orchestration (Phase 5+) |
+| [`skills/gene-designer/SKILL.md`](skills/gene-designer/SKILL.md) | Creating new gene variants |
+| [`skills/tuner-system/SKILL.md`](skills/tuner-system/SKILL.md) | Configuring taste-engine tuner profiles |
+| [`skills/sequencer/SKILL.md`](skills/sequencer/SKILL.md) | Industry profiles and pacing rules (Phase 4+) |
+| [`skills/ticonderoga/SKILL.md`](skills/ticonderoga/SKILL.md) | Ticonderoga agent competition (Phase 5+) |
+| [`skills/theme-uniqueness/SKILL.md`](skills/theme-uniqueness/SKILL.md) | Uniqueness verification |
 
 ---
 
@@ -424,9 +506,10 @@ GitHub Actions pipeline runs on push/PR to `main`:
 ## Pages
 
 | Route | Description |
-|---|---|
+|-------|-------------|
 | `/` | Home — hero, menu preview, reviews, hours, map, Instagram |
 | `/menu` | Full dynamic menu (items, modifiers, categories from Square) |
+| `/preview` | SiteConfig preview — render any config from `src/test-configs/` via query param |
 | `/cart` | Full cart page with item management |
 | `/checkout` | Custom checkout with Square Web Payments form |
 | `/checkout/confirmation` | Post-payment confirmation with order details |
@@ -441,7 +524,7 @@ GitHub Actions pipeline runs on push/PR to `main`:
 ## API Routes
 
 | Route | Description |
-|---|---|
+|-------|-------------|
 | `GET /api/square/catalog` | Menu items, categories, images from Square |
 | `POST /api/square/order` | Create order (pickup or delivery) |
 | `GET /api/square/order/[orderId]` | Retrieve order by ID |
@@ -449,6 +532,8 @@ GitHub Actions pipeline runs on push/PR to `main`:
 | `POST /api/square/webhook` | Square order webhook → Twilio SMS |
 | `POST /api/twilio/sms` | Send SMS via Twilio |
 | `GET|POST /api/outstatic/[...]` | Outstatic CMS API |
+| `GET /api/preview` | List / serve SiteConfig test configs |
+| `POST /api/preview` | Validate and echo a SiteConfig |
 
 ---
 

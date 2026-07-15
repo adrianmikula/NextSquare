@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { useCartStore, useCartItemCount, useCartSubtotal } from "@/lib/store/cart"
-import { Button } from "@/components/ui/button"
 import { CartItem } from "@/components/cart/CartItem"
 import { CartSummary } from "@/components/cart/CartSummary"
 import { DeliveryPickupToggle } from "@/components/cart/DeliveryPickupToggle"

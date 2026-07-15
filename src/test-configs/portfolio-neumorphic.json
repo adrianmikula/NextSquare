@@ -1,0 +1,63 @@
+{
+  "meta": {
+    "name": "Aria Chen",
+    "industry": "portfolio",
+    "tone": "minimal and elegant"
+  },
+  "designLanguage": {
+    "relief": "neumorphic",
+    "finish": "matte",
+    "shape": "clothoid"
+  },
+  "tuners": {
+    "warmth": 0.3,
+    "density": 0.15,
+    "motion": 0.2,
+    "contrast": 0.3,
+    "narrative": 0.5
+  },
+  "spec": {
+    "root": "page",
+    "elements": {
+      "page": {
+        "type": "Container",
+        "props": {},
+        "children": ["hero-1", "features-1", "cta-1"]
+      },
+      "hero-1": {
+        "type": "HeroMinimal",
+        "props": {
+          "headline": "Aria Chen",
+          "subheadline": "Product designer crafting meaningful experiences for digital products"
+        },
+        "children": []
+      },
+      "features-1": {
+        "type": "FeaturesGrid",
+        "props": {
+          "headline": "Selected Work",
+          "items": [
+            { "title": "Bloom Health", "description": "Redesigned the patient portal experience for a health-tech startup serving 50K+ users." },
+            { "title": "Vela Travel", "description": "End-to-end design system for a travel booking platform across web and mobile." },
+            { "title": "Nexus CRM", "description": "Simplified a complex B2B CRM interface, reducing onboarding time by 40%." }
+          ]
+        },
+        "children": []
+      },
+      "cta-1": {
+        "type": "CtaSplit",
+        "props": {
+          "headline": "Let's work together",
+          "subheadline": "Available for freelance projects and full-time roles.",
+          "ctaLabel": "Get in Touch"
+        },
+        "children": []
+      }
+    }
+  },
+  "content": {
+    "hero-headline": "Aria Chen",
+    "features-headline": "Selected Work",
+    "cta-headline": "Let's work together"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "meta": {
+    "name": "Mama Mahoney's",
+    "industry": "restaurant",
+    "tone": "classic american diner, bold reds and whites, retro 50s feel"
+  },
+  "designLanguage": {
+    "relief": "flat",
+    "finish": "matte",
+    "shape": "squircle"
+  },
+  "tuners": {
+    "warmth": 0.9,
+    "density": 0.25,
+    "motion": 0.3,
+    "contrast": 0.85,
+    "narrative": 0.5
+  },
+  "spec": {
+    "root": "page",
+    "elements": {
+      "page": {
+        "type": "Container",
+        "props": {},
+        "children": ["hero-1", "features-1", "cta-1"]
+      },
+      "hero-1": {
+        "type": "HeroCentered",
+        "props": {
+          "headline": "Mama Mahoney's",
+          "subheadline": "Classic American burgers, hand-cut fries, and thick shakes — just like Mama used to make. Serving the neighborhood since 1952.",
+          "ctaLabel": "View Our Menu",
+          "ctaLink": "#menu"
+        },
+        "children": []
+      },
+      "features-1": {
+        "type": "FeaturesGrid",
+        "props": {
+          "headline": "The Mahoney's Classics",
+          "items": [
+            { "title": "Hand-Pressed Burgers", "description": "Fresh never frozen — 100% American beef, ground daily, smashed to order on a seasoned flat-top. Served on a toasted brioche bun.", "icon": "🍔" },
+            { "title": "Hand-Cut Fries", "description": "Russet potatoes cut fresh every morning, double-fried to golden perfection. Served with our secret seasoning blend.", "icon": "🍟" },
+            { "title": "Thick Shakes & Floats", "description": "Real ice cream, whole milk, and house-made syrups blended thick enough to stand a straw in. Ten rotating flavours weekly.", "icon": "🥤" }
+          ]
+        },
+        "children": []
+      },
+      "cta-1": {
+        "type": "CtaSimple",
+        "props": {
+          "headline": "Pull up a stool. The coffee's always on.",
+          "ctaLabel": "Find Your Nearest Location",
+          "ctaLink": "#locations"
+        },
+        "children": []
+      }
+    }
+  },
+  "content": {
+    "headline": "Mama Mahoney's",
+    "features-headline": "The Mahoney's Classics",
+    "cta-headline": "Pull up a stool. The coffee's always on."
+  }
+}

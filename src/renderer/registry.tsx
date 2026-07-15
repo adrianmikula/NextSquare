@@ -18,6 +18,12 @@ function defineGene(def: GeneDefinition): GeneDefinition {
   return def
 }
 
+export const containerDef = defineGene({
+  name: "Container",
+  props: {},
+  tuners: [],
+})
+
 export const heroCenteredDef = defineGene({
   name: "HeroCentered",
   props: {
@@ -100,11 +106,12 @@ export function getGene(name: string): GeneDefinition | undefined {
 }
 
 export const componentRegistry: ComponentRegistry = {
-  HeroCentered: ({ element: { props } }) => <HeroCentered {...(props as any)} />,
-  HeroSplit: ({ element: { props } }) => <HeroSplit {...(props as any)} />,
-  HeroMinimal: ({ element: { props } }) => <HeroMinimal {...(props as any)} />,
-  FeaturesGrid: ({ element: { props } }) => <FeaturesGrid {...(props as any)} />,
-  FeaturesAlternating: ({ element: { props } }) => <FeaturesAlternating {...(props as any)} />,
-  CtaSimple: ({ element: { props } }) => <CtaSimple {...(props as any)} />,
-  CtaSplit: ({ element: { props } }) => <CtaSplit {...(props as any)} />,
+  Container: ({ children }) => <>{children}</>,
+  HeroCentered: ({ element: { props } }) => <HeroCentered {...props} />,
+  HeroSplit: ({ element: { props } }) => <HeroSplit {...props} />,
+  HeroMinimal: ({ element: { props } }) => <HeroMinimal {...props} />,
+  FeaturesGrid: ({ element: { props } }) => <FeaturesGrid {...props} />,
+  FeaturesAlternating: ({ element: { props } }) => <FeaturesAlternating {...props} />,
+  CtaSimple: ({ element: { props } }) => <CtaSimple {...props} />,
+  CtaSplit: ({ element: { props } }) => <CtaSplit {...props} />,
 }

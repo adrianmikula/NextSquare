@@ -23,12 +23,12 @@ const shapeConfigs: Record<ShapeCurve, ShapeTokens> = {
   },
   superellipse: {
     cornerRadius: "16px",
-    cornerSmoothing: 0.8,
+    cornerSmoothing: 0.85,
     dividerStyle: "curved",
     decorativePattern: null,
   },
   clothoid: {
-    cornerRadius: "20px",
+    cornerRadius: "24px",
     cornerSmoothing: 1,
     dividerStyle: "organic",
     decorativePattern: "blob",

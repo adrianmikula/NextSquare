@@ -31,6 +31,27 @@
 6. **Continuous over discrete.** Taste Engine tuners replace bundles. Infinite intermediate states instead of 3 fixed variants.
 7. **Quality gate at every phase.** `@design-guard/core` validates output after generation to catch anti-patterns before they ship.
 
+## Control Surface & Iteration Model
+
+The generation process is **agent-guided**, not runtime-tweaked. The primary loop:
+
+1. Agent (LLM or human) writes/edits a `SiteConfig` JSON
+2. Restart or hot-reload the Next.js dev server to preview
+3. Inspect result via `/preview` route
+4. Return to step 1 — edit JSON, regenerate, repeat
+
+The running Next.js app is a **static viewer** — it renders a SiteConfig faithfully but provides no runtime design controls. All iteration happens at the JSON level, driven by the agent.
+
+### Future iteration modes (post-MVP)
+
+| Mode | When | How |
+|------|------|-----|
+| **LLM-powered refinement** | Later phase | Agent calls generation API with natural-language tweaks ("make it warmer, denser layout") → sequencer produces new SiteConfig |
+| **Interactive dev panel** | Later phase | Floating panel on `/preview` with sliders (tuners), picks (relief/finish/shape), and per-section variant dropdowns. Changes emit updated SiteConfig JSON, not live DOM mutations. |
+| **Snapshot history** | Phase 5 | Each generation is saved as a named snapshot. Browse history, compare side-by-side, fork from any point. |
+
+This keeps the MVP focused: get the rendering stack and JSON format right first. The interactive control surface is added once the generation pipeline is producing consistently good output.
+
 ## Directory Layout
 
 ```
@@ -61,6 +82,7 @@ src/
     rules.ts                  # Additional custom rules beyond the 18 built-in
     uniqueness.ts             # Cross-site fingerprint comparison
 skills/
+  agent/                      # Agent workflow — guides the AI through the generation loop
   generator/                  # Full generation pipeline skill
   gene-designer/              # Creating new gene variants
   tuner-system/               # Configuring taste-engine tuners
@@ -344,28 +366,31 @@ const spec = {
 - No external dependencies at runtime
 
 **Preview route** (`/preview?config=...`)
-- Accepts a SiteConfig JSON (via query param or POST body)
+- Dev-only tool for verifying SiteConfig output
+- Accepts a config filename (`/preview?config=cafe.json`) via query param
 - Renders via the same `SitePage` component
-- Hot-reload on file changes during development
+- Includes a minimal toolbar showing current config name, relief/finish/shape, and quick-relief-switch buttons for visual comparison
+- Hot-reload on JSON file changes during development
+- Does NOT include tuner sliders, section variant pickers, or other runtime design controls — those are post-MVP
 
 **Manual test:**
 ```
 1. Write src/test-configs/cafe.json  (hand-authored SiteConfig)
 2. Visit /preview  → see rendered page
-3. Tweak tuners in JSON  → see page update
-4. Switch relief/flat → glassmorphic  → see surface change
+3. Edit cafe.json  → hot-reload shows updated page
+4. Visit /preview?config=saas-glass.json  → different industry, different archetype
 ```
 
 #### Success criteria
 - Renderer produces valid HTML from any valid SiteConfig
-- Soltana archetype switching changes visual surface treatment
+- Soltana archetype switching changes visual surface treatment (via quick-switch buttons)
 - Taste Engine tuners modulate gene appearance
 - @lisse corners render correctly per section
 - Standalone export opens with zero errors
 - Preview route works with hot-reload
 - No imports from old `components/`, `app/`, `pages/`, or `lib/`
 
-**MVP achieved** — the system can produce visually distinct pages from structured input.
+**MVP achieved** — the system can produce visually distinct pages from structured input. The agent iterates by editing SiteConfig JSON, not by manipulating runtime controls.
 
 #### Estimated effort: 2-3 days (integration wiring, preview route, export)
 
@@ -408,9 +433,9 @@ const spec = {
 
 ---
 
-### Phase 5: Generator Engine — Ticonderoga Integration
+### Phase 5: Generator Engine — Ticonderoga Integration + Snapshot History
 
-**Goal:** Wire the Ticonderoga skill into the generation pipeline. No agent competition code to write — the skill invokes Ticonderoga's existing deconstruct → generate → evolve loop.
+**Goal:** Wire the Ticonderoga skill into the generation pipeline. No agent competition code to write — the skill invokes Ticonderoga's existing deconstruct → generate → evolve loop. Add snapshot history for managing multiple generations.
 
 #### Deliverables
 
@@ -430,20 +455,68 @@ const spec = {
 **Generator CLI** (`src/generator/cli/`)
 - `npx templatecafe generate "cafe in melbourne, warm feel"`
 - Runs: parse → industry detect → sequence → Ticonderoga competition → map winner → tune → render → export
+- Agent-facing — the CLI is designed to be called by an LLM agent or CI script, not by end users
 
 **Generator API** (`src/generator/api/`)
 - `POST /api/generate` with `{ prompt, industry?, tone? }`
 - Returns `{ siteConfig: SiteConfig, previewUrl: string }`
+
+**Snapshot history** (`src/generator/snapshots/`)
+- Each generation persists as a named snapshot: `{ id, timestamp, prompt, siteConfig, fingerprint }`
+- Snapshots stored as JSON files in `content/generator-snapshots/` (gitignored)
+- `GET /api/snapshots` — list all snapshots with metadata
+- `GET /api/snapshots/:id` — retrieve a specific snapshot
+- `POST /api/snapshots` — save current SiteConfig as a new snapshot
+- Fingerprint computed from `hash(gene sequence, tuner vector rounded to 0.1, designLanguage)` for uniqueness comparison
+- CLI: `npx templatecafe list` shows history, `npx templatecafe fork <id>` starts a new generation from a snapshot
 
 #### Success criteria
 - Ticonderoga skill setup completes (clone, install, Playwright)
 - 3 agents produce visibly different pages from the same TasteGraph
 - Bridge correctly converts sequencer output → TasteGraph → back to tuner profile
 - CLI produces a complete SiteConfig from a text prompt
+- Snapshots persist across server restarts
+- History listing and forking works via CLI and API
 
-#### Estimated effort: 2-3 days (bridge code + skill wiring)
+#### Estimated effort: 4-5 days (industry profiles) + 2-3 days (snapshots)
 
-#### Dependencies: Phase 3 (renderer to preview), Phase 4 (sequencer output to feed Ticonderoga)
+#### Dependencies: Phase 3 (renderer to validate output)
+
+---
+
+### Phase 5b: Interactive Dev Panel (Post-MVP)
+
+**Goal:** Add runtime design controls to `/preview` — tuner sliders, archetype pickers, per-section variant swapping. This is the first phase where the running app is used for design iteration rather than just passive previewing.
+
+#### Deliverables
+
+**Dev panel overlay** (`/preview` with `?panel=true`)
+- Floating panel toggled by a `?panel=true` query param or a keyboard shortcut
+- **Tuner sliders**: 5 range sliders (warmth, density, motion, contrast, narrative) — adjustable from 0.0 to 1.0
+- **Archetype pickers**: relief dropdown (flat/glassmorphic/skeuomorphic/neumorphic), finish dropdown (matte/frosted/tinted/glossy), shape dropdown (arc/squircle/superellipse/clothoid)
+- **Config output**: "Copy config" button that serializes current state to a SiteConfig JSON (for pasting back into a file or saving as a snapshot)
+- Does NOT mutate the DOM directly — all controls update the SiteConfig object and re-render through the normal React tree
+
+**Per-section variant swapping** (gene picker)
+- Each rendered section shows a small "swap" button (visible with `?panel=true`)
+- Clicking opens a dropdown of all variants in the same gene category
+- Swapping replaces the element's `type` and adjusts `props` to match the new variant's schema
+- Works within the existing tuner context — doesn't require regeneration
+
+**Snapshot save from panel**
+- "Save snapshot" button captures current state (including any swapped sections) to the snapshot store
+
+#### Success criteria
+- 5 tuner sliders produce visible visual change on the preview
+- All 4 reliefs, 4 finishes, 4 shapes selectable from pickers
+- Section swap dropdown shows correct variants for each gene category
+- Config export produces valid SiteConfig JSON
+- Saved snapshots appear in history listing
+- Panel is not visible by default (opt-in via `?panel=true`)
+
+#### Estimated effort: 3-4 days
+
+#### Dependencies: Phase 3 (renderer + preview route), Phase 5 (snapshot system)
 
 ---
 
@@ -611,15 +684,16 @@ Each new gene registered in json-render's catalog with typed schema, tuner bindi
 | 2 | Tuner system + Soltana archetypes | **2-3 days** | Yes | taste-engine, soltana-ui, @lisse, inkjet |
 | 3 | Renderer — **first visible output (MVP)** | **2-3 days** | Yes | json-render, taste-engine, soltana-ui |
 | 4 | Sequencing engine | 4-5 days | No | Custom (VULK-inspired) |
-| 5 | Generator + Ticonderoga | 2-3 days | No | Ticonderoga skill |
+| 5 | Generator + Ticonderoga + Snapshots | 4-6 days | No | Ticonderoga skill |
+| 5b | Interactive dev panel (sliders, section swap) | 3-4 days | No | json-render, taste-engine |
 | 6 | Content generation | 3-4 days | No | AI APIs |
 | 7 | Validation + uniqueness guard | 2 days | No | @design-guard/core |
 | 8 | Gene library expansion (80+) | 10-14 days | No | json-render registration |
 | 9 | Migration & retirement | 2-3 days | No | — |
 
-**MVP in 9-13 days** (Phases 0-3). Full system in 31-44 days.
+**MVP in 9-13 days** (Phases 0-3). Core system in ~35-49 days (Phases 0-5). Full system in ~51-70 days (Phases 0-9).
 
-**Incremental testing:** At the end of Phase 3, hand-write a SiteConfig JSON and see a real page. After Phase 4, the sequencer produces that JSON automatically. After Phase 5, a text prompt drives it all.
+**Incremental testing:** At the end of Phase 3, hand-write a SiteConfig JSON and see a real page via `/preview`. After Phase 4, the sequencer produces that JSON automatically. After Phase 5, a text prompt drives it all through the CLI/API, and each generation is saved as a browsable snapshot.
 
 ## Dependency Map
 
@@ -665,7 +739,8 @@ useinkjet
 
 | Skill | Purpose | Uses |
 |-------|---------|------|
-| `skills/generator/SKILL.md` | Full pipeline orchestration | All libraries + wrapped tools |
+| `skills/agent/SKILL.md` | Agent workflow — guides the AI through the generation loop (interpret brief → write config → preview → iterate → verify uniqueness) | `theme-uniqueness` for verification, all generator libraries |
+| `skills/generator/SKILL.md` | Full pipeline orchestration + snapshot management | All libraries + wrapped tools |
 | `skills/gene-designer/SKILL.md` | Creating gene components as json-render components | `@json-render/core` catalog |
 | `skills/tuner-system/SKILL.md` | Configuring taste-engine tuner profiles | `taste-engine` |
 | `skills/sequencer/SKILL.md` | Industry + pacing rules | Custom (VULK pattern) |
