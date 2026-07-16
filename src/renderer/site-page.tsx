@@ -34,6 +34,18 @@ const SITE_PAGE_SCOPE = "data-site-page"
 
 function CssVarInjector({ cssVars }: { cssVars: Record<string, string> }) {
   const styleString = cssVarsToStyleString(cssVars)
+
+  useEffect(() => {
+    const root = document.documentElement
+    const entries = Object.entries(cssVars)
+    entries.forEach(([key, value]) => {
+      root.style.setProperty(key, value)
+    })
+    return () => {
+      entries.forEach(([key]) => root.style.removeProperty(key))
+    }
+  }, [cssVars])
+
   return (
     <>
       <style>{`:root{${styleString}}`}</style>

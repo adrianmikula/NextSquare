@@ -44,6 +44,12 @@ Never run `npm install`, `npm ci`, or `npm audit` without `--ignore-scripts`. Pi
 
 Details: [`docs/patterns/supply-chain-hardening.md`](docs/patterns/supply-chain-hardening.md)
 
+## CSS Var Override Strategy
+
+ThemeProvider sets CSS vars as inline styles on `<html>` via `useEffect` + `root.style.setProperty()`. Inline styles beat `<style>:root{...}` declarations. To override them for layout elements (header, footer), use a `useEffect` that sets vars on `document.documentElement` (last-write-wins). For content-only overrides, use an attribute-scoped `<style>` (e.g. `[data-site-page]{...}`). Always complement the var set — ensure `compileColorBridge` emits all vars that layout components reference.
+
+Details: [`docs/patterns/css-var-override-strategy.md`](docs/patterns/css-var-override-strategy.md)
+
 <!-- BEGIN:theme-variant-servers -->
 # Theme Variant Dev Servers
 

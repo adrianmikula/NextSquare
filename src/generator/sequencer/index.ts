@@ -1,0 +1,8 @@
+export { SECTION_TEMPLATES, getSectionTemplate } from "./section-templates"
+export type { SectionTemplate, SectionSlot, GeneCategory } from "./section-templates"
+export { INDUSTRY_PROFILES, getIndustryProfile } from "./industry-profiles"
+export type { IndustryProfile, IndustryContentTemplate, FeatureContent } from "./industry-profiles"
+export { checkPacing, enforcePacing } from "./pacing"
+export type { PacingResult, PacingViolation, SectionInfo } from "./pacing"
+export { assemble, getAvailableIndustries, validateAssembleOptions, VALID_RELIEFS, VALID_FINISHES, VALID_SHAPES, VALID_TEMPLATE_IDS, VALID_INDUSTRIES } from "./assemble"
+export type { AssembleOptions, AssembleResult } from "./assemble"

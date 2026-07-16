@@ -2,13 +2,89 @@
 
 This repo uses the [skillify-codebase](https://github.com/anomalyco/AgentSkills/tree/main/skillify-codebase) methodology to maintain lockstep between upstream Claude skills and downstream implementation code.
 
-## Active Skills
+## Architecture-Aligned Skill Map
 
-| Skill | Path | Status | Maps To |
-|-------|------|--------|---------|
-| agent | `skills/agent/` | Active — Phase 3+ | Generator system (`src/renderer/`, `src/genes/`, `src/schema/`, `src/archetypes/`, `app/preview/`, `src/test-configs/`) |
-| theme-dimensions | `skills/theme-dimensions/` | Active — mapped | `lib/dimensions/`, `content/dimensions/`, `components/cms/ThemeProvider.tsx` |
-| theme-uniqueness | `skills/theme-uniqueness/` | Active — mapped | `lib/dimensions/compile.ts`, `app/globals.css`, `app/layout.tsx`, `app/[tenant]/layout.tsx`, `app/page.tsx`, `app/[tenant]/page.tsx`, all `components/` |
+Skills are organized by the four architectural boundaries documented in `README.md`. Each major AI-generated config artifact has a dedicated skill.
+
+### Modern Generator Architecture (New)
+
+| Skill | Path | Boundary | Guides | Maps To |
+|-------|------|----------|--------|---------|
+| **website-generator** | `skills/website-generator/` | AI/Skills (orchestrator) | Full generation loop: brief → preview → iterate | `skills/agent/SKILL.md` (renamed/expanded) |
+| **business-profile** | `skills/business-profile/` | Human Input → Code | Extracting/validating `BusinessProfile` from raw data | `lib/ai/multi-source-pipeline.ts` input stage |
+| **layout-selector** | `skills/layout-selector/` | AI/Skills → Code | Archetype selection, variant assignment, produces `LayoutOutput` | `lib/ai/archetype-selector.ts` |
+| **content-generator** | `skills/content-generator/` | AI/Skills → Code | Block data generation, produces `PageBundle` | `lib/ai/multi-source-pipeline.ts` data stage |
+| **sequencer** | `skills/sequencer/` | Code | Industry profiles, section templates, pacing, produces `SiteConfig` | `src/generator/sequencer/assemble.ts` |
+| **tuner-system** | `skills/tuner-system/` | Code | Taste Engine tuners, Soltana archetypes, `DesignLanguage` | `src/renderer/compile-tuners.ts`, `src/archetypes/` |
+| **gene-designer** | `skills/gene-designer/` | Code | Creating new gene variants as json-render components | `src/genes/`, `src/renderer/registry.tsx` |
+
+### Legacy CMS + Dimension System (Old)
+
+| Skill | Path | Boundary | Notes |
+|-------|------|----------|-------|
+| **legacy-theme-dimensions** | `skills/legacy-theme-dimensions/` | Config → Code | 9-dimension design system for old CMS theme injection |
+| **legacy-theme-uniqueness** | `skills/legacy-theme-uniqueness/` | Code (audit) | Hardcoded value audit for legacy dimension system |
+| **legacy-website-builder** | `skills/legacy-website-builder/` | Human Input → Code | End-to-end CMS site builder using old `content/cms/` pipeline |
+
+### External Tool Wrappers
+
+| Skill | Path | Boundary | Notes |
+|-------|------|----------|-------|
+| **ticonderoga** | `skills/ticonderoga/` | AI/Skills | Wraps standalone Ticonderoga Design Genome Lab CLI |
+
+## Generation Pipeline Skill Ownership
+
+```
+Human Input
+  └─ business-profile  →  BusinessProfile
+        ↓
+AI/Skills (orchestrated by website-generator)
+  ├─ layout-selector   →  LayoutOutput (archetype + variants per page)
+  ├─ content-generator  →  PageBundle (block data per layout)
+  └─ sequencer          →  SiteConfig (industry + tone + pacing)
+        ↓
+Code (rendering)
+  ├─ tuner-system       →  CSS custom properties
+  ├─ gene-designer      →  React gene components
+  └─ renderer           →  React DOM
+```
+
+## Active Skills (by layer)
+
+### Human Input Layer
+
+| Skill | Purpose |
+|-------|---------|
+| `business-profile` | Extract and validate business data into `BusinessProfile` schema |
+
+### AI / Skills Layer
+
+| Skill | Purpose |
+|-------|---------|
+| `website-generator` | Top-level orchestrator: interpret brief → run pipeline → preview → iterate |
+| `layout-selector` | Select archetypes and variants per page using LLM or rule-based fallback |
+| `content-generator` | Generate block data maps from layout + business profile |
+
+### Code Layer
+
+| Skill | Purpose |
+|-------|---------|
+| `sequencer` | Rule-based assembly from industry + tone → `SiteConfig` |
+| `tuner-system` | Configure 5 Taste Engine tuners and Soltana archetype tokens |
+| `gene-designer` | Create new gene variants registered in json-render catalog |
+
+### Config Layer
+
+| Skill | Purpose |
+|-------|---------|
+| `legacy-theme-dimensions` | Define/resolve/compile 9-dimension theme specs (legacy) |
+| `legacy-theme-uniqueness` | Audit hardcoded theme values (legacy dimension system) |
+
+### External
+
+| Skill | Purpose |
+|-------|---------|
+| `ticonderoga` | Wraps Ticonderoga CLI for agent competition (Phase 5+) |
 
 ## Unskilled Modules (TODOs)
 
@@ -23,18 +99,15 @@ The following codebase modules have no upstream skill yet. Create skills for the
 | loyalty | `lib/square/loyalty.ts`, `components/loyalty/`, `app/api/square/loyalty/` | `specs/loyalty.tsp` | Low |
 | notifications | `lib/twilio/client.ts`, `app/api/twilio/sms/` | `specs/notifications.tsp` | Low |
 | security | `proxy.ts`, `lib/security/`, `lib/env.ts` | — | Low |
-| website-builder | `lib/ai/`, `skills/website-builder/resources/` | — | Low |
 | menu-catalog | `lib/square/catalog.ts`, `hooks/useMenu.ts`, `components/menu/`, `app/menu/` | — | Low |
 
 ## How to Add a New Skill
 
-1. Create `skills/<skill-name>/` with `SKILL.md`, `config.yaml`, `mapping.toml`, and `resources/`
-2. Follow the template in the `skillify-codebase` skill:
-   - Phase 1: Analyse the codebase module
-   - Phase 2: Generate SKILL.md with matching inputs/outputs
-   - Phase 3: Create granular section-level mapping in mapping.toml
-   - Phase 4: Document sync workflow
-3. Update this file to move the module from "Unskilled" to "Active"
+1. Create `skills/<skill-name>/` with `SKILL.md`
+2. Map the skill to one of the four architectural boundaries
+3. Ensure it produces or consumes a well-defined config artifact (e.g. `BusinessProfile`, `LayoutOutput`, `PageBundle`, `SiteConfig`)
+4. Update this file to register the skill in the appropriate layer table
+5. Update `README.md` skill table if the skill is user-facing
 
 ## When to Run a Sync
 
@@ -92,5 +165,5 @@ Reverse sync: <yes/no>
 
 ---
 
-**Last sync:** 2026-07-11
-**Skill versions:** theme-dimensions v0.1.0
+**Last sync:** 2026-07-16
+**Skill versions:** theme-dimensions v0.2.0 (legacy)

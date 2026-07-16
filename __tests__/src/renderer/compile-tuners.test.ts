@@ -49,6 +49,12 @@ const COLOR_BRIDGE_KEYS = [
   "--color-heading",
   "--color-body",
   "--color-muted",
+  "--color-nav-bg",
+  "--color-footer-bg",
+  "--color-footer-heading",
+  "--color-footer-link",
+  "--color-footer-link-hover",
+  "--color-footer-muted",
   "--color-cta-text",
   "--color-background-value",
   "--border",
@@ -164,6 +170,36 @@ describe("compileColorBridge", () => {
       const values = new Set([flat[key], glass[key], skeo[key], neumo[key]])
       expect(values.size).toBe(4)
     }
+  })
+
+  it("produces distinct nav-bg per relief", () => {
+    const flat = compileColorBridge(DEFAULT_TUNER_VALUES, "flat")
+    const glass = compileColorBridge(DEFAULT_TUNER_VALUES, "glassmorphic")
+    const skeo = compileColorBridge(DEFAULT_TUNER_VALUES, "skeuomorphic")
+    const neumo = compileColorBridge(DEFAULT_TUNER_VALUES, "neumorphic")
+    const navBgs = new Set([flat["--color-nav-bg"], glass["--color-nav-bg"], skeo["--color-nav-bg"], neumo["--color-nav-bg"]])
+    expect(navBgs.size).toBe(4)
+  })
+
+  it("produces distinct footer-bg per relief", () => {
+    const results = ["flat", "glassmorphic", "skeuomorphic", "neumorphic"].map(
+      (r) => compileColorBridge(DEFAULT_TUNER_VALUES, r)["--color-footer-bg"],
+    )
+    expect(new Set(results).size).toBe(4)
+  })
+
+  it("sets footer-link-hover to same as primary", () => {
+    const vars = compileColorBridge(DEFAULT_TUNER_VALUES, "flat")
+    expect(vars["--color-footer-link-hover"]).toBe(vars["--color-primary"])
+  })
+
+  it("nav-bg is darker than section-bg", () => {
+    const vars = compileColorBridge(DEFAULT_TUNER_VALUES, "flat")
+    const navMatch = vars["--color-nav-bg"]?.match(/hsl\([\d.]+,\s*[\d.]+%,\s*([\d.]+)%\)/)
+    const sectionMatch = vars["--color-section-bg"]?.match(/hsl\([\d.]+,\s*[\d.]+%,\s*([\d.]+)%\)/)
+    expect(navMatch).not.toBeNull()
+    expect(sectionMatch).not.toBeNull()
+    expect(Number(navMatch![1])).toBeLessThan(Number(sectionMatch![1]))
   })
 })
 

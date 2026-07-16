@@ -1,24 +1,8 @@
 # Gene Designer Skill — Creating Gene Variants
 
-Create new block type variants registered as json-render components.
-
-## Structure
-
-Each gene lives in `src/genes/<category>/` as a standalone React component:
-
-```
-src/genes/
-  hero/
-    hero-centered.tsx
-    hero-split.tsx
-    hero-minimal.tsx
-  features/
-    features-grid.tsx
-    features-alternating.tsx
-  cta/
-    cta-simple.tsx
-    cta-split.tsx
-```
+> **Boundary:** Code layer — atomic visual block creation
+> **Input:** `GeneDefinition` schema in `src/schema/site-config.ts`
+> **Output:** React component registered in `src/renderer/registry.tsx`
 
 ## Contract
 
@@ -67,3 +51,9 @@ npm run typecheck
 # Preview in gene viewer:
 npm run dev -- --gene hero-centered
 ```
+
+## Related Skills
+
+- `skills/website-generator/SKILL.md` — Top-level orchestrator
+- `skills/tuner-system/SKILL.md` — Tuners consumed by genes via `useTuners()`
+- `skills/sequencer/SKILL.md` — Sequencer selects which gene variants to use per industry

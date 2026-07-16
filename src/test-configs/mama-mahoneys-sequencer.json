@@ -5,15 +5,15 @@
     "tone": "classic american diner, bold reds and whites, retro 50s feel"
   },
   "designLanguage": {
-    "relief": "skeuomorphic",
-    "finish": "glossy",
-    "shape": "clothoid"
+    "relief": "flat",
+    "finish": "matte",
+    "shape": "squircle"
   },
   "tuners": {
-    "warmth": 0.8,
-    "density": 0.2,
+    "warmth": 0.9,
+    "density": 0.25,
     "motion": 0.3,
-    "contrast": 0.4,
+    "contrast": 0.85,
     "narrative": 0.7
   },
   "spec": {
@@ -46,15 +46,18 @@
           "items": [
             {
               "title": "Hand-Pressed Burgers",
-              "description": "Fresh never frozen — 100% American beef, ground daily, smashed to order on a seasoned flat-top. Served on a toasted brioche bun."
+              "description": "Fresh never frozen — 100% American beef, ground daily, smashed to order on a seasoned flat-top. Served on a toasted brioche bun.",
+              "icon": "🍔"
             },
             {
               "title": "Hand-Cut Fries",
-              "description": "Russet potatoes cut fresh every morning, double-fried to golden perfection. Served with our secret seasoning blend."
+              "description": "Russet potatoes cut fresh every morning, double-fried to golden perfection. Served with our secret seasoning blend.",
+              "icon": "🍟"
             },
             {
               "title": "Thick Shakes & Floats",
-              "description": "Real ice cream, whole milk, and house-made syrups blended thick enough to stand a straw in. Ten rotating flavours weekly."
+              "description": "Real ice cream, whole milk, and house-made syrups blended thick enough to stand a straw in. Ten rotating flavours weekly.",
+              "icon": "🥤"
             }
           ]
         },
@@ -67,11 +70,13 @@
           "items": [
             {
               "title": "Red Leather Booths",
-              "description": "Sink into a classic red vinyl booth beneath gleaming chrome trim. Each table has its own jukebox selector with hits from the 50s through today."
+              "description": "Sink into a classic red vinyl booth beneath gleaming chrome trim. Each table has its own jukebox selector.",
+              "icon": "📻"
             },
             {
               "title": "Open Kitchen Counter",
-              "description": "Watch the short-order crew work their magic on the flat-top grill. Sizzle, smoke, and showmanship — breakfast served all day."
+              "description": "Watch the short-order crew work their magic on the flat-top grill. Sizzle, smoke, and showmanship.",
+              "icon": "🍳"
             }
           ]
         },
@@ -90,13 +95,9 @@
   },
   "content": {
     "hero-headline": "Mama Mahoney's",
-    "hero-subheadline": "Classic American burgers, hand-cut fries, and thick shakes — just like Mama used to make. Serving the neighborhood since 1952.",
     "features-1-headline": "The Mahoney's Classics",
-    "features-1-items": "[{\"title\":\"Hand-Pressed Burgers\",\"description\":\"Fresh never frozen — 100% American beef, ground daily, smashed to order on a seasoned flat-top. Served on a toasted brioche bun.\"},{\"title\":\"Hand-Cut Fries\",\"description\":\"Russet potatoes cut fresh every morning, double-fried to golden perfection. Served with our secret seasoning blend.\"},{\"title\":\"Thick Shakes & Floats\",\"description\":\"Real ice cream, whole milk, and house-made syrups blended thick enough to stand a straw in. Ten rotating flavours weekly.\"}]",
     "features-2-headline": "The Diner Experience",
-    "features-2-items": "[{\"title\":\"Red Leather Booths\",\"description\":\"Sink into a classic red vinyl booth beneath gleaming chrome trim. Each table has its own jukebox selector with hits from the 50s through today.\"},{\"title\":\"Open Kitchen Counter\",\"description\":\"Watch the short-order crew work their magic on the flat-top grill. Sizzle, smoke, and showmanship — breakfast served all day.\"}]",
     "cta-headline": "Pull up a stool. The coffee's always on.",
-    "cta-subheadline": "",
     "cta-label": "Find Your Nearest Location"
   }
 }

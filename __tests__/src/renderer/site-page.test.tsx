@@ -234,4 +234,34 @@ describe("SitePage", () => {
     const wrapper = container.querySelector("[data-site-page]")
     expect(wrapper).toBeTruthy()
   })
+
+  it("sets color vars as inline styles on documentElement to override ThemeProvider", () => {
+    const { rerender } = render(<SitePage config={MINIMAL_CONFIG} />)
+
+    const docEl = document.documentElement
+    const navBg = docEl.style.getPropertyValue("--color-nav-bg")
+    expect(navBg).toBeTruthy()
+    expect(navBg).toContain("hsl")
+    expect(navBg).toContain("%")
+
+    const cardBorder = docEl.style.getPropertyValue("--color-card-border")
+    expect(cardBorder).toBeTruthy()
+    expect(cardBorder).toContain("hsl")
+
+    const tunerWarmth = docEl.style.getPropertyValue("--tuner-warmth")
+    expect(tunerWarmth).toBe("0.5")
+
+    const glassConfig: SiteConfig = {
+      ...MINIMAL_CONFIG,
+      designLanguage: { ...MINIMAL_CONFIG.designLanguage, relief: "glassmorphic" },
+    }
+    rerender(<SitePage config={glassConfig} />)
+
+    const newNavBg = docEl.style.getPropertyValue("--color-nav-bg")
+    expect(newNavBg).not.toBe(navBg)
+
+    docEl.style.removeProperty("--color-nav-bg")
+    docEl.style.removeProperty("--color-card-border")
+    docEl.style.removeProperty("--tuner-warmth")
+  })
 })

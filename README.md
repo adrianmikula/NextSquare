@@ -118,6 +118,54 @@ src/test-configs/
 
 Each gene is a React component registered in `@json-render/react`'s catalog, consuming soltana-ui archetype tokens and taste-engine tuners via context hooks.
 
+### Architectural Boundaries
+
+The generator system has four distinct layers with clear ownership and handoff points:
+
+| Layer | Owns | Handoff To |
+|-------|------|------------|
+| **Human Input** | Business profiles, catalogues, CMS content, dimension specs, archetype catalog, reference configs | AI pipeline reads these as source material |
+| **AI / Skills** | Pipeline orchestration, archetype selection, content generation, workflow instructions | Writes to `content/cms/site/pages.json`; invokes Code |
+| **Code** | Sequencer, renderer, genes, schemas, AI pipeline logic, API routes | Reads from Human Input; produces `SiteConfig` / `PageBundle` |
+| **Config** | Env vars, dimension specs, bundle isolation, MCP servers, build settings | Enforced by Code at startup and build time |
+
+#### Generation flow
+
+```
+Human Input → AI/Skills → Code → Rendered Output
+    ↓              ↓         ↓
+  content/    skills/    src/ + lib/
+  + scratch/  + .kilo/   + app/ + components/
+```
+
+1. **Human Input** provides the source material:
+   - `content/site-profile/` — business data
+   - `content/catalogue/` — product data
+   - `content/cms/site/pages.json` — editable CMS content (human ↔ AI handoff)
+   - `content/dimensions/specs/` — theme design configs
+   - `content/archetypes/catalog.json` — archetype knowledge base
+   - `src/test-configs/` — reference `SiteConfig` JSONs
+
+2. **AI / Skills** decides what to generate:
+   - `skills/` — workflow instructions for the agent
+   - `.kilo/` — Kilo IDE/runtime config
+   - `mcp.json` — MCP server definitions
+   - `AGENTS.md` — project-wide AI rules
+   - Invokes Code via `npm run` commands and edits source files
+
+3. **Code** performs deterministic generation and rendering:
+   - `src/generator/sequencer/` — rule-based assembly from industry + tone
+   - `lib/ai/multi-source-pipeline.ts` — LLM-or-fallback pipeline
+   - `src/renderer/` — `SiteConfig` → React DOM
+   - `src/genes/` — atomic visual blocks
+   - `app/` + `components/` + `lib/` — legacy production app
+
+4. **Config** controls the environment and build:
+   - `next.config.ts` — theme bundle isolation (`.next-a/b/c`)
+   - `.env.local` — secrets and feature flags
+   - `content/dimensions/specs/` + `content/dimensions/bundles/` — theme dimension configs
+   - `lib/env.ts` — enforces required vars at startup (`requireEnv`)
+
 ---
 
 ### Prerequisites
@@ -243,15 +291,33 @@ The project ships with [`mcp.json`](mcp.json) for AI coding agents and MCP-aware
 
 ### Generator skills for AI agents
 
-| Skill | Purpose |
-|-------|---------|
-| [`skills/agent/SKILL.md`](skills/agent/SKILL.md) | Primary agent workflow — guides the full generation loop |
-| [`skills/generator/SKILL.md`](skills/generator/SKILL.md) | Full pipeline orchestration (Phase 5+) |
-| [`skills/gene-designer/SKILL.md`](skills/gene-designer/SKILL.md) | Creating new gene variants |
-| [`skills/tuner-system/SKILL.md`](skills/tuner-system/SKILL.md) | Configuring taste-engine tuner profiles |
-| [`skills/sequencer/SKILL.md`](skills/sequencer/SKILL.md) | Industry profiles and pacing rules (Phase 4+) |
-| [`skills/ticonderoga/SKILL.md`](skills/ticonderoga/SKILL.md) | Ticonderoga agent competition (Phase 5+) |
-| [`skills/theme-uniqueness/SKILL.md`](skills/theme-uniqueness/SKILL.md) | Uniqueness verification |
+Skills are organized by the four architectural boundaries documented above. Each major AI-generated config artifact has a dedicated skill.
+
+#### Modern Generator Architecture (New)
+
+| Skill | Boundary | Purpose |
+|-------|----------|---------|
+| [`skills/website-generator/SKILL.md`](skills/website-generator/SKILL.md) | AI/Skills (orchestrator) | Top-level generation loop: interpret brief → run pipeline → preview → iterate |
+| [`skills/business-profile/SKILL.md`](skills/business-profile/SKILL.md) | Human Input → Code | Extract and validate `BusinessProfile` from raw business data |
+| [`skills/layout-selector/SKILL.md`](skills/layout-selector/SKILL.md) | AI/Skills → Code | Select archetypes and variants per page, produces `LayoutOutput` |
+| [`skills/content-generator/SKILL.md`](skills/content-generator/SKILL.md) | AI/Skills → Code | Generate block data maps from layout + business profile, produces `PageBundle` |
+| [`skills/sequencer/SKILL.md`](skills/sequencer/SKILL.md) | Code | Industry profiles, section templates, pacing rules, produces `SiteConfig` |
+| [`skills/tuner-system/SKILL.md`](skills/tuner-system/SKILL.md) | Code | Configure 5 Taste Engine tuners and Soltana archetype tokens |
+| [`skills/gene-designer/SKILL.md`](skills/gene-designer/SKILL.md) | Code | Create new gene variants as json-render components |
+
+#### Legacy CMS + Dimension System (Old)
+
+| Skill | Boundary | Purpose |
+|-------|----------|---------|
+| [`skills/legacy-theme-dimensions/SKILL.md`](skills/legacy-theme-dimensions/SKILL.md) | Config → Code | 9-dimension design system for old CMS theme injection |
+| [`skills/legacy-theme-uniqueness/SKILL.md`](skills/legacy-theme-uniqueness/SKILL.md) | Code (audit) | Hardcoded value audit for legacy dimension system |
+| [`skills/legacy-website-builder/SKILL.md`](skills/legacy-website-builder/SKILL.md) | Human Input → Code | End-to-end CMS site builder using old `content/cms/` pipeline |
+
+#### External Tool Wrappers
+
+| Skill | Boundary | Purpose |
+|-------|----------|---------|
+| [`skills/ticonderoga/SKILL.md`](skills/ticonderoga/SKILL.md) | AI/Skills | Wraps standalone Ticonderoga Design Genome Lab CLI (Phase 5+) |
 
 ---
 
@@ -554,21 +620,4 @@ TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_PHONE_NUMBER=
 
-# ─── Square Webhooks ─────────────────────────────────────────────────
-SQUARE_WEBHOOK_SIGNATURE_KEY=
-
-# ─── Outstatic CMS ───────────────────────────────────────────────────
-OUTSTATIC_API_KEY=
-
-# ─── Dashboard Auth ──────────────────────────────────────────────────
-DASHBOARD_PASSWORD=
-
-# ─── Square Loyalty ─────────────────────────────────────────────────
-SQUARE_LOYALTY_PROGRAM_ID=
-
-# ─── App ─────────────────────────────────────────────────────────────
-NEXT_PUBLIC_SITE_URL=
-
-# ─── Demo Mode ───────────────────────────────────────────────────────
-NEXT_PUBLIC_DEMO_MODE=false
-```
+# ─── Square Webhooks �
