@@ -6,6 +6,7 @@ import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
 import { canEditCatalog, canEditStock } from "@/lib/auth/rbac"
 import crypto from "crypto"
 import { requireEnv } from "@/lib/env"
+import { getSquareEnvironment, getSquareDefaultCurrency } from "@/lib/square/config"
 
 interface UpdatePayload {
   name?: string
@@ -16,8 +17,7 @@ interface UpdatePayload {
 
 const { catalogApi } = new Client({
   accessToken: requireEnv("SQUARE_ACCESS_TOKEN"),
-  environment:
-    requireEnv("SQUARE_ENVIRONMENT") === "production" ? Environment.Production : Environment.Sandbox,
+  environment: getSquareEnvironment() === "production" ? Environment.Production : Environment.Sandbox,
 })
 
 interface UpdatePayload {
@@ -92,10 +92,10 @@ export async function PATCH(
     if (updates.name) catalogObject.itemVariationData.name = updates.name
     if (updates.priceMoney !== undefined) {
       catalogObject.itemVariationData.pricingType = "FIXED_PRICING"
-      catalogObject.itemVariationData.priceMoney = {
-        amount: BigInt(Math.round(updates.priceMoney * 100)),
-        currency: "AUD",
-      }
+        catalogObject.itemVariationData.priceMoney = {
+          amount: BigInt(Math.round(updates.priceMoney * 100)),
+          currency: getSquareDefaultCurrency(),
+        }
     }
     if (updates.availableOnline !== undefined) {
       const parentItemId = catalogObject.itemVariationData.itemId

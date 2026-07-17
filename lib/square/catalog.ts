@@ -30,14 +30,30 @@ export async function fetchMenu(): Promise<{
     return { items: demoMenuItems, categories: demoCategories }
   }
 
-  const [catalogResult, categoryResult] = await Promise.all([
-    squareFetch<{ objects?: CatalogObject[]; cursor?: string }>("/v2/catalog/list?types=ITEM,IMAGE&cursor="),
-    squareFetch<{ objects?: SquareCatalogCategory[] }>("/v2/catalog/list?types=CATEGORY"),
-  ])
+  const allObjects: CatalogObject[] = []
+  let cursor: string | undefined
 
-  const items = (catalogResult.objects ?? []).filter((obj): obj is SquareCatalogItem => obj.type === "ITEM")
-  const images = (catalogResult.objects ?? []).filter((obj): obj is SquareImage => obj.type === "IMAGE")
-  const categories = (categoryResult.objects ?? []).filter((obj): obj is SquareCatalogCategory => obj.type === "CATEGORY")
+  do {
+    const path = `/v2/catalog/list?types=ITEM,IMAGE${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`
+    const result = await squareFetch<{ objects?: CatalogObject[]; cursor?: string }>(path)
+    allObjects.push(...(result.objects ?? []))
+    cursor = result.cursor
+  } while (cursor)
+
+  const items = allObjects.filter((obj): obj is SquareCatalogItem => obj.type === "ITEM")
+  const images = allObjects.filter((obj): obj is SquareImage => obj.type === "IMAGE")
+
+  let categoryCursor: string | undefined
+  const allCategories: SquareCatalogCategory[] = []
+
+  do {
+    const path = `/v2/catalog/list?types=CATEGORY${categoryCursor ? `&cursor=${encodeURIComponent(categoryCursor)}` : ""}`
+    const result = await squareFetch<{ objects?: SquareCatalogCategory[]; cursor?: string }>(path)
+    allCategories.push(...(result.objects ?? []))
+    categoryCursor = result.cursor
+  } while (categoryCursor)
+
+  const categories = allCategories.filter((obj): obj is SquareCatalogCategory => obj.type === "CATEGORY")
 
   const imageMap = new Map<string, string>()
   for (const img of images) {

@@ -4,6 +4,7 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import type { CartItem, FulfillmentType } from "@/types/cart"
 import { logger } from "@/lib/logger"
+import { getSquareFeeRate } from "@/lib/square/config"
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -114,12 +115,12 @@ export function useCartSubtotal(): number {
 }
 
 export function useCartFee(): number {
-  return useCartStore((state) => Math.round(computeSubtotal(state.items) * 0.05))
+  return useCartStore((state) => Math.round(computeSubtotal(state.items) * getSquareFeeRate()))
 }
 
 export function useCartTotalWithFee(): number {
   return useCartStore((state) => {
     const subtotal = computeSubtotal(state.items)
-    return subtotal + Math.round(subtotal * 0.05)
+    return subtotal + Math.round(subtotal * getSquareFeeRate())
   })
 }

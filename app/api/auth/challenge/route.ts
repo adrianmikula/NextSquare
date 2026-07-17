@@ -6,6 +6,7 @@ import { sendSms } from "@/lib/twilio/client"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
 import { logger } from "@/lib/logger"
 import { Client, Environment } from "square/legacy"
+import { getSquareEnvironment } from "@/lib/square/config"
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown"
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       const { teamApi } = new Client({
         accessToken: requireEnv("SQUARE_ACCESS_TOKEN"),
         environment:
-          requireEnv("SQUARE_ENVIRONMENT") === "production"
+          getSquareEnvironment() === "production"
             ? Environment.Production
             : Environment.Sandbox,
       })

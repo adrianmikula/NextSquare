@@ -3,11 +3,11 @@ import { Client, Environment } from "square/legacy"
 import { getSession } from "@/lib/auth/session"
 import { rateLimit, getRateLimitResponse } from "@/lib/security/rate-limit"
 import { requireEnv } from "@/lib/env"
+import { getSquareEnvironment } from "@/lib/square/config"
 
 const { catalogApi } = new Client({
   accessToken: requireEnv("SQUARE_ACCESS_TOKEN"),
-  environment:
-    requireEnv("SQUARE_ENVIRONMENT") === "production" ? Environment.Production : Environment.Sandbox,
+  environment: getSquareEnvironment() === "production" ? Environment.Production : Environment.Sandbox,
 })
 
 export async function GET(request: NextRequest) {

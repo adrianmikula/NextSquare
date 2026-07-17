@@ -1,11 +1,10 @@
 // @vitest-environment node
-import { createHash } from "node:crypto"
+import { createHmac } from "node:crypto"
 import { describe, expect, it, beforeEach, afterEach } from "vitest"
 import { verifySquareWebhook, parseWebhookEvent } from "@/lib/webhooks/square"
 
 function computeSignature(body: string, key: string): string {
-  const hmac = createHash("sha256")
-  hmac.update(key)
+  const hmac = createHmac("sha256", key)
   hmac.update(body)
   return hmac.digest("hex")
 }

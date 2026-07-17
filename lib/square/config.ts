@@ -5,7 +5,7 @@ export const API_VERSION = "2025-01-23"
 
 export function getSquareApiBase(): string {
   if (isDemoMode()) return "https://connect.squareupsandbox.com"
-  return requireEnv("SQUARE_ENVIRONMENT") === "production"
+  return getSquareEnvironment() === "production"
     ? "https://connect.squareup.com"
     : "https://connect.squareupsandbox.com"
 }
@@ -23,7 +23,24 @@ export function getSquareHeaders(): Record<string, string> {
 
 export function getSquareEnvironment(): "sandbox" | "production" {
   if (isDemoMode()) return "sandbox"
-  return requireEnv("SQUARE_ENVIRONMENT") as "sandbox" | "production"
+  const env = process.env.SQUARE_ENVIRONMENT
+  if (!env) {
+    if (process.env.NODE_ENV === "development") return "sandbox"
+    return requireEnv("SQUARE_ENVIRONMENT") as "sandbox" | "production"
+  }
+  return env as "sandbox" | "production"
+}
+
+export function getSquareDefaultCurrency(): string {
+  return process.env.SQUARE_DEFAULT_CURRENCY ?? "AUD"
+}
+
+export function getSquareFeeRate(): number {
+  const raw = process.env.SQUARE_PLATFORM_FEE_RATE
+  if (!raw) return 0.05
+  const value = parseFloat(raw)
+  if (isNaN(value) || value < 0) return 0.05
+  return value
 }
 
 export function getSquareEnvironmentForRole(roles: string[]): "sandbox" | "production" {

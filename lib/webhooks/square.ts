@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto"
+import { createHmac, timingSafeEqual } from "node:crypto"
 
 export function verifySquareWebhook(
   body: string,
@@ -7,8 +7,7 @@ export function verifySquareWebhook(
   const key = process.env.SQUARE_WEBHOOK_SIGNATURE_KEY
   if (!key) return false
 
-  const hmac = createHash("sha256")
-  hmac.update(key)
+  const hmac = createHmac("sha256", key)
   hmac.update(body)
   const digest = hmac.digest("hex")
 

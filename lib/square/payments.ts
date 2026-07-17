@@ -1,6 +1,6 @@
 import "server-only"
 import { Client, Environment } from "square/legacy"
-import { getSquareEnvironment } from "./config"
+import { getSquareEnvironment, getSquareDefaultCurrency } from "./config"
 import { isDemoMode } from "@/lib/demo/config"
 import { createDemoPayment } from "@/lib/demo/menu-data"
 import { requireEnv } from "@/lib/env"
@@ -34,7 +34,7 @@ export async function processPayment(params: {
     sourceId: params.nonce,
     idempotencyKey: params.idempotencyKey,
     orderId: params.orderId,
-    amountMoney: { amount: BigInt(Math.round(params.amount)), currency: params.currency ?? "AUD" },
+    amountMoney: { amount: BigInt(Math.round(params.amount)), currency: params.currency ?? getSquareDefaultCurrency() },
     ...(params.verificationToken ? { verificationToken: params.verificationToken } : {}),
     autocomplete: true,
   })

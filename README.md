@@ -443,46 +443,106 @@ A **Demo Mode** badge appears in the UI when active. Check programmatically via 
 
 ---
 
-## Deploy to Netlify
+## Releasing to Production with Devin
+
+[Devin](https://devin.ai/) is an AI software engineer that can automate the release workflow from a clean main branch all the way through to a live Netlify deployment. This section documents the expected setup and the exact steps Devin should follow.
 
 ### Prerequisites
 
-1. Push your repo to GitHub/GitLab/Bitbucket
-2. Create a [Netlify](https://netlify.com) account
-3. Have a Square **production** access token and application ready (or use demo mode)
+1. **Netlify account** linked to your GitHub org
+2. **Netlify Personal Access Token** with `publish:update` and `sites:read` scopes
+3. **Netlify Site ID** for the production site (found in Site settings → General → Site ID)
+4. **GitHub repo** pushed and Netlify site connected via Git (auto-deploy enabled on `main`)
+5. **Production env vars** configured in Netlify Dashboard → Site settings → Environment variables
 
-### Deploy via Git (recommended)
+### Environment setup
 
-Netlify auto-detects Next.js — [`netlify.toml`](netlify.toml) is included for explicit config.
+Create a `.env.netlify` file (gitignored) or store these in your secret manager so Devin can access them:
 
-1. **Netlify Dashboard** → **Add new site** → **Import an existing project**
-2. Connect your Git provider and select the repo
-3. Configure:
+```bash
+NETLIFY_AUTH_TOKEN=your-netlify-personal-access-token
+NETLIFY_SITE_ID=your-site-id
+```
 
-| Setting | Value |
-|---|---|
-| **Build command** | `npm run build` |
-| **Publish directory** | `.next` (auto-detected) |
-| **Node version** | 20 |
+Also ensure production variables are set in the Netlify Dashboard:
 
-4. **Add environment variables** — all from `.env.local`, with live credentials:
-
-| Variable | Production value |
+| Variable | Value |
 |---|---|
 | `SQUARE_ENVIRONMENT` | `production` |
-| `SQUARE_ACCESS_TOKEN` | Square **production** token |
-| `NEXT_PUBLIC_SQUARE_APP_ID` | Square **production** Application ID |
-| `NEXT_PUBLIC_DEMO_MODE` | `false` (or omit) |
+| `SQUARE_ACCESS_TOKEN` | Square production token |
+| `NEXT_PUBLIC_SQUARE_APP_ID` | Square production Application ID |
+| `NEXT_PUBLIC_SQUARE_LOCATION_ID` | Production location ID |
+| `NEXT_PUBLIC_DEMO_MODE` | `false` |
 | `NEXT_PUBLIC_SITE_URL` | `https://yourdomain.com` |
+| `SQUARE_WEBHOOK_SIGNATURE_KEY` | Production webhook signature key |
+| `SQUARE_LOYALTY_PROGRAM_ID` | Production loyalty program ID |
 
-5. **Deploy**
+### Devin release workflow
 
-### Post-deploy checklist
+When asked to "release to production" or "publish to Netlify", Devin should run the following sequence:
 
-- **Custom domain** — Netlify Dashboard → **Domain settings** → add your domain
-- **Square webhooks** — Update webhook URL to `https://yourdomain.com/api/square/webhook`
-- **Square CORS** — Add `https://yourdomain.com` to CORS allowlist
-- **Outstatic** — Visit `https://yourdomain.com/outstatic` to generate API key
+1. **Confirm branch state**
+   ```bash
+   git status
+   git log --oneline -5
+   ```
+   Ensure working tree is clean and HEAD is up to date with `origin/main`. If there are uncommitted changes, ask the user before proceeding.
+
+2. **Run the full CI signal locally**
+   ```bash
+   npm run lint:quiet
+   npm run typecheck
+   npm run test:fast
+   ```
+   All three must pass before a release proceeds. If any fail, stop and report the failure.
+
+3. **Install Netlify CLI (if not already installed)**
+   ```bash
+   npm install -g netlify-cli
+   ```
+
+4. **Build the production bundle locally**
+   ```bash
+   npm run build
+   ```
+   Verify the build completes without errors. If the build fails, stop and report.
+
+5. **Deploy to Netlify (production)**
+   ```bash
+   netlify deploy --prod \
+     --dir=.next \
+     --site="$NETLIFY_SITE_ID" \
+     --auth="$NETLIFY_AUTH_TOKEN"
+   ```
+   The `netlify.toml` at the repo root configures the Next.js plugin automatically.
+
+6. **Verify the deploy**
+   - Open the deploy URL returned by the CLI
+   - Confirm the site loads without console errors
+   - Spot-check the menu, cart, and checkout pages
+   - Verify the site is running against production Square credentials (not sandbox)
+
+7. **Run post-deploy sanity checks**
+   ```bash
+   # Smoke-test the catalog API
+   curl -s https://yourdomain.com/api/square/catalog | head -c 200
+
+   # Smoke-test the order API (requires a valid order ID from the live site)
+   # curl -s https://yourdomain.com/api/square/order/ORDER_ID
+   ```
+   If either endpoint returns a 5xx, stop and alert the user.
+
+8. **Report the release**
+   Output the Netlify deploy URL, commit SHA, and a summary of what changed. If any step fails, report the exact error and the step that failed without retrying.
+
+### Troubleshooting
+
+| Issue | Fix |
+|---|---|
+| `netlify deploy` returns 401 | Regenerate Netlify Personal Access Token and update `NETLIFY_AUTH_TOKEN` |
+| Deploy succeeds but site shows old content | Check Netlify Deploy Preview vs Production; ensure `--prod` flag was used |
+| Build fails with `SQUARE_ENVIRONMENT` missing | Set the variable in Netlify Dashboard → Environment variables, then trigger a new deploy |
+| Webhook SMS not sending after deploy | Confirm `SQUARE_WEBHOOK_SIGNATURE_KEY` matches Square Dashboard; verify webhook URL points to production domain |
 
 ---
 
@@ -620,4 +680,126 @@ TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_PHONE_NUMBER=
 
-# ─── Square Webhooks �
+# ─── Square Webhooks ──────────────────────────────────────────────────
+SQUARE_WEBHOOK_SIGNATURE_KEY=
+
+# ─── Outstatic CMS ───────────────────────────────────────────────────
+OUTSTATIC_API_KEY=
+
+# ─── Dashboard Auth ──────────────────────────────────────────────────
+DASHBOARD_PASSWORD=
+
+# ─── RBAC via Square Team API ─────────────────────────────────────────
+# Email used to look up Square team membership for role assignment.
+# Optional - defaults to owner role if unset.
+DASHBOARD_ADMIN_EMAIL=
+# Comma-separated emails granted the developer role (bypasses Square lookup)
+DASHBOARD_DEVELOPER_EMAILS=
+
+# ─── MFA via Twilio SMS ───────────────────────────────────────────────
+# Admin phone for MFA OTP delivery (Twilio-compatible E.164 format)
+DASHBOARD_ADMIN_PHONE=
+# OTP validity window in seconds (default: 300 = 5 minutes)
+MFA_CODE_TTL=300
+
+# ─── App ─────────────────────────────────────────────────────────────
+NEXT_PUBLIC_SITE_URL=
+# Logging verbosity: debug, info, warn, error (default: debug in dev, warn in production)
+LOG_LEVEL=debug
+
+# ─── Square Loyalty ──────────────────────────────────────────────────
+# From Square Developer Dashboard > Loyalty > Program ID
+SQUARE_LOYALTY_PROGRAM_ID=
+
+# ─── Demo Mode ───────────────────────────────────────────────────────
+# Set to "true" to use mock data (no real Square API calls)
+NEXT_PUBLIC_DEMO_MODE=false
+```
+
+---
+
+## Testing with Square Sandbox
+
+To test the full ordering flow locally against Square's sandbox:
+
+### 1. Get sandbox credentials
+
+1. Go to the [Square Developer Dashboard](https://developer.squareup.com/)
+2. Create a new application (or use an existing one)
+3. In **Credentials**, copy:
+   - **Sandbox Access Token** → `SQUARE_ACCESS_TOKEN`
+   - **Application ID** → `NEXT_PUBLIC_SQUARE_APP_ID`
+4. In **Locations**, copy your location ID → `SQUARE_LOCATION_ID` and `NEXT_PUBLIC_SQUARE_LOCATION_ID`
+
+### 2. Configure your local environment
+
+```bash
+cp .env.local.example .env.local
+```
+
+Set these values in `.env.local`:
+
+```bash
+# Square sandbox credentials
+SQUARE_ACCESS_TOKEN=your-sandbox-access-token
+SQUARE_ENVIRONMENT=sandbox
+SQUARE_LOCATION_ID=your-location-id
+NEXT_PUBLIC_SQUARE_APP_ID=your-app-id
+NEXT_PUBLIC_SQUARE_LOCATION_ID=your-location-id
+
+# Optional: override defaults
+SQUARE_DEFAULT_CURRENCY=AUD
+SQUARE_PLATFORM_FEE_RATE=0.05
+```
+
+> **Note:** When `NODE_ENV=development` and `SQUARE_ENVIRONMENT` is not set, the app automatically uses sandbox mode.
+
+### 3. Add sandbox items to your Square catalog
+
+1. In the Developer Dashboard, open your sandbox location
+2. Go to **Items** and add at least one item with a price
+3. Optionally create categories and upload images
+
+### 4. Start the dev server
+
+```bash
+npm run dev
+# → http://localhost:3000
+```
+
+The menu page (`/menu`) will pull live catalog data from the Square sandbox. You can add items to cart and complete a full checkout using Square's test card:
+
+```
+4111 1111 1111 1111
+Expiry: any future date
+CVC: any 3 digits
+ZIP: any 5 digits
+```
+
+### 5. Verify orders in the sandbox
+
+1. After placing an order, go to the Square Developer Dashboard → **Sandbox** → **Orders**
+2. You should see the order in `PROPOSED` state
+3. You can manually transition it through `IN_PROGRESS` → `COMPLETED` to test webhook SMS notifications
+
+### 6. Testing webhooks locally
+
+Square webhooks require a public HTTPS endpoint. To test webhooks locally:
+
+1. Use a tunnel like [ngrok](https://ngrok.com/):
+   ```bash
+   ngrok http 3000
+   ```
+2. In the Developer Dashboard → **Webhooks**, add the ngrok URL:
+   ```
+   https://your-ngrok-id.ngrok.io/api/square/webhook
+   ```
+3. Copy the **Signature Key** into `.env.local`:
+   ```bash
+   SQUARE_WEBHOOK_SIGNATURE_KEY=your-signature-key
+   ```
+4. Restart the dev server after changing `.env.local`
+
+### 7. Developer role sandbox override
+
+If you log into the admin dashboard with an email listed in `DASHBOARD_DEVELOPER_EMAILS`, all Square API calls automatically use sandbox credentials regardless of `SQUARE_ENVIRONMENT`. This lets you test admin catalog operations safely.
